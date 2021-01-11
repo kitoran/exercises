@@ -12,26 +12,28 @@ to the default PCM device for 5 seconds of data.
 
 #include <math.h>
 #include <memory.h>
-#include "alsa.h"
+#include "audio.h"
+#include "midi.h"
 #include <stdio.h>
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
 extern uint sampleRate;
 extern uint framesPerPeriod;
-double envelope(int sample, long long int length) {
-    int a = sampleRate/30;
+double attack(long long int sample) {
+    long long int a = sampleRate/30;
     if(sample < a) {
         return 1.0/a*sample;
     }
-    if(length > sample && length - sample < sampleRate) {
-        return 1/44100.0*(length-sample);
-    }
-    if(sample > length)  {
-      fprintf(stderr, "bad! %d %lld", sample, length);
-      exit(0);
-        return 0;
-    }
     return 1;
+}
+
+double release(int sample, double init) {
+    const int l = 10;
+    if(sample > l) {
+        fprintf(stderr, "bad! %d %lld", sample, l);
+        exit(1);
+    }
+    return init*(1-((double)sample)/l);
 }
 
 void swap(int* indexTable, int16_t* valueTable, int i, int j) {
@@ -56,6 +58,7 @@ void sortIter(int* indexTable, int16_t* valueTable, int framesPerOsc) {
     printf("\n");
 }
 int main() {
+    midi_open();
     long loops;
     //  int size;
     stereo16 *buffer;
@@ -82,21 +85,36 @@ int main() {
     /* 5 seconds in microseconds divided by
      * period time */
     loops = 5 / periodInSecs;
-    fprintf(stderr, "%d loops\n", loops);
-    long long int totalFrames = loops * framesPerPeriod;
+    fprintf(stderr, "%d loops %lf millisecs in period\n", loops, periodInSecs*1000);
+//    long long int totalFrames = loops * framesPerPeriod;
     int frameNumber = 0;
-    while(frameNumber < totalFrames) {
-        int remainingSize = framesPerPeriod;
-        if(frameNumber + framesPerPeriod >= totalFrames) {
-            remainingSize = totalFrames - frameNumber;
-        }
-        for(int j = 0; j < remainingSize; j++, frameNumber++) {
-            buffer[j].l = valueTable[frameNumber%(int)framesPerOsc]*envelope((frameNumber), totalFrames);
+    double phase = 0;
+    double frequency = 440;
+    long long int sample = 0;
+//    struct timeval timecheck;
+    while(true) {
+//        time();
+            snd_seq_event_t* ev = midi_read();
+            if(ev) {
+                fprintf(stderr, "%c %d\n", ev->data.note.note, (int)(ev->data.note.note));
+                if(ev->type == SND_SEQ_EVENT_NOTEON) {
+                    frequency = 440 * pow(2, ((double)(ev->data.note.note-69))/12);
+                }
+            }
+//        fprintf(stderr, ".");
+//        int remainingSize = framesPerPeriod;
+//        if(frameNumber + framesPerPeriod >= totalFrames) {
+//            remainingSize = totalFrames - frameNumber;
+//        }
+        for(int j = 0; j < framesPerPeriod; j++, frameNumber++) {
+            buffer[j].l = sin(phase)*10000*attack(sample);
             buffer[j].r = buffer[j].l;
+            sample++;
+            phase += M_PI*2/sampleRate*frequency;
         }
 
         writeFrames(buffer, framesPerPeriod);
-        sortIter(indexTable, valueTable, framesPerOsc);
+        usleep(periodInSecs*200000);
     }
     drain();
 //  free(buffer); // there is no need to free

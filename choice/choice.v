@@ -18,15 +18,22 @@ intros. destruct H. exact (existT (fun x => c = rewr a a x c) eq_refl eq_refl). 
 
 Axiom Uniquness : forall phi (eqq: forall a b, (phi a /\ phi b -> a = b)), 
                               (forall a (b:{x:Type & phi x}), a = b).
- match (eqq a b (conj pa pb)) with
+(*Axiom Uniqunessgw : forall phi (eqq: forall a b, (phi a /\ phi b -> a = b)), 
+                              (forall a b c (d:{x:b & phi x}), c =  rewr d). *)
+(* match (eqq a b (conj pa pb)) with
                             | eq_refl =>
-existT phi a = existT phi rewr a  b t
-Axiom Uniquness : forall c phi (eqq: forall (a:c) (b:c), (phi a /\ phi b -> a = b)), 
+existT phi a = existT phi rewr a  b t*)
+(*Axiom IrrelevanceForUniqw : forall c phi (eqq: forall (a:c) (b:c), (phi a /\ phi b -> a = b)), 
                               (forall a (pa:phi a) (pb:phi a),
-                                   pa = pb     ). (*proof irrelevance for defining/characteristic properties, like empty*)
-Definition rewr : forall a b, a = b -> (a -> Type) -> (b -> Type).
+                                   pa = pb     ). (*proof irrelevance for defining/characteristic properties, like empty*) *)
+
+Definition rewrgf : forall a b, a = b -> (a -> Type) -> (b -> Type).
 auto. Defined.
-Theorem eqsig : forall a b c d, {x:a & c x} = {y:b & d y} -> {t:a = b & d = rewr a b t c}.
+Theorem eqsig : forall a b c d, {x:a & c x} = {y:b & d y} -> {t:a = b & d = rewrgf a b t c}.
+intros.
+apply projT1_eq in H.
+apply sigT_eta.
+destruct H.
 Definition create_empty a := existT (isEmpty) a.
 Definition empty_ergo_empty : forall a, isEmpty a -> {x:MSet & forall (f:MSet), ~(m f x)}.
 intros.
