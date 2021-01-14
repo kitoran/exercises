@@ -5,6 +5,7 @@
 snd_pcm_t *handle;
 uint sampleRate = 44100;
 snd_pcm_uframes_t framesPerPeriod = 32;
+snd_pcm_uframes_t framesPerBuffer = 256;
 void init()
 {
     snd_pcm_hw_params_t *params;
@@ -13,7 +14,8 @@ void init()
     int rc;
     /* Open PCM device for playback. */
     rc = snd_pcm_open(&handle, "default",
-                      SND_PCM_STREAM_PLAYBACK, 0);
+                      SND_PCM_STREAM_PLAYBACK
+                      ,  0/*SND_PCM_NONBLOCK*/);
     if (rc < 0) {
       fprintf(stderr,
               "unable to open pcm device: %s\n",
@@ -50,6 +52,8 @@ void init()
     snd_pcm_hw_params_set_period_size_near(handle,
                                 params, &framesPerPeriod, &dir);
     fprintf(stderr, "\n%d frames per period", framesPerPeriod);
+    int err = snd_pcm_hw_params_set_buffer_size_near(handle, params, &framesPerBuffer);
+    fprintf(stderr, "\n%d returned from snd_pcm_hw_params_set_buffer_size res=%d\n", err, framesPerBuffer );
 
     /* Write the parameters to the driver */
     rc = snd_pcm_hw_params(handle, params);
@@ -78,6 +82,7 @@ int writeFrames(stereo16 *buffer, int frames)
         fprintf(stderr,
                 "short write, write %d frames\n", rc);
     }
+    return 0;
 }
 
 void drain()

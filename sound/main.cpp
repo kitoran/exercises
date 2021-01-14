@@ -57,6 +57,7 @@ void sortIter(int* indexTable, int16_t* valueTable, int framesPerOsc) {
     }
     printf("\n");
 }
+extern snd_pcm_t * handle;
 int main() {
     midi_open();
     long loops;
@@ -92,6 +93,9 @@ int main() {
     double frequency = 440;
     long long int sample = 0;
 //    struct timeval timecheck;
+    subscribe();
+    fprintf(stderr, "avail: %d\n", snd_pcm_avail(handle));
+//    return 0;
     while(true) {
 //        time();
             snd_seq_event_t* ev = midi_read();
@@ -114,7 +118,6 @@ int main() {
         }
 
         writeFrames(buffer, framesPerPeriod);
-        usleep(periodInSecs*200000);
     }
     drain();
 //  free(buffer); // there is no need to free
