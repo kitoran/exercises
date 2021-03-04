@@ -4,8 +4,8 @@
 
 snd_pcm_t *handle;
 uint sampleRate = 44100;
-snd_pcm_uframes_t framesPerPeriod = 32;
-snd_pcm_uframes_t framesPerBuffer = 256;
+snd_pcm_uframes_t framesPerPeriod = 4096;
+snd_pcm_uframes_t framesPerBuffer = 256000;
 void init()
 {
     snd_pcm_hw_params_t *params;
