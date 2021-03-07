@@ -18,10 +18,10 @@ to the default PCM device for 5 seconds of data.
 #include <stdio.h>
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
-extern uint sampleRate;
+extern uint alsaSampleRate;
 extern uint framesPerPeriod;
 float attack(long long int sample) {
-    long long int a = sampleRate/30;
+    long long int a = alsaSampleRate/30;
     if(sample < a) {
         return 1.0/a*sample;
     }

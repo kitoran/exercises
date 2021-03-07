@@ -4,6 +4,7 @@
 #include "../libspline/aaCurve.h"
 #include <complex>
 #include "graph.h"
+#include "alsathread.h"
 #include "stft.h"
 #include "mainwindow.h"
 #include <sndfile.h>
@@ -11,7 +12,44 @@ extern  const double tau = M_PI*2;
 extern const double frequencyMultiplent;
 extern const int windowSize;
 extern const int stepSize;
+extern const double freqMin;
 double *transform;
+void resynthesize(double* data, int w, SF_INFO inpi, int h)
+{
+    std::vector<harmonic> maxe = maxes(data, h, w);
+
+    SF_INFO outi = inpi;
+    SNDFILE* out = sf_open("/home/n/exercises/additive/resynth.wav", SFM_WRITE, &outi);
+
+//    double phases[h] = {0};
+//    double frequencies[h] = {0};
+//    for(int i = 0; i < h; i++) {
+//        double mul = pow(frequencyMultiplent, i);
+//        double prod = freqMin * mul;
+//        frequencies[i] = prod;
+//    }
+    double phase = 0;
+    for(int i = 0; i < w-1; i++) {
+        double maxfreqp = maxe[i].freq;
+        double maxfreqn = maxe[i+1].freq;
+        double maxampp = maxe[i].amp;
+        double maxampn = maxe[i+1].amp;
+        for(int s = 0; s < stepSize; s++) {
+            double freq = (maxfreqp * (stepSize-s) + maxfreqn * (s))/stepSize;
+            double amp = (maxampp * (stepSize-s) + maxampn * (s))/stepSize/max;
+            double value = sin(phase)*amp;
+            phase += tau*freq/outi.samplerate;
+//                phases[j] += valuefrequencies[i] = freqMin * pow(frequencyMultiplent, ind);
+            sf_write_double(out, &value, 1);
+        }
+        if((i) %4 == 0) {
+            fprintf(stderr, "hey %d of %d", i, w);
+        }
+
+    }
+    sf_close(out);
+}
+
 int main(int argc, char *argv[])
 {
     SF_INFO inpi;
@@ -61,9 +99,22 @@ int main(int argc, char *argv[])
     MainWindow win;
     int h, w;
     stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
-    win.g->setData(transform, h, w, max);
-    win.show();
 
+//    double* shmul;
+//    int rh;
+//    shiftandmul(transform, h, w, &shmul, &rh);
+        win.g->setData(transform, h, w, max, freqMin*
+                                          pow(frequencyMultiplent,
+                                              h));
+//    win.g->setData(shmul, rh, w, max,
+//                   freqMin*
+//                   pow(frequencyMultiplent,
+//                       rh));
+
+//    resynthesize(shmul, w, inpi, rh);
+
+    win.show();
+    startAlsathread();
 //    std::vector<aaAaa::aaSpline> splines;
 
 //    aaAaa::aaSpline spline;
@@ -84,5 +135,5 @@ int main(int argc, char *argv[])
 
 
 //    ge.show();
-    return a.exec();
+     return a.exec();
 }

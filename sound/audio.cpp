@@ -3,10 +3,10 @@
 #include <stdio.h>
 
 snd_pcm_t *handle;
-uint sampleRate = 44100;
-snd_pcm_uframes_t framesPerPeriod = 4096;
-snd_pcm_uframes_t framesPerBuffer = 256000;
-void init()
+uint alsaSampleRate = 44100;
+snd_pcm_uframes_t framesPerPeriod = 512;
+snd_pcm_uframes_t framesPerBuffer = 512;
+void initAudio()
 {
     snd_pcm_hw_params_t *params;
     unsigned int val;
@@ -44,16 +44,16 @@ void init()
 
     /* 44100 bits/second sampling rate (CD quality) */
     snd_pcm_hw_params_set_rate_near(handle, params,
-                                    &sampleRate, &dir);
-    fprintf(stderr, "sampleRate is %d\n", sampleRate);
+                                    &alsaSampleRate, &dir);
+    fprintf(stderr, "sampleRate is %d\n", alsaSampleRate);
 
 
+    int err = snd_pcm_hw_params_set_buffer_size_near(handle, params, &framesPerBuffer);
+    fprintf(stderr, "\n%d returned from snd_pcm_hw_params_set_buffer_size res=%d\n", err, framesPerBuffer );
     /* Set period size to 32 frames. */
     snd_pcm_hw_params_set_period_size_near(handle,
                                 params, &framesPerPeriod, &dir);
     fprintf(stderr, "\n%d frames per period", framesPerPeriod);
-    int err = snd_pcm_hw_params_set_buffer_size_near(handle, params, &framesPerBuffer);
-    fprintf(stderr, "\n%d returned from snd_pcm_hw_params_set_buffer_size res=%d\n", err, framesPerBuffer );
 
     /* Write the parameters to the driver */
     rc = snd_pcm_hw_params(handle, params);
@@ -85,7 +85,7 @@ int writeFrames(stereo16 *buffer, int frames)
     return 0;
 }
 
-void drain()
+void drainAudio()
 {
     snd_pcm_drain(handle);
     snd_pcm_close(handle);
