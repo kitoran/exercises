@@ -6,25 +6,21 @@
 namespace Ui {
 class MainWindow;
 }
-
+class graph;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
     explicit MainWindow(/*QWidget *parent = 0,*/
-                        double* data,
+                        /*double* data,
                         int size,
-                        double max);
+                        double max*/);
     ~MainWindow();
 
-    void paintEvent(QPaintEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
+    graph* g;
 private:
     Ui::MainWindow *ui;
-    double*data;
-    int size;
-    double max;
 };
 
 #endif // MAINWINDOW_H
