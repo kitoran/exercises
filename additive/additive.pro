@@ -34,7 +34,9 @@ SOURCES += \
     qt-curve-editor/src/curveeditor/graphiceditor.cpp \
     qt-curve-editor/src/curveeditor/SplineDisplayerWidget.cpp \
     qt-curve-editor/src/libspline/aaCurve.cpp \
-    qt-curve-editor/src/libspline/spline.cpp
+    qt-curve-editor/src/libspline/spline.cpp \
+    graph.cpp \
+    stft.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -43,7 +45,9 @@ HEADERS += \
     qt-curve-editor/src/curveeditor/graphiceditor.h \
     qt-curve-editor/src/curveeditor/SplineDisplayerWidget.h \
     qt-curve-editor/src/libspline/aaCurve.h \
-    qt-curve-editor/src/libspline/spline.h
+    qt-curve-editor/src/libspline/spline.h \
+    graph.h \
+    stft.h
 
 FORMS += \
         mainwindow.ui \
