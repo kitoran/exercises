@@ -1,11 +1,12 @@
 #include "graph.h"
 #include "math.h"
+#include "alsathread.h"
 
 #include <QPainter>
 #include <QMouseEvent>
 extern const int windowSize = 2048;
-        extern const int stepSize = 1024;
-extern const double freqMax=20000;
+extern const int stepSize = 2048;
+extern const double freqMax/*=20000*/;
 extern const double freqMin=30;
 extern const double frequencyMultiplent = 1.02;//sqrt(sqrt(freqMax/freqMin));
 
@@ -16,12 +17,12 @@ graph::graph(QWidget *parent) : QWidget(parent){
 
 }
 
-void graph::setData(double* data_, int height_, int width_, double max_) {
+void graph::setData(double* data_, int height_, int width_, double max_, double freqMax_) {
     heights = height_;
     data = data_;
     widths = width_;
     max = max_;
-
+    freqMax = freqMax_;
 }
 
 void graph::paintEvent(QPaintEvent *event) {
@@ -51,6 +52,14 @@ void graph::paintEvent(QPaintEvent *event) {
             double top = (height()-20)/double(heights)*(j+1);
             int g = data[i*heights+j]/max*255;
             p.setBrush(QColor(g,g,g));
+//            if(j > 0 && j < heights-1) {
+//                double cur = data[i*heights+j];
+//                double pr = data[i*heights+j-1];
+//                double next = data[i*heights+j+1];
+//                if(cur - pr > 0.001 && cur - next > 0.001) {
+//                    p.setBrush(QColor(0,0,255));
+//                }
+//            }
             p.drawRect(QRectF(left+10, height()-10-top, right-left, top-bottom));
         }
     }
@@ -84,7 +93,7 @@ void graph::mouseMoveEvent(QMouseEvent *event)
 
     int indh = double(height()-event->y()-10) / (height()-20) * heights;
     int indw = double(event->x()-10) / (width()-20) * widths;
-    double freq = freqMin * pow(frequencyMultiplent, indh);
+    double freq = freqMin * log(freqMax/freqMin)/log(double(height()-event->y()-10) / (height()-20));//pow(frequencyMultiplent, indh);
     double val;
     int ind = indw*heights+indh;
     if(ind < 0 || ind >= heights*widths) {
@@ -92,6 +101,24 @@ void graph::mouseMoveEvent(QMouseEvent *event)
     } else {
         val = data[ind];
     }
-    fprintf(stderr, "indh %d indw %d freq %lf val %lf", indh, indw, freq, val);
+//    fprintf(stderr, "indh %d indw %d freq %lf val %lf", indh, indw, freq, val);
+}
+
+void graph::mousePressEvent(QMouseEvent *event)
+{
+    int indw = double(event->x()-10) / (width()-20) * widths;
+
+    mut.lock();
+    m = {data+indw*heights, heights};
+    full = true;
+    mut.unlock();
+}
+
+void graph::mouseReleaseEvent(QMouseEvent *event)
+{
+    mut.lock();
+    m = {0, -1};
+    full = true;
+    mut.unlock();
 }
 

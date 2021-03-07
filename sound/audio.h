@@ -7,7 +7,7 @@ struct stereo16 {
     int16_t r;
 };
 extern snd_pcm_uframes_t framesPerBuffer;
-void init();
-void drain();
+void initAudio();
+void drainAudio();
 int writeFrames(stereo16* buffer, int frames);
 #endif // ALSA_H

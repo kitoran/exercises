@@ -19,6 +19,9 @@ public:
     ~MainWindow();
 
     graph* g;
+private slots:
+    void on_toolButton_clicked();
+
 private:
     Ui::MainWindow *ui;
 };

@@ -10,9 +10,15 @@ MainWindow::MainWindow(/*QWidget *parent,*/
 {
     ui->setupUi(this);
     g=ui->widget;
+
 //    g->setData(data_, size_, max_);
 }
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::on_toolButton_clicked()
+{
+
 }
