@@ -1,14 +1,15 @@
 #include "stft.h"
 #include <math.h>
+#include "mathext.h"
 #include <stdio.h>
 #include <vector>
 #include <complex>
 std::vector<double> window;
 const double hammingCoef = 0.53836;
-extern const double tau;
 extern const double frequencyMultiplent;
 extern const double freqMax = 20000;
 extern const double freqMin;
+
 
 void makeHammingWindow(int windowSize)
 {
@@ -26,7 +27,7 @@ void stft(int16_t *data, int size, int windowSize, int step, int samplerate, dou
     *resH = ceil(log(freqMax/freqMin)/log(frequencyMultiplent));
     *resW = ((size) - windowSize)/step;
     *res = (double*)malloc((*resW)*(*resH)*sizeof(double));
-    fprintf(stderr, "\n%d bytes for doubles\n", (*resW)*(*resH)*sizeof(double));
+    fprintf(stderr, "\n%ld bytes for doubles\n", (*resW)*(*resH)*sizeof(double));
 //    exit(0);
     double maxw;
     double maxh;
@@ -65,9 +66,6 @@ void stfft(int16_t *data, int size, int windowSize, int step, double **res, int 
     makeHammingWindow(windowSize);
     *resW = ((size) - windowSize)/step;
     *res = (double*)malloc((*resW)*(windowSize)*sizeof(double));
-    double maxw;
-    double maxh;
-
     std::vector<double> datum; datum.resize(windowSize);
     for(int i = 0; i < *resW; i++) {
         for(int n = 0; n < windowSize; n++) {
@@ -78,9 +76,8 @@ void stfft(int16_t *data, int size, int windowSize, int step, double **res, int 
             fprintf(stderr, "%lf, %d of %d", max, i, *resW);
         }
     }
-    fprintf(stderr, "max %lf maxw %lf maxh %lf", max, maxw, maxh);
+    fprintf(stderr, "max %lf ", max);
 
-//    exit(0);
 }
 
 std::vector<harmonic> maxes(double *data, int h, int w)
@@ -131,6 +128,32 @@ void shiftandmul(double *src, int h, int w, double **dest, int* resH)
     fprintf(stderr, "shmul max %lf", max);
 }
 
+void shiftandmulLinear(double *src, int h, int w, double **dest, int *resH)
+{
+    double lastmax = max;
+    max = 0;
+    constexpr int lastHarmonic = 10;
+    *resH = h/lastHarmonic;
+    *dest = (double*)malloc(w*(*resH)*sizeof(double));
+    for(int i = 0; i < w; i++) {
+        for(int j = 0; j < *resH; j++) {
+            double v = 1;
+            for(int k = 0; k < lastHarmonic; k++) {
+                v *= src[i*h + j*(k+1)]/(lastmax/2)/*/1000*/;
+            }
+//            double treshold = 5.238856/100000;
+//            if(v > treshold) {
+//                v = log(v/treshold)+100;
+//            }else v = 0;
+            (*dest)[i*(*resH)+j] = v;
+            if(v > max) {
+                max = v;
+            }
+        }
+    }
+    fprintf(stderr, "shmul max %lf", max);
+}
+
 std::complex<double> primeroot(int p) {
     static std::vector<std::complex<double>> r;
     if(r.size() > p) {
@@ -153,23 +176,21 @@ void fftRec(int16_t *data, int logsize, int logstep, std::complex<double> *res) 
     fftRec(data, logsize-1, logstep+1, res);
     fftRec(data+(1 << logstep), logsize-1, logstep+1, res+(1 << (logsize-1)));
 
-    std::complex<double> root = primeroot(logsize);
+    std::complex<double> proot = primeroot(logsize);
+    std::complex<double> root = 1;
     for(int i = 0; i < (1 << (logsize-1)); i++) {
         std::complex<double> e = res[i];
         std::complex<double> o = res[i+(1 << (logsize-1))];
         res[i] = e + root * o;
         res[i+(1 << (logsize-1))] = e - root * o;
+        root *= proot;
     }
 }
 
 void fft(int16_t *data, int size, double *res)
 {
     std::complex<double> actualRes[size];
-    int logsize = 0;
-    int sacrificialSize = size;
-    while(sacrificialSize >>= 1) {
-        logsize++;
-    }
+    int logsize = intLog2(size);
 
     fftRec(data, logsize, 0, &actualRes[0]);
     for(int i = 0; i < size; i++) {

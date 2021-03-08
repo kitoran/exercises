@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui opengl
-
+CONFIG += c++17
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = additive
@@ -30,36 +30,23 @@ LIBS += -lsndfile
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    qt-curve-editor/src/cetest/cetest.cpp \
-    qt-curve-editor/src/curveeditor/GlobalData.cpp \
-    qt-curve-editor/src/curveeditor/graphiceditor.cpp \
-    qt-curve-editor/src/curveeditor/SplineDisplayerWidget.cpp \
-    qt-curve-editor/src/libspline/aaCurve.cpp \
-    qt-curve-editor/src/libspline/spline.cpp \
     graph.cpp \
     stft.cpp \
     ../sound/audio.cpp \
     alsathread.cpp \
-    synthesis.cpp
+    synthesis.cpp \
+    mathext.cpp
 
 HEADERS += \
         mainwindow.h \
-    qt-curve-editor/src/cetest/cetest.h \
-    qt-curve-editor/src/curveeditor/GlobalData.h \
-    qt-curve-editor/src/curveeditor/graphiceditor.h \
-    qt-curve-editor/src/curveeditor/SplineDisplayerWidget.h \
-    qt-curve-editor/src/libspline/aaCurve.h \
-    qt-curve-editor/src/libspline/spline.h \
     graph.h \
     stft.h \
     ../sound/audio.h \
     alsathread.h \
-    synthesis.h
+    synthesis.h \
+    mathext.h
 
 FORMS += \
-        mainwindow.ui \
-    qt-curve-editor/src/cetest/cetest.ui \
-    qt-curve-editor/src/curveeditor/graphiceditor.ui
+        mainwindow.ui
 
-RESOURCES += \
-    qt-curve-editor/src/cetest/cetest.qrc
+RESOURCES +=

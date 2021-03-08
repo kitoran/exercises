@@ -7,7 +7,6 @@
 #include <math.h>
 #include <sndfile.h>
 using namespace std;
-const double tau = M_PI*2;
 int main()
 {
     SF_INFO inpi;
