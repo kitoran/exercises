@@ -60,9 +60,3 @@ void resynthesizeAll(double *data, int w, SF_INFO inpi, int h)
     }
     sf_close(out);
 }
-
-void resynthesizeMaxima(double *data, int w, SF_INFO inpi, int h)
-{
-    isolateMaxima();
-    resynthesizeAll();
-}
