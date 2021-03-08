@@ -61,6 +61,7 @@ void stft(int16_t *data, int size, int windowSize, int step, int samplerate, dou
 
 void stfft(int16_t *data, int size, int windowSize, int step, double **res, int *resW)
 {
+    max = 0;
     makeHammingWindow(windowSize);
     *resW = ((size) - windowSize)/step;
     *res = (double*)malloc((*resW)*(windowSize)*sizeof(double));
@@ -79,6 +80,7 @@ void stfft(int16_t *data, int size, int windowSize, int step, double **res, int 
     }
     fprintf(stderr, "max %lf maxw %lf maxh %lf", max, maxw, maxh);
 
+//    exit(0);
 }
 
 std::vector<harmonic> maxes(double *data, int h, int w)
@@ -134,9 +136,10 @@ std::complex<double> primeroot(int p) {
     if(r.size() > p) {
         return r[p];
     }
+    int oldsize = r.size();
     r.resize(p+1);
-    for(int i = r.size(); i <= p; i++) {
-        r[i] = std::polar(1., tau/(1 << p));
+    for(int i = oldsize; i <= p; i++) {
+        r[i] = std::polar(1., tau/(1 << i));
     }
     return r[p];
 }
@@ -163,13 +166,14 @@ void fft(int16_t *data, int size, double *res)
 {
     std::complex<double> actualRes[size];
     int logsize = 0;
-    while(size >>= 1) {
+    int sacrificialSize = size;
+    while(sacrificialSize >>= 1) {
         logsize++;
     }
 
     fftRec(data, logsize, 0, &actualRes[0]);
     for(int i = 0; i < size; i++) {
-        res[i] - std::abs(actualRes[i]);
+        res[i] = std::abs(actualRes[i]);
         if(max < (res[i])) {
             max = (res[i]);
 //            maxh = i;
