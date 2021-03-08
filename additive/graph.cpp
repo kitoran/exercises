@@ -5,10 +5,10 @@
 #include <QPainter>
 #include <QMouseEvent>
 extern const int windowSize = 2048;
-extern const int stepSize = 2048;
+extern const int stepSize = 512;//2048;
 extern const double freqMax/*=20000*/;
 extern const double freqMin=30;
-extern const double frequencyMultiplent = 1.02;//sqrt(sqrt(freqMax/freqMin));
+extern const double frequencyMultiplent = 1.01;//sqrt(sqrt(freqMax/freqMin));
 
 
 graph::graph(QWidget *parent) : QWidget(parent){
@@ -93,7 +93,7 @@ void graph::mouseMoveEvent(QMouseEvent *event)
 
     int indh = double(height()-event->y()-10) / (height()-20) * heights;
     int indw = double(event->x()-10) / (width()-20) * widths;
-    double freq = freqMin * log(freqMax/freqMin)/log(double(height()-event->y()-10) / (height()-20));//pow(frequencyMultiplent, indh);
+//    double freq = freqMin * log(freqMax/freqMin)/log(double(height()-event->y()-10) / (height()-20));//pow(frequencyMultiplent, indh);
     double val;
     int ind = indw*heights+indh;
     if(ind < 0 || ind >= heights*widths) {
@@ -101,6 +101,12 @@ void graph::mouseMoveEvent(QMouseEvent *event)
     } else {
         val = data[ind];
     }
+
+
+    mut.lock();
+    m = {data+indw*heights, heights};
+    full = true;
+    mut.unlock();
 //    fprintf(stderr, "indh %d indw %d freq %lf val %lf", indh, indw, freq, val);
 }
 

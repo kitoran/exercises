@@ -33,8 +33,8 @@ void startAlsathread()
             output++;
             mut.lock();
             if(full) {
-                phase = 0;
-                fprintf(stderr, "Got medssage! %d", m.h);
+//                phase = 0;
+//                fprintf(stderr, "Got medssage! %d", m.h);
                 spectr = m;
                 full = false;
                 if(m.h > frequencies.size()) {
@@ -52,8 +52,8 @@ void startAlsathread()
             for(int j = 0; j < framesPerPeriod; j++) {
                 double v = 0;
                 for(int i = 0; i < spectr.h; i++) {
-                    v += spectr.data[i]*lookup[int(frequencies[i]/alsaSampleRate
-                                            *phase*TABLE_SIZE)%TABLE_SIZE]/max*3;
+                    v += spectr.data[i]*lookup[int((frequencies[i]/alsaSampleRate
+                                            *phase+i)*TABLE_SIZE)%TABLE_SIZE]/max*3;
 //                    if(output % 128 == 0) {
 //                        fprintf(stdout, "freq %lf, amp %lf  ", frequencies[i], spectr.data[i]);
 //                    }
@@ -61,6 +61,9 @@ void startAlsathread()
 //                if(spectr.h > 0 && output % 128 == 0) fprintf(stdout, "\n");
                 phase++;
                 buffer[j].r = buffer[j].l = v*400;
+            }
+            if(phase > alsaSampleRate * 7) {
+                phase = 0;
             }
             writeFrames(buffer, framesPerPeriod);
 //            if(phase%16 == 0) {

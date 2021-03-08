@@ -49,12 +49,91 @@ void resynthesize(double* data, int w, SF_INFO inpi, int h)
     }
     sf_close(out);
 }
+void resynthesizeAll(double* data, int w, SF_INFO inpi, int h)
+{
+    SF_INFO outi = inpi;
+    SNDFILE* out = sf_open("/home/n/exercises/additive/resynthAllFlute.wav", SFM_WRITE, &outi);
+
+//    double phases[h] = {0};
+    double frequencies[h] = {0};
+    for(int i = 0; i < h; i++) {
+        double mul = pow(frequencyMultiplent, i);
+        double prod = freqMin * mul;
+        frequencies[i] = prod;
+    }
+//    double phases[h] = {0};
+    for(int i = 0; i < w-1; i++) {
+        for(int s = 0; s < stepSize; s++) {
+            double v = 0;
+            for(int j = 0; j < h; j++) {
+//                double freq = frequencies[j];
+                double amp = (data[i*h+j] * (stepSize-s) + data[(i+1)*h+j] * (s))/stepSize/max/100;
+                v += sin(tau*frequencies[j]/inpi.samplerate*(i*stepSize+s))*amp;
+//                phase += tau*freq/outi.samplerate;
+//                phases[j] += frequencies[i] = freqMin * pow(frequencyMultiplent, ind);
+            }
+            sf_write_double(out, &v, 1);
+        }
+        if((i) %4 == 0) {
+            fprintf(stderr, "hey %d of %d", i, w);
+        }
+
+    }
+    sf_close(out);
+}
+void resynthesizeMaxima(double* olddata, int w, SF_INFO inpi, int h)
+{
+    SF_INFO outi = inpi;
+    SNDFILE* out = sf_open("/home/n/exercises/additive/resynthMaximaFlute.wav", SFM_WRITE, &outi);
+
+//    double phases[h] = {0};
+    double frequencies[h] = {0};
+    for(int i = 0; i < h; i++) {
+        double mul = pow(frequencyMultiplent, i);
+        double prod = freqMin * mul;
+        frequencies[i] = prod;
+    }
+    double *data = (double*)malloc(w*h*sizeof(double));
+    for(int i = 0; i < w; i++) {
+        for(int j = 0; j < h; j++) {
+            if(j == 0 || j == h-1 || olddata[i*h+(j-1)] > olddata[i*h+(j)] ||
+                    olddata[i*h+(j+1)] > olddata[i*h+(j)] ||
+                    max/255 > olddata[i*h+(j)]) {
+                data[i*h+(j)] = 0;
+            } else {
+                data[i*h+(j)] = olddata[i*h+(j)];
+            }
+        }
+        if((i) %4 == 0) {
+            fprintf(stderr, "hey %d of %d", i, w);
+        }
+    }
+//    double phases[h] = {0};
+    for(int i = 0; i < w-1; i++) {
+        for(int s = 0; s < stepSize; s++) {
+            double v = 0;
+            for(int j = 1; j < h-1; j++) {
+//                double freq = frequencies[j];
+                double amp = (data[i*h+j] * (stepSize-s) + data[(i+1)*h+j] * (s))/stepSize/max/100;
+                v += sin(tau*frequencies[j]/inpi.samplerate*(i*stepSize+s))*amp;
+//                phase += tau*freq/outi.samplerate;
+//                phases[j] += frequencies[i] = freqMin * pow(frequencyMultiplent, ind);
+            }
+            sf_write_double(out, &v, 1);
+        }
+        if((i) %4 == 0) {
+            fprintf(stderr, "hey %d of %d", i, w);
+        }
+
+    }
+    sf_close(out);
+}
 
 int main(int argc, char *argv[])
 {
     SF_INFO inpi;
     inpi.format = 0;
-    SNDFILE* inp = sf_open("/home/n/exercises/additive/08-2nd voice-201025_1505-01.wav", SFM_READ, &inpi);
+    SNDFILE* inp = sf_open("/home/n/exercises/additive/354672__mtg__flute-d4.wav", SFM_READ, &inpi);
 
     if(inpi.channels != 1) {
         fprintf(stderr, "%d channels ! ! !", inpi.channels);
@@ -99,11 +178,26 @@ int main(int argc, char *argv[])
     MainWindow win;
     int h, w;
     stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
+    double *data = (double*)malloc(w*h*sizeof(double));
+    for(int i = 0; i < w; i++) {
+        for(int j = 0; j < h; j++) {
+            if(j == 0 || j == h-1 || transform[i*h+(j-1)] > transform[i*h+(j)] ||
+                    transform[i*h+(j+1)] > transform[i*h+(j)] ||
+                    max/255 > transform[i*h+(j)]) {
+                data[i*h+(j)] = 0;
+            } else {
+                data[i*h+(j)] = transform[i*h+(j)];
+            }
+        }
+        if((i) %4 == 0) {
+            fprintf(stderr, "hey %d of %d", i, w);
+        }
+    }
 
 //    double* shmul;
 //    int rh;
 //    shiftandmul(transform, h, w, &shmul, &rh);
-        win.g->setData(transform, h, w, max, freqMin*
+        win.g->setData(data, h, w, max, freqMin*
                                           pow(frequencyMultiplent,
                                               h));
 //    win.g->setData(shmul, rh, w, max,
@@ -111,8 +205,9 @@ int main(int argc, char *argv[])
 //                   pow(frequencyMultiplent,
 //                       rh));
 
-//    resynthesize(shmul, w, inpi, rh);
-
+//    resynthesizeMaxima(transform, w, inpi, h);
+resynthesizeMaxima(transform, w, inpi, h);
+resynthesizeAll(transform, w, inpi, h);
     win.show();
     startAlsathread();
 //    std::vector<aaAaa::aaSpline> splines;
