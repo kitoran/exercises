@@ -6,7 +6,10 @@ inline double max = 0;
 void stft(int16_t *data, int size,
           int window, int step, int samplerate,
           double** res, int* resH, int* resW);
-void fft(int16_t *data, int size, double* res);
+void fft(int16_t *data, int size, int step, double* res, int stepres);
+void stаft(int16_t *data, int size,
+          int window /* should be power of 2 */, int step, int samplerate,
+          double** res, int* resH, int* resW);
 struct harmonic {
     double freq;
     double amp;
