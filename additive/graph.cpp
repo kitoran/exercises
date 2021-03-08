@@ -1,13 +1,11 @@
 #include "graph.h"
 #include "math.h"
+#include "mathext.h"
 #include "alsathread.h"
 
 #include <QPainter>
 #include <QDebug>
 #include <QMouseEvent>
-extern const int windowSize = 2048;
-extern const int stepSize = 512;//2048;
-extern const double freqMax/*=20000*/;
 extern const double freqMin=30;
 extern const double frequencyMultiplent = 1.01;//sqrt(sqrt(freqMax/freqMin));
 
@@ -37,23 +35,24 @@ void graph::setLinearData(double *data_, int width_, int windowSize, int sampler
     mode = linear;
 }
 
-void graph::paintEvent(QPaintEvent *event) {
+void graph::paintEvent(QPaintEvent */*event*/) {
     fprintf(stderr, "real %d %d need %d %d", width()-20, height()-20, widths, heights);
 
     QPainter p(this);
-    p.drawLine(QPointF{10, height()-10},
-               QPointF{width() - 10, height()-10});
+    p.drawLine(QPointF{10., height()-10.},
+               QPointF{width() - 10., height()-10.});
 //    p.drawLine(QPointF{10, height()-10},
 //               QPointF{10, 10});
 
 //    QPointF last(10, height()-10);
     p.setPen(Qt::NoPen);
+    double cutoff = 1000.0*heights/samplerate;
     for(int i = 0; i < widths; i++) {
-        for(int j = 0; j < heights; j++) {
+        for(int j = 0; j < cutoff; j++) {
             double left = (width()-20)/double(widths)*i;
             double right = (width()-20)/double(widths)*(i+1);
-            double bottom = (height()-20)/double(heights)*j;
-            double top = (height()-20)/double(heights)*(j+1);
+            double bottom = (height()-20)/double(cutoff)*j;
+            double top = (height()-20)/double(cutoff)*(j+1);
             int g = data[i*heights+j]/max*255;
             p.setBrush(QColor(g,g,g));
 //            qDebug() << "amplitude" << data[i*heights+j]
@@ -70,13 +69,14 @@ void graph::paintEvent(QPaintEvent *event) {
         if(mode == logarithmic) {
              freq = 30 * exp(sortabase*y);
         } else {
-             freq = double(y) / (height()-20) * samplerate;
+             freq = double(y) / (height()-20) * 1000;//samplerate;
         }
-        p.drawLine(QPointF{10, height()-10-y},
-                   QPointF{width()-10, height()-10-y});
-        p.drawText(QPointF{10, height()-10-y},
+        p.drawLine(QPointF{10., height()-10.-y},
+                   QPointF{width()-10., height()-10.-y});
+        p.drawText(QPointF{10., height()-10.-y},
                    QString::number(freq, ' ', 2));
     }
+
 }
 
 void graph::mouseMoveEvent(QMouseEvent *event)
@@ -84,23 +84,28 @@ void graph::mouseMoveEvent(QMouseEvent *event)
 //    double sortabase = log(20000.0/30)/(width()-20);
 //    double freq = 30 * exp(sortabase*x);
 
-    int indh = double(height()-event->y()-10) / (height()-20) * heights;
+//    int indh = double(height()-event->y()-10) / (height()-20) * heights;
     int indw = double(event->x()-10) / (width()-20) * widths;
-//    double freq = freqMin * log(freqMax/freqMin)/log(double(height()-event->y()-10) / (height()-20));//pow(frequencyMultiplent, indh);
-    double val;
-    int ind = indw*heights+indh;
-    if(ind < 0 || ind >= heights*widths) {
-        val = nan("hello");
-    } else {
-        val = data[ind];
+    double freq = 0;// = freqMin * log(freqMax/freqMin)/log(double(height()-event->y()-10) / (height()-20));//pow(frequencyMultiplent, indh);
+    if(mode == linear) {
+//        double(y) / (height()-20) * 1000;
+        freq = double(height()-event->y()-10) / (height()-20)*1000;
     }
+    //    double val;
+//    int ind = indw*heights+indh;
+//    if(ind < 0 || ind >= heights*widths) {
+//        val = nan("hello");
+//    } else {
+//        val = data[ind];
+//    }
 
 
     mut.lock();
     m = {data+indw*heights, heights};
     full = true;
     mut.unlock();
-//    fprintf(stderr, "indh %d indw %d freq %lf val %lf", indh, indw, freq, val);
+    //    fprintf(stderr, "indh %d indw %d freq %lf val %lf", indh, indw, freq, val);
+    fprintf(stderr, "freq %lf", freq);
 }
 
 void graph::mousePressEvent(QMouseEvent *event)
@@ -108,15 +113,15 @@ void graph::mousePressEvent(QMouseEvent *event)
     int indw = double(event->x()-10) / (width()-20) * widths;
 
     mut.lock();
-    m = {data+indw*heights, heights};
+    m = {data+indw*heights, heights, mode};
     full = true;
     mut.unlock();
 }
 
-void graph::mouseReleaseEvent(QMouseEvent *event)
+void graph::mouseReleaseEvent(QMouseEvent */*event*/)
 {
     mut.lock();
-    m = {0, -1};
+    m = {0, 0, mode};
     full = true;
     mut.unlock();
 }

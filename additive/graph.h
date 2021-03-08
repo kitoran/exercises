@@ -3,12 +3,12 @@
 
 #include <QWidget>
 
+#include <synthesis.h>
 class graph : public QWidget
 {
     Q_OBJECT
 public:
-    enum mode_t {linear, logarithmic} mode;
-
+    spectrogram_mode mode;
     explicit graph(QWidget *parent = nullptr);
     void setLogarithmicData(double *data_,
                  int size1,

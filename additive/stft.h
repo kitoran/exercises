@@ -16,7 +16,8 @@ struct harmonic {
 };
 std::vector<harmonic> maxes(double *data, int h, int w);
 
-void shiftandmul(double *src, int h, int w, double** dest, int *resW);
+void shiftandmul(double *src, int h, int w, double** dest, int *resH);
+void shiftandmulLinear(double *src, int h, int w, double** dest, int *resH);
 void isolateMaxima(int w, double *transform, int h, double *data);
 
 #endif // STFT_H
