@@ -121,8 +121,8 @@ void fftRec(int16_t *data, int logsize, int logstep, std::complex<double> *res) 
         *res = *data*coef;
         return;
     }
-    fft(data, logsize-1, logstep+1, res);
-    fft(data+(1 << logstep), logsize-1, logstep+1, res+(1 << (logsize-1)));
+    fftRec(data, logsize-1, logstep+1, res);
+    fftRec(data+(1 << logstep), logsize-1, logstep+1, res+(1 << (logsize-1)));
 
     std::complex<double> root = primeroot(logsize);
     for(int i = 0; i < (1 << (logsize-1)); i++) {
