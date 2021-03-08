@@ -3,6 +3,7 @@
 #include "alsathread.h"
 
 #include <QPainter>
+#include <QDebug>
 #include <QMouseEvent>
 extern const int windowSize = 2048;
 extern const int stepSize = 512;//2048;
@@ -55,6 +56,9 @@ void graph::paintEvent(QPaintEvent *event) {
             double top = (height()-20)/double(heights)*(j+1);
             int g = data[i*heights+j]/max*255;
             p.setBrush(QColor(g,g,g));
+//            qDebug() << "amplitude" << data[i*heights+j]
+//                     << "max" << max <<
+//                        "color" << g;
             p.drawRect(QRectF(left+10, height()-10-top, right-left, top-bottom));
         }
     }
@@ -66,7 +70,7 @@ void graph::paintEvent(QPaintEvent *event) {
         if(mode == logarithmic) {
              freq = 30 * exp(sortabase*y);
         } else {
-             freq = y / (height()-20) * samplerate;
+             freq = double(y) / (height()-20) * samplerate;
         }
         p.drawLine(QPointF{10, height()-10-y},
                    QPointF{width()-10, height()-10-y});

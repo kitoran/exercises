@@ -39,7 +39,8 @@ SOURCES += \
     graph.cpp \
     stft.cpp \
     ../sound/audio.cpp \
-    alsathread.cpp
+    alsathread.cpp \
+    synthesis.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -52,7 +53,8 @@ HEADERS += \
     graph.h \
     stft.h \
     ../sound/audio.h \
-    alsathread.h
+    alsathread.h \
+    synthesis.h
 
 FORMS += \
         mainwindow.ui \
