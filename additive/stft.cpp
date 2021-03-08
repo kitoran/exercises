@@ -102,3 +102,50 @@ void shiftandmul(double *src, int h, int w, double **dest, int* resH)
     }
     fprintf(stderr, "shmul max %lf", max);
 }
+
+std::complex<double> primeroot(int p) {
+    static std::vector<double> r;
+    if(r.size() > p) {
+        return r[p];
+    }
+    r.resize(p+1);
+    for(int i = r.size(); i <= p; i++) {
+        r[i] = std::polar(1, tau/(1 << p));
+    }
+    return r[p];
+}
+#pragma GCC push_options
+void fftRec(int16_t *data, int logsize, int logstep, std::complex<double> *res) {
+    constexpr double coef = 1/sqrt(tau);
+    if(logsize == 0) {
+        *res = *data*coef;
+        return;
+    }
+    fft(data, logsize-1, logstep+1, res);
+    fft(data+(1 << logstep), logsize-1, logstep+1, res+(1 << (logsize-1)));
+
+    std::complex<double> root = primeroot(logsize);
+    for(int i = 0; i < (1 << (logsize-1)); i++) {
+        std::complex e = res[i];
+        std::complex o = res[i+(1 << (logsize-1))];
+        res[i] = e + root * o;
+        res[i+(1 << (logsize-1))] = e - root * o;
+    }
+}
+
+void fft(int16_t *data, int size, double *res)
+{
+    std::complex<double> actualRes[size];
+    actualRes.resize(size);
+    int logsize = 0;
+    while(size >>= 1) {
+        logsize++;
+    }
+
+    fftRec(data, logsize, 0, &actualRes[0]);
+    for(int i = 0; i < size; i++) {
+        res[i] - std::abs(actualRes[i]);
+    }
+}
+
+#pragma GCC pop_options
