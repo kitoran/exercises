@@ -129,11 +129,12 @@ void resynthesizeMaxima(double* olddata, int w, SF_INFO inpi, int h)
     sf_close(out);
 }
 
+
 int main(int argc, char *argv[])
 {
     SF_INFO inpi;
     inpi.format = 0;
-    SNDFILE* inp = sf_open("/home/n/exercises/additive/354672__mtg__flute-d4.wav", SFM_READ, &inpi);
+    SNDFILE* inp = sf_open("/home/n/exercises/additive/08-2nd voice-201025_1505-01.wav", SFM_READ, &inpi);
 
     if(inpi.channels != 1) {
         fprintf(stderr, "%d channels ! ! !", inpi.channels);
@@ -176,38 +177,27 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     MainWindow win;
-    int h, w;
-    stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
-    double *data = (double*)malloc(w*h*sizeof(double));
-    for(int i = 0; i < w; i++) {
-        for(int j = 0; j < h; j++) {
-            if(j == 0 || j == h-1 || transform[i*h+(j-1)] > transform[i*h+(j)] ||
-                    transform[i*h+(j+1)] > transform[i*h+(j)] ||
-                    max/255 > transform[i*h+(j)]) {
-                data[i*h+(j)] = 0;
-            } else {
-                data[i*h+(j)] = transform[i*h+(j)];
-            }
-        }
-        if((i) %4 == 0) {
-            fprintf(stderr, "hey %d of %d", i, w);
-        }
-    }
+    int /*h,*/ w;
+//    stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
+    stfft(sampls, end, windowSize, stepSize, &transform, &w);
+//    double *data = (double*)malloc(w*h*sizeof(double));
+//    isolateMaxima(w, data, h);
 
 //    double* shmul;
 //    int rh;
 //    shiftandmul(transform, h, w, &shmul, &rh);
-        win.g->setData(data, h, w, max, freqMin*
-                                          pow(frequencyMultiplent,
-                                              h));
-//    win.g->setData(shmul, rh, w, max,
+//    win.g->setLogarithmicData(data, h, w, max, freqMin*
+//                                      pow(frequencyMultiplent,
+//                                            h));
+    win.g->setLinearData(transform, w, windowSize, inpi.samplerate, max);
+//    win.g->setLogarithmicData(shmul, rh, w, max,
 //                   freqMin*
 //                   pow(frequencyMultiplent,
 //                       rh));
 
 //    resynthesizeMaxima(transform, w, inpi, h);
-resynthesizeMaxima(transform, w, inpi, h);
-resynthesizeAll(transform, w, inpi, h);
+//resynthesizeMaxima(transform, w, inpi, h);
+//resynthesizeAll(transform, w, inpi, h);
     win.show();
     startAlsathread();
 //    std::vector<aaAaa::aaSpline> splines;

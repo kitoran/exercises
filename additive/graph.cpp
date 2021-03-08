@@ -17,12 +17,23 @@ graph::graph(QWidget *parent) : QWidget(parent){
 
 }
 
-void graph::setData(double* data_, int height_, int width_, double max_, double freqMax_) {
+void graph::setLogarithmicData(double* data_, int height_, int width_, double max_, double freqMax_) {
     heights = height_;
     data = data_;
     widths = width_;
     max = max_;
     freqMax = freqMax_;
+    mode = logarithmic;
+}
+
+void graph::setLinearData(double *data_, int width_, int windowSize, int samplerate_, double max_)
+{
+    heights = windowSize;
+    data = data_;
+    widths = width_;
+    max = max_;
+    samplerate = samplerate_;
+    mode = linear;
 }
 
 void graph::paintEvent(QPaintEvent *event) {
@@ -38,28 +49,12 @@ void graph::paintEvent(QPaintEvent *event) {
     p.setPen(Qt::NoPen);
     for(int i = 0; i < widths; i++) {
         for(int j = 0; j < heights; j++) {
-//            double freq = freqMin * pow(frequencyMultiplent, i);
-//            double x = log(freq/30)/sortabase;
-//            double y = data[i]/max*(height()-20);
-//            QPointF ne{x+10, height()-10-y};
-//            p.drawLine(last, ne);
-//            last = ne;
-//        p.drawText(QPointF{x+10, height()-10},
-//                   QString::number(freq, ' ', 2));
             double left = (width()-20)/double(widths)*i;
             double right = (width()-20)/double(widths)*(i+1);
             double bottom = (height()-20)/double(heights)*j;
             double top = (height()-20)/double(heights)*(j+1);
             int g = data[i*heights+j]/max*255;
             p.setBrush(QColor(g,g,g));
-//            if(j > 0 && j < heights-1) {
-//                double cur = data[i*heights+j];
-//                double pr = data[i*heights+j-1];
-//                double next = data[i*heights+j+1];
-//                if(cur - pr > 0.001 && cur - next > 0.001) {
-//                    p.setBrush(QColor(0,0,255));
-//                }
-//            }
             p.drawRect(QRectF(left+10, height()-10-top, right-left, top-bottom));
         }
     }
@@ -67,23 +62,17 @@ void graph::paintEvent(QPaintEvent *event) {
     p.setPen(Qt::darkMagenta);
     double sortabase = log(freqMax/freqMin)/(height()-20);
     for(int y = 0; y < height()-20; y += 100) {
-        double freq = 30 * exp(sortabase*y);
+        double freq;
+        if(mode == logarithmic) {
+             freq = 30 * exp(sortabase*y);
+        } else {
+             freq = y / (height()-20) * samplerate;
+        }
         p.drawLine(QPointF{10, height()-10-y},
                    QPointF{width()-10, height()-10-y});
         p.drawText(QPointF{10, height()-10-y},
                    QString::number(freq, ' ', 2));
     }
-//    QPointF last(10, height()-10);
-//    for(int i = 0; i < heights; i++) {
-//        double freq = 30 * pow(frequencyMultiplent, i);
-//        double x = log(freq/30)/sortabase;
-//        double y = data[i]/max*(height()-20);
-//        QPointF ne{x+10, height()-10-y};
-//        p.drawLine(last, ne);
-//        last = ne;
-////        p.drawText(QPointF{x+10, height()-10},
-////                   QString::number(freq, ' ', 2));
-//    }
 }
 
 void graph::mouseMoveEvent(QMouseEvent *event)

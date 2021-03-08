@@ -10,7 +10,7 @@ extern const double frequencyMultiplent;
 extern const double freqMax = 20000;
 extern const double freqMin;
 
-void stft(int16_t *data, int size, int windowSize, int step, int samplerate, double **res, int *resH, int *resW)
+void makeHammingWindow(int windowSize)
 {
     window.resize(windowSize);
     double anotherCoef = 1 - hammingCoef;
@@ -18,6 +18,11 @@ void stft(int16_t *data, int size, int windowSize, int step, int samplerate, dou
 //        int n = i-windowSize/2;
         window[i] = hammingCoef - anotherCoef*cos(tau*i/windowSize);
     }
+}
+
+void stft(int16_t *data, int size, int windowSize, int step, int samplerate, double **res, int *resH, int *resW)
+{
+    makeHammingWindow(windowSize);
     *resH = ceil(log(freqMax/freqMin)/log(frequencyMultiplent));
     *resW = ((size) - windowSize)/step;
     *res = (double*)malloc((*resW)*(*resH)*sizeof(double));
@@ -47,6 +52,27 @@ void stft(int16_t *data, int size, int windowSize, int step, int samplerate, dou
             }
     //        if(ind >= 3202) break;
         }
+        if((i) %4 == 0) {
+            fprintf(stderr, "%lf, %d of %d", max, i, *resW);
+        }
+    }
+    fprintf(stderr, "max %lf maxw %lf maxh %lf", max, maxw, maxh);
+}
+
+void stfft(int16_t *data, int size, int windowSize, int step, double **res, int *resW)
+{
+    makeHammingWindow(windowSize);
+    *resW = ((size) - windowSize)/step;
+    *res = (double*)malloc((*resW)*(windowSize)*sizeof(double));
+    double maxw;
+    double maxh;
+
+    std::vector<double> datum; datum.resize(windowSize);
+    for(int i = 0; i < *resW; i++) {
+        for(int n = 0; n < windowSize; n++) {
+            datum[n] = window[n] * data[i*step+n];
+        }
+        fft(data + step*i, windowSize, (*res) + i*windowSize);
         if((i) %4 == 0) {
             fprintf(stderr, "%lf, %d of %d", max, i, *resW);
         }
@@ -104,21 +130,21 @@ void shiftandmul(double *src, int h, int w, double **dest, int* resH)
 }
 
 std::complex<double> primeroot(int p) {
-    static std::vector<double> r;
+    static std::vector<std::complex<double>> r;
     if(r.size() > p) {
         return r[p];
     }
     r.resize(p+1);
     for(int i = r.size(); i <= p; i++) {
-        r[i] = std::polar(1, tau/(1 << p));
+        r[i] = std::polar(1., tau/(1 << p));
     }
     return r[p];
 }
 #pragma GCC push_options
+static const double ftcoef = 1/sqrt(tau);
 void fftRec(int16_t *data, int logsize, int logstep, std::complex<double> *res) {
-    constexpr double coef = 1/sqrt(tau);
     if(logsize == 0) {
-        *res = *data*coef;
+        *res = *data*ftcoef;
         return;
     }
     fftRec(data, logsize-1, logstep+1, res);
@@ -126,8 +152,8 @@ void fftRec(int16_t *data, int logsize, int logstep, std::complex<double> *res) 
 
     std::complex<double> root = primeroot(logsize);
     for(int i = 0; i < (1 << (logsize-1)); i++) {
-        std::complex e = res[i];
-        std::complex o = res[i+(1 << (logsize-1))];
+        std::complex<double> e = res[i];
+        std::complex<double> o = res[i+(1 << (logsize-1))];
         res[i] = e + root * o;
         res[i+(1 << (logsize-1))] = e - root * o;
     }
@@ -136,7 +162,6 @@ void fftRec(int16_t *data, int logsize, int logstep, std::complex<double> *res) 
 void fft(int16_t *data, int size, double *res)
 {
     std::complex<double> actualRes[size];
-    actualRes.resize(size);
     int logsize = 0;
     while(size >>= 1) {
         logsize++;
@@ -145,7 +170,29 @@ void fft(int16_t *data, int size, double *res)
     fftRec(data, logsize, 0, &actualRes[0]);
     for(int i = 0; i < size; i++) {
         res[i] - std::abs(actualRes[i]);
+        if(max < (res[i])) {
+            max = (res[i]);
+//            maxh = i;
+        }
     }
 }
 
 #pragma GCC pop_options
+
+void isolateMaxima(int w, double *transform, int h,  double *data)
+{
+    for(int i = 0; i < w; i++) {
+        for(int j = 0; j < h; j++) {
+            if(j == 0 || j == h-1 || transform[i*h+(j-1)] > transform[i*h+(j)] ||
+                    transform[i*h+(j+1)] > transform[i*h+(j)] ||
+                    max/255 > transform[i*h+(j)]) {
+                data[i*h+(j)] = 0;
+            } else {
+                data[i*h+(j)] = transform[i*h+(j)];
+            }
+        }
+        if((i) %4 == 0) {
+            fprintf(stderr, "hey %d of %d", i, w);
+        }
+    }
+}
