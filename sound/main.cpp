@@ -31,7 +31,7 @@ float attack(long long int sample) {
 double release(int sample, double init) {
     const int l = 10;
     if(sample > l) {
-        fprintf(stderr, "bad! %d %lld", sample, l);
+        fprintf(stderr, "bad! %d %d", sample, l);
         exit(1);
     }
     return init*(1-((double)sample)/l);
@@ -80,12 +80,12 @@ int main() {
     midi_open();
     long loops;
     //  int size;
-    stereo16 *buffer;
+    int16_t *buffer;
 
-    init();
-    buffer = (stereo16 *) malloc(sizeof(stereo16)*framesPerPeriod);
+    initAudio(1, SND_PCM_FORMAT_S16_LE);
+    buffer = (int16_t *) malloc(sizeof(int16_t)*framesPerPeriod);
     const double freq = 440;
-    const double framesPerOsc = sampleRate/freq;
+    const double framesPerOsc = alsaSampleRate/freq;
     fprintf(stderr, "%lf frames int one osc\n", framesPerOsc);
     int* indexTable = (int*)malloc(sizeof(int)*framesPerOsc);
 //    memset(indexTable, 0, framesPerPeriod);
@@ -101,7 +101,7 @@ int main() {
 //            valueTable[i] += cos(freq*2*M_PI*(n)/sampleRate*i + f)*400.0/n;
 ////            fprintf(stderr, "i=%d\n", i);
 //            valueTable[i] += freq/sampleRate*i*i*20;
-            double pv = sin(freq*2*M_PI/sampleRate*i);
+            double pv = sin(freq*2*M_PI/alsaSampleRate*i);
             double sqr = copysign(exp(pv)-1, pv);
             valueTable[i] += sqr*400.0;
 
@@ -130,7 +130,7 @@ int main() {
 //    long long int totalFrames = loops * framesPerPeriod;
     int frameNumber = 0;
     double phase = 0;
-    double frequency = 260;
+    double frequency = 50;
     long long int sample = 0;
 //    struct timeval timecheck;
     subscribe();
@@ -140,6 +140,7 @@ int main() {
     uint32_t value = 3;
     int simulation[100];
     int index = 0;
+
     while(true) {
 //        time();
             snd_seq_event_t* ev = midi_read();
@@ -159,20 +160,21 @@ int main() {
         for(int j = 0; j < framesPerPeriod; j++, frameNumber++) {
 //            buffer[j].l = 0;
 //            buffer[j].r = buffer[j].l = valueTable[sample%framesPerOscNormal];
-//            sample++;
-            int fewfwe = double(value)/UINT_MAX;
-            buffer[j].r = buffer[j].l = (fewfwe + simulation[index])/2000000;
-            simulation[index] += fewfwe;
-            value = value * (value + 1);
-            index++;
-            index = index % 100;
+            sample++;
+//            int fewfwe = double(value)/UINT_MAX;
+//            buffer[j] = (fewfwe + simulation[index])/2000000;
+//            simulation[index] += fewfwe;
+//            value = value * (value + 1);
+//            index++;
+//            index = index % 100;
 //            phase += M_PI*2/sampleRate*frequency;
+            buffer[j] = ((long long int)(sample*frequency*2/alsaSampleRate)%2 * 2 - 1)*1600;
         }
 
         writeFrames(buffer, framesPerPeriod);
 //        iter(valueTable, framesPerOscNormal);
     }
-    drain();
+    drainAudio();
 //  free(buffer); // there is no need to free
 
   return 0;

@@ -15,7 +15,7 @@ public:
                  int size2,
                  double max_,
                  double freqMax_);
-    void setLinearData(double *data_, int width_,
+    void setLinearData(double *data_, int width_, int height_,
                  int windowSize,
                  int samplerate,
                  double max_);
@@ -30,6 +30,7 @@ public slots:
 private:
     double*data;
     int heights;
+    int windowSize;
     int widths;
     double max;
     double freqMax;

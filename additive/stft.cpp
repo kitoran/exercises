@@ -25,6 +25,19 @@ void stft(int16_t *data, int size, int windowSize, int step, int samplerate, dou
 {
     makeHammingWindow(windowSize);
     *resH = ceil(log(freqMax/freqMin)/log(frequencyMultiplent));
+
+//    double frequencies[*resH] = {0};
+//    for(int i = 0; i < *resH; i++) {
+//        double mul = pow(frequencyMultiplent, i);
+//        double prod = freqMin * mul;
+//        frequencies[i] = prod;
+//    }
+    std::complex<double> primroots[*resH];
+    for(int i = 0; i < *resH; i++) {
+        double mul = pow(frequencyMultiplent, i);
+        double prod = freqMin * mul;
+        primroots[i] = std::polar(1.0, (double)tau*prod/samplerate);
+    }
     *resW = ((size) - windowSize)/step;
     *res = (double*)malloc((*resW)*(*resH)*sizeof(double));
     fprintf(stderr, "\n%ld bytes for doubles\n", (*resW)*(*resH)*sizeof(double));
@@ -37,9 +50,8 @@ void stft(int16_t *data, int size, int windowSize, int step, int samplerate, dou
             datum[n] = window[n] * data[i*step+n];
         }
         for(int ind = 0; ind < *resH; ind++) {
-            double freq = freqMin * pow(frequencyMultiplent, ind);
             std::complex<double> acc = 0;
-            const std::complex<double> primroot = std::polar(1.0, (double)tau*freq/samplerate);
+            const std::complex<double> primroot = primroots[ind];
             std::complex<double> root = 1;
             for(int j = 0; j < windowSize; j++) {
                 acc += root * ((double)(datum[j])/1000.);
@@ -99,6 +111,25 @@ std::vector<harmonic> maxes(double *data, int h, int w)
     return r;
 }
 
+//std::vector<harmonic> maxesLinear(double *data, int h, int w, int samplerate, int windowSize)
+//{
+//    std::vector<harmonic> r;
+//    r.reserve(w);
+//    for(int i = 0; i < w; i++) {
+//        double max = 0;
+//        int maxind = 0;
+//        for(int j = 0; j < h; j++) {
+//            if(data[i*h+j] > max) {
+//                max = data[i*h+j];
+//                maxind = j;
+//            }
+//        }
+//        double freq = freqMin * pow(frequencyMultiplent, maxind);
+//        r.push_back({freq, max});
+//    }
+//    return r;
+//}
+
 void shiftandmul(double *src, int h, int w, double **dest, int* resH)
 {
     max = 0;
@@ -139,12 +170,12 @@ void shiftandmulLinear(double *src, int h, int w, double **dest, int *resH)
         for(int j = 0; j < *resH; j++) {
             double v = 1;
             for(int k = 0; k < lastHarmonic; k++) {
-                v *= src[i*h + j*(k+1)]/(lastmax/2)/*/1000*/;
+                v *= src[i*h + j*(k+1)]/500000;
             }
-//            double treshold = 5.238856/100000;
-//            if(v > treshold) {
-//                v = log(v/treshold)+100;
-//            }else v = 0;
+            double treshold = 455.500326/10000;
+            if(v > treshold) {
+                v = log(v/treshold)/*+100*/;
+            }else v = 0;
             (*dest)[i*(*resH)+j] = v;
             if(v > max) {
                 max = v;
@@ -168,7 +199,8 @@ std::complex<double> primeroot(int p) {
 }
 #pragma GCC push_options
 static const double ftcoef = 1/sqrt(tau);
-void fftRec(int16_t *data, int logsize, int logstep, std::complex<double> *res) {
+template<typename inptype>
+void fftRec(inptype *data, int logsize, int logstep, std::complex<double> *res) {
     if(logsize == 0) {
         *res = *data*ftcoef;
         return;
@@ -187,7 +219,8 @@ void fftRec(int16_t *data, int logsize, int logstep, std::complex<double> *res) 
     }
 }
 
-void fft(int16_t *data, int size, double *res)
+template<typename inptype>
+void fft(inptype *data, int size, double *res)
 {
     std::complex<double> actualRes[size];
     int logsize = intLog2(size);
@@ -202,6 +235,8 @@ void fft(int16_t *data, int size, double *res)
     }
 }
 
+template void fft(int16_t *data, int size, double *res);
+template void fft(double *data, int size, double *res);
 #pragma GCC pop_options
 
 void isolateMaxima(int w, double *transform, int h,  double *data)
@@ -221,3 +256,4 @@ void isolateMaxima(int w, double *transform, int h,  double *data)
         }
     }
 }
+
