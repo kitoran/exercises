@@ -6,7 +6,7 @@ snd_pcm_t *handle;
 uint alsaSampleRate = 44100;
 snd_pcm_uframes_t framesPerPeriod = 512;
 snd_pcm_uframes_t framesPerBuffer = 512;
-void initAudio()
+void initAudio(int channels, snd_pcm_format_t format)
 {
     snd_pcm_hw_params_t *params;
     unsigned int val;
@@ -37,10 +37,10 @@ void initAudio()
 
     /* Signed 16-bit little-endian format */
     snd_pcm_hw_params_set_format(handle, params,
-                                SND_PCM_FORMAT_S16_LE);
+                                format);
 
-    /* Two channels (stereo) */
-    snd_pcm_hw_params_set_channels(handle, params, 2);
+    /*  */
+    snd_pcm_hw_params_set_channels(handle, params, channels);
 
     /* 44100 bits/second sampling rate (CD quality) */
     snd_pcm_hw_params_set_rate_near(handle, params,
@@ -67,7 +67,7 @@ void initAudio()
 
 }
 
-int writeFrames(stereo16 *buffer, int frames)
+int writeFrames(const void *buffer, int frames)
 {
     int rc = snd_pcm_writei(handle, buffer, frames);
     if (rc == -EPIPE) {

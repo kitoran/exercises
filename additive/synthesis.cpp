@@ -67,21 +67,25 @@ void resynthesizeAll(double *data, int w, SF_INFO inpi, int stepSize, int h)
     sf_close(out);
 }
 
-void resynthesizeAllLinear(double *data, int w, int stepSize, SF_INFO inpi, int h)
+void resynthesizeAllLinear(double *data, int w, int stepSize, SF_INFO inpi, int specrtSize, int windowSize)
 {
-    fprintf(stderr, "Data %p w %d stepSize %d h %d", data, w, stepSize, h);
+    fprintf(stderr, "Data %p w %d stepSize %d specs %d", data, w, stepSize, specrtSize);
     double* look = sinLookupTable();
+    int logWindowSize = intLog2(windowSize);
     SF_INFO outi = inpi;
     SNDFILE* out = sf_open("/home/n/exercises/additive/resynthAllLinear.wav", SFM_WRITE, &outi);
     for(int i = 0; i < w-1; i++) {
+        double outb[stepSize];
         for(int s = 0; s < stepSize; s++) {
             double v = 0;
-            for(int j = 0; j < h/2; j++) {
-                double amp = (data[i*h+j] * (stepSize-s) + data[(i+1)*h+j] * (s))/stepSize/max;
-                v += look[(LOOKUP_TABLE_SIZE*j/h)%LOOKUP_TABLE_SIZE]*amp/40;
+            for(int j = 0; j < specrtSize; j++) {
+                double amp = (data[i*specrtSize+j] * (stepSize-s) + data[(i+1)*specrtSize+j] * (s))/stepSize/max;
+                v += look[
+                        (((long long int)(i*stepSize+s)*LOOKUP_TABLE_SIZE*j+hash(j))>>logWindowSize)%LOOKUP_TABLE_SIZE]*amp/10;
             }
-            sf_write_double(out, &v, 1);
+            outb[s] = v;
         }
+        sf_write_double(out, outb, stepSize);
         if((i) %4 == 0) {
             fprintf(stderr, "hey %d of %d", i, w);
         }
