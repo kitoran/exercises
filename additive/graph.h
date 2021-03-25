@@ -4,6 +4,7 @@
 #include <QWidget>
 
 #include <synthesis.h>
+#include <complex>
 class graph : public QWidget
 {
     Q_OBJECT
@@ -24,13 +25,18 @@ public:
     void mouseMoveEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
+    void setComplexData(std::complex<double> *data_, int width_, int height_, int windowSize_, int samplerate_, double max_);
 signals:
 
 public slots:
 private:
-    double*data;
-    int heights;
-    int windowSize;
+    union {
+        double*ddata;
+        std::complex<double> *cdata;
+    };
+    bool complex {false};
+    uint heights;
+    uint windowSize;
     int widths;
     double max;
     double freqMax;

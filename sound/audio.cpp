@@ -49,11 +49,11 @@ void initAudio(int channels, snd_pcm_format_t format)
 
 
     int err = snd_pcm_hw_params_set_buffer_size_near(handle, params, &framesPerBuffer);
-    fprintf(stderr, "\n%d returned from snd_pcm_hw_params_set_buffer_size res=%d\n", err, framesPerBuffer );
+    fprintf(stderr, "\n%d returned from snd_pcm_hw_params_set_buffer_size res=%lu\n", err, framesPerBuffer );
     /* Set period size to 32 frames. */
     snd_pcm_hw_params_set_period_size_near(handle,
                                 params, &framesPerPeriod, &dir);
-    fprintf(stderr, "\n%d frames per period", framesPerPeriod);
+    fprintf(stderr, "\n%lu frames per period", framesPerPeriod);
 
     /* Write the parameters to the driver */
     rc = snd_pcm_hw_params(handle, params);

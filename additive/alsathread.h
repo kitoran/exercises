@@ -5,12 +5,13 @@
 inline std::mutex mut;
 inline bool full = false;
 struct message {
-    double *data;
+    void *data;
     uint spectrumSize;
     spectrogram_mode mode;
-    uint windowSize;
+    uint windowSize{0};
+    bool complex{0};
 };
-inline message m = {0, 0, logarithmic, 0};
+inline message m = {0, 0, logarithmic, 0, false};
 
 void startAlsathread();
 #endif // ALSATHREAD_H
