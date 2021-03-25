@@ -1,5 +1,6 @@
 #include "alsathread.h"
 #include <thread>
+#include <pthread.h>
 #include <vector>
 #include "audio.h"
 #include <math.h>
@@ -31,8 +32,8 @@ void startAlsathread()
 //        QElapsedTimer t;
 //        t.start();
 //        int samples = 0;
-        int changes = 0;
-        bool signPositive = 1;
+//        int changes = 0;
+//        bool signPositive = 1;
         while(true) {
             std::vector<double> unFft;
             int unfftIndex = 0;
@@ -57,12 +58,15 @@ void startAlsathread()
                 }
                 unFft.resize(m.windowSize);
 
-                fft(spectr.data, spectr.windowSize, &unFft[0]);
+                fft((std::complex<double>*)spectr.data, spectr.windowSize, &unFft[0]);
+                for(int i = 0; i < spectr.windowSize; i++) {
+                    unFft[i] /= window[i];
+                }
             } else {
                 mut.unlock();
             }
 
-
+/*
             if(spectr.mode == logarithmic) {
                 for(int j = 0; j < framesPerPeriod; j++) {
                     double v = 0;
@@ -73,9 +77,9 @@ void startAlsathread()
                     phase++;
                     buffer[j] = v*400;
                 }
-            } else {
+            } else */{
                 int written = 0;
-                while(written < framesPerPeriod) {
+                while(spectr.windowSize > 0 && written < framesPerPeriod) {
                     int amount = std::min(framesPerPeriod-written,
                                           spectr.windowSize);
                     memcpy(buffer, &unFft[0], amount);
@@ -97,5 +101,6 @@ void startAlsathread()
             writeFrames(buffer, framesPerPeriod);
         }
     });
+    pthread_setname_np(th.native_handle(), "alsathread");
     th.detach();
 }

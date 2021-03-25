@@ -4,12 +4,11 @@
 #include <stdio.h>
 #include <vector>
 #include <complex>
-std::vector<double> window;
+
 const double hammingCoef = 0.53836;
 extern const double frequencyMultiplent;
 extern const double freqMax = 20000;
 extern const double freqMin;
-
 
 void makeHammingWindow(int windowSize)
 {
@@ -89,7 +88,25 @@ void stfft(int16_t *data, int size, int windowSize, int step, double **res, int 
         }
     }
     fprintf(stderr, "max %lf ", max);
+}
 
+void complex_stfft(int16_t *data, int size, int windowSize, int step, std::complex<double> **res, int *resW)
+{
+    max = 0;
+    makeHammingWindow(windowSize);
+    *resW = ((size) - windowSize)/step;
+    *res = (std::complex<double>*)malloc((*resW)*(windowSize)*sizeof(std::complex<double>));
+    std::vector<double> datum; datum.resize(windowSize);
+    for(int i = 0; i < *resW; i++) {
+        for(int n = 0; n < windowSize; n++) {
+            datum[n] = window[n] * data[i*step+n];
+        }
+        complex_fft(data + step*i, windowSize, (*res) + i*windowSize);
+        if((i) %4 == 0) {
+            fprintf(stderr, "%lf, %d of %d", max, i, *resW);
+        }
+    }
+    fprintf(stderr, "max %lf ", max);
 }
 
 std::vector<harmonic> maxes(double *data, int h, int w)
@@ -161,7 +178,7 @@ void shiftandmul(double *src, int h, int w, double **dest, int* resH)
 
 void shiftandmulLinear(double *src, int h, int w, double **dest, int *resH)
 {
-    double lastmax = max;
+//    double lastmax = max;
     max = 0;
     constexpr int lastHarmonic = 10;
     *resH = h/lastHarmonic;
@@ -197,7 +214,7 @@ std::complex<double> primeroot(int p) {
     }
     return r[p];
 }
-#pragma GCC push_options
+//#pragma GCC push_options
 static const double ftcoef = 1/sqrt(tau);
 template<typename inptype>
 void fftRec(inptype *data, int logsize, int logstep, std::complex<double> *res) {
@@ -237,7 +254,24 @@ void fft(inptype *data, int size, double *res)
 
 template void fft(int16_t *data, int size, double *res);
 template void fft(double *data, int size, double *res);
-#pragma GCC pop_options
+template void fft(std::complex<double> *data, int size, double *res);
+//#pragma GCC pop_options
+template<typename inptype>
+void complex_fft(inptype *data, int size, std::complex<double> *res)
+{
+    int logsize = intLog2(size);
+
+    fftRec(data, logsize, 0, &res[0]);
+    for(int i = 0; i < size; i++) {
+        if(max < std::abs(res[i])) {
+            max = std::abs(res[i]);
+//            maxh = i;
+        }
+    }
+}
+template void complex_fft(int16_t *data, int size, std::complex<double> *res);
+template void complex_fft(double *data, int size, std::complex<double> *res);
+
 
 void isolateMaxima(int w, double *transform, int h,  double *data)
 {

@@ -2,15 +2,26 @@
 #define STFT_H
 #include <inttypes.h>
 #include <vector>
+
+
+inline std::vector<double> window;
 inline double max = 0;
 void stft(int16_t *data, int size,
           int window, int step, int samplerate,
           double** res, int* resH, int* resW);
 template<typename inptype>
 void fft(inptype *data, int size, double* res);
+namespace std {
+template<typename inptype>
+class complex;
+}
+template<typename inptype>
+void complex_fft(inptype *data, int size, std::complex<double>* res);
 void stfft(int16_t *data, int size,
           int window /* should be power of 2 */, int step,
           double** res, int* resW); // resH = window
+void complex_stfft(int16_t *data, int size, int windowSize, int step, std::complex<double> **res, int *resW);
+
 struct harmonic {
     double freq;
     double amp;

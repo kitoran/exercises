@@ -6,8 +6,6 @@
 #include "synthesis.h"
 #include "mainwindow.h"
 #include <sndfile.h>
-extern const double frequencyMultiplent;
-double *transform;
 
 int main(int argc, char *argv[])
 {
@@ -31,9 +29,12 @@ int main(int argc, char *argv[])
     MainWindow win;
     const int windowSize = 1<<14;
     const int stepSize = 512;
-    int h, w;
+    int /*h,*/ w;
 //    stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
-    stfft(sampls, end, windowSize, stepSize, &transform, &w);
+    //    stfft(sampls, end, windowSize, stepSize, &transform, &w);
+    std::complex< double>* transform;
+    complex_stfft(sampls, end, windowSize, stepSize, &transform, &w);
+
 //    double *data = (double*)malloc(w*windowSize*sizeof(double));
 //    isolateMaxima(w, transform, windowSize, data);
 
@@ -44,7 +45,9 @@ int main(int argc, char *argv[])
 //    win.g->setLogarithmicData(data, h, w, max, freqMin*
 //                                      pow(frequencyMultiplent,
 //                                            h));
-    win.g->setLinearData(transform, w, h, windowSize, inpi.samplerate, max);
+    win.g->setComplexData(transform, w, windowSize, windowSize, inpi.samplerate, max);
+
+//    win.g->setLinearData(transform, w, h, windowSize, inpi.samplerate, max);
 //    win.g->setLinearData(transform, w, windowSize, windowSize, inpi.samplerate, max);
 //    win.g->setLogarithmicData(shmul, rh, w, max,
 //                   freqMin*
