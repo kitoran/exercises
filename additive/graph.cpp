@@ -25,30 +25,30 @@ graph::graph(QWidget *parent) : QWidget(parent){
 
 void graph::setLogarithmicData(double* data_, int height_, int width_, double max_, double freqMax_) {
     heights = height_;
-    ddata = data_;
+    data = {data_, height_*width_};
     widths = width_;
     max = max_;
     freqMax = freqMax_;
-    mode = logarithmic;
+    mode = spectrogram_mode::logarithmic;
 }
 
 void graph::setLinearData(double *data_, int width_, int height_, int windowSize_, int samplerate_, double max_) {
     heights = height_;
-    ddata = data_;
+    data = {data_, height_*width_};
     widths = width_;
     max = max_;
     samplerate = samplerate_;
-    mode = linear;
+    mode = spectrogram_mode::linear;
     windowSize = windowSize_;
 }
 
 void graph::setComplexData(std::complex<double> *data_, int width_, int height_, int windowSize_, int samplerate_, double max_) {
     heights = height_;
-    cdata = data_;
+    data = {(double*)data_, height_*width_*2};
     widths = width_;
     max = max_;
     samplerate = samplerate_;
-    mode = linear;
+    mode = spectrogram_mode::linear;
     complex = true;
     windowSize = windowSize_;
 }
@@ -72,11 +72,13 @@ void graph::paintEvent(QPaintEvent */*event*/) {
             double right = (width()-20)/double(widths)*(i+1);
             double bottom = (height()-20)/double(cutoffind)*j;
             double top = (height()-20)/double(cutoffind)*(j+1);
-            int g = std::abs(cdata[i*heights+j])/max*255;
+            int g = std::abs(data.c(i*heights+j))/max*255;
             p.setBrush(QColor(g,g,g));
-//            qDebug() << "amplitude" << data[i*heights+j]
-//                     << "max" << max <<
-//                        "color" << g;
+            if(g < 0 || g > 255) {
+                qDebug() << "i" << i << "j" << j << "amplitude" << data.c(i*heights+j)
+                         << "max" << max <<
+                            "color" << g;
+            }
             p.drawRect(QRectF(left+10, height()-10-top, right-left, top-bottom));
         }
     }
@@ -85,7 +87,7 @@ void graph::paintEvent(QPaintEvent */*event*/) {
     double sortabase = log(freqMax/freqMin)/(height()-20);
     for(int y = 0; y < height()-20; y += 100) {
         double freq;
-        if(mode == logarithmic) {
+        if(mode == spectrogram_mode::logarithmic) {
              freq = 30 * exp(sortabase*y);
         } else {
              freq = double(y) / (height()-20) * cutoff;
@@ -106,7 +108,7 @@ void graph::mouseMoveEvent(QMouseEvent *event)
 //    int indh = double(height()-event->y()-10) / (height()-20) * heights;
     int indw = double(event->x()-10) / (width()-20) * widths;
 //    double freq = 0;// = freqMin * log(freqMax/freqMin)/log(double(height()-event->y()-10) / (height()-20));//pow(frequencyMultiplent, indh);
-    if(mode == linear) {
+    if(mode == spectrogram_mode::linear) {
 //        double(y) / (height()-20) * 1000;
 //        freq = double(height()-event->y()-10) / (height()-20)*samplerate;
     }
@@ -118,11 +120,7 @@ void graph::mouseMoveEvent(QMouseEvent *event)
 //        val = data[ind];
 //    }
 
-
-    mut.lock();
-    m = {cdata+indw*heights, heights, mode, windowSize, true};
-    full = true;
-    mut.unlock();
+    channel.blockAndPut({data.slicec(indw*heights, heights), mode, windowSize, true});
     //    fprintf(stderr, "indh %d indw %d freq %lf val %lf", indh, indw, freq, val);
 //    fprintf(stderr, "freq %lf", freq);
 }
@@ -131,25 +129,19 @@ void graph::mousePressEvent(QMouseEvent *event)
 {
     int indw = double(event->x()-10) / (width()-20) * widths;
 
-    mut.lock();
-    m = {cdata+indw*heights, heights, mode, windowSize, true};
+    channel.blockAndPut({data.slicec(indw*heights, heights), mode, windowSize, true});
     fprintf(stderr, "heights %d\n", heights);
     for(int i = 0; i < heights; i++) {
-        if(cdata[indw*heights+i] != 0.) {
-            qDebug() << i << cdata[indw*heights+i] <<
+        if(data.c(indw*heights+i) != 0.) {
+            qDebug() << i << data.c(indw*heights+i) <<
                     double(samplerate)/windowSize*i;
 
         }
     }
-    full = true;
-    mut.unlock();
 }
 
 void graph::mouseReleaseEvent(QMouseEvent */*event*/)
 {
-    mut.lock();
-    m = {0, 0, mode};
-    full = true;
-    mut.unlock();
+    channel.blockAndPut({0, 0, mode});
 }
 
