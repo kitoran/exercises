@@ -4,6 +4,7 @@
 #include <QWidget>
 
 #include <synthesis.h>
+#include "ambiguousarray.h"
 #include <complex>
 class graph : public QWidget
 {
@@ -30,10 +31,7 @@ signals:
 
 public slots:
 private:
-    union {
-        double*ddata;
-        std::complex<double> *cdata;
-    };
+    AmbiguousArray data;
     bool complex {false};
     uint heights;
     uint windowSize;

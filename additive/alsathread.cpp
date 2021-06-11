@@ -1,5 +1,9 @@
 #include "alsathread.h"
 #include <thread>
+#include <QDebug>
+#include <signal.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <pthread.h>
 #include <vector>
 #include "audio.h"
@@ -15,8 +19,12 @@ extern const double freqMin;
 
 extern uint alsaSampleRate;
 extern uint framesPerPeriod;
+using namespace std::chrono_literals;
+
+
 void startAlsathread()
 {
+
     std::thread th([](){
         double* lookup = sinLookupTable();
 
@@ -24,7 +32,7 @@ void startAlsathread()
         double *buffer;
         initAudio(1, SND_PCM_FORMAT_FLOAT64_LE);
         buffer = (double *) malloc(sizeof(double)*framesPerPeriod);
-        message spectr = {0, 0};
+        message spectr = {{0, 0}, spectrogram_mode::linear};
         uint phase = 0;
         int output = 0;
 
@@ -35,22 +43,22 @@ void startAlsathread()
 //        int changes = 0;
 //        bool signPositive = 1;
         while(true) {
+            qDebug() << "hey";
             std::vector<double> unFft;
             int unfftIndex = 0;
             output++;
-            mut.lock();
-            if(full) {
+            if(channel.full) {
 //                phase = 0;
 //                fprintf(stderr, "Got medssage! %d", m.h);
-                spectr = m;
-                full = false;
-                mut.unlock();
+                spectr = channel.take();
 
 
                 logWindowSize = intLog2(spectr.windowSize);
-                if(spectr.spectrumSize > frequencies.size()) {
+                int size = spectr.data.sized;
+                if(spectr.complex) size /= 2;
+                if(size > frequencies.size()) {
                     int i = frequencies.size();
-                    for(; i < spectr.spectrumSize; i++) {
+                    for(; i < size; i++) {
                         double mul = pow(frequencyMultiplent, i);
                         double prod = freqMin * mul;
                         frequencies.push_back(prod);
@@ -58,14 +66,18 @@ void startAlsathread()
                 }
                 unFft.resize(m.windowSize);
 
-                fft((std::complex<double>*)spectr.data, spectr.windowSize, &unFft[0]);
+                fft((std::complex<double>*)spectr.data.data, spectr.windowSize, &unFft[0]);
                 for(int i = 0; i < spectr.windowSize; i++) {
                     unFft[i] /= window[i];
                 }
-            } else {
-                mut.unlock();
             }
-
+            qDebug() << "hey";
+            if(spectr.data.data == 0) {
+                qDebug() << "waitinf...";
+                channel.wait();
+                qDebug() << "waited!";
+                continue;
+            }
 /*
             if(spectr.mode == logarithmic) {
                 for(int j = 0; j < framesPerPeriod; j++) {
@@ -104,3 +116,4 @@ void startAlsathread()
     pthread_setname_np(th.native_handle(), "alsathread");
     th.detach();
 }
+

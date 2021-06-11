@@ -6,6 +6,8 @@
 #include "synthesis.h"
 #include "mainwindow.h"
 #include <sndfile.h>
+#include <openssl/md5.h>
+#include <storearray.h>
 
 int main(int argc, char *argv[])
 {
@@ -21,7 +23,8 @@ int main(int argc, char *argv[])
     sf_count_t end = sf_seek(inp, 0, SEEK_END);
     fprintf(stderr, "%ld", end);
     sf_seek(inp, 0, SEEK_SET);
-    int16_t *sampls = (int16_t*)malloc(end*sizeof(int16_t));
+    int sizeOfSamplsInBytes = end*sizeof(int16_t);
+    int16_t *sampls = (int16_t*)malloc(sizeOfSamplsInBytes);
     sf_read_short(inp, sampls, end);
     fprintf(stderr, "%ld", end);
     QApplication a(argc, argv);
@@ -33,8 +36,22 @@ int main(int argc, char *argv[])
 //    stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
     //    stfft(sampls, end, windowSize, stepSize, &transform, &w);
     std::complex< double>* transform;
-    complex_stfft(sampls, end, windowSize, stepSize, &transform, &w);
+    unsigned char hassh[MD5_DIGEST_LENGTH];
+    MD5((uchar*)sampls, sizeOfSamplsInBytes, hassh);
+    if(!load(hassh, "complex_stfft", 1, (void**)(&transform))) {
+        complex_stfft(sampls, end, windowSize, stepSize, &transform, &w);
+        save((transform), (w)*(windowSize)*sizeof(std::complex<double>),
+             hassh, "complex_stfft", 1 );
+        save(&max, (w)*(windowSize)*sizeof(std::complex<double>),
+                                              hassh, "complex_stfft_max", 1 );
+    } else {
+        int* maxp;
 
+        w = ((end) - windowSize)/stepSize;
+        load(hassh, "complex_stfft_max", 1, (void**)(&maxp));
+        max = *maxp;
+//       i'm not gonna free maxp
+    }
 //    double *data = (double*)malloc(w*windowSize*sizeof(double));
 //    isolateMaxima(w, transform, windowSize, data);
 

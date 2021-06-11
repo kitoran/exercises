@@ -25,8 +25,8 @@ INCLUDEPATH += qt-curve-editor/src/cetest
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 QMAKE_CXXFLAGS += -Wno-sign-compare
-INCLUDEPATH += ../sound
-LIBS += -lsndfile
+INCLUDEPATH += ../sound ../../library/ambiguousArray
+LIBS += -lsndfile -lssl -lcrypto -lexplain
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
@@ -35,7 +35,8 @@ SOURCES += \
     ../sound/audio.cpp \
     alsathread.cpp \
     synthesis.cpp \
-    mathext.cpp
+    mathext.cpp \
+    storearray.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -44,7 +45,8 @@ HEADERS += \
     ../sound/audio.h \
     alsathread.h \
     synthesis.h \
-    mathext.h
+    mathext.h \
+    storearray.h
 
 FORMS += \
         mainwindow.ui
