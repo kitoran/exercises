@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
     } else {
         int* maxp;
 
+        makeHammingWindow(windowSize);
         w = ((end) - windowSize)/stepSize;
         load(hassh, "complex_stfft_max", 1, (void**)(&maxp));
         max = *maxp;
@@ -97,5 +98,6 @@ int main(int argc, char *argv[])
 
 
 //    ge.show();
-     return a.exec();
+     int r = a.exec();
+     return r;
 }
