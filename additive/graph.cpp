@@ -119,7 +119,9 @@ void graph::mouseMoveEvent(QMouseEvent *event)
 //    } else {
 //        val = data[ind];
 //    }
-
+    if(indw < 0 || indw > width()) {
+        return;
+    }
     channel.blockAndPut({data.slicec(indw*heights, heights), mode, windowSize, true});
     //    fprintf(stderr, "indh %d indw %d freq %lf val %lf", indh, indw, freq, val);
 //    fprintf(stderr, "freq %lf", freq);
