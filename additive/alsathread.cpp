@@ -28,9 +28,10 @@ void startAlsathread()
         double* lookup = sinLookupTable();
 
         std::vector<double> frequencies;
-        double *buffer;
-        initAudio(1, SND_PCM_FORMAT_FLOAT64_LE);
-        buffer = (double *) malloc(sizeof(double)*framesPerPeriod);
+        using frameType = int16_t;
+        frameType *buffer;
+        initAudio(1, SND_PCM_FORMAT_S16_LE);//SND_PCM_FORMAT_FLOAT64_LE
+        buffer = (frameType *) malloc(sizeof(frameType)*framesPerPeriod);
         message spectr = {{0, 0}, spectrogram_mode::linear};
         uint phase = 0;
         int output = 0;
@@ -42,6 +43,7 @@ void startAlsathread()
 //        int changes = 0;
 //        bool signPositive = 1;
         std::vector<double> unFft;
+        channel.blockAndPut(spectr);
         while(true) {
 //            qDebug() << "hey";
             int unfftIndex = 0;
@@ -94,9 +96,12 @@ void startAlsathread()
                 while(spectr.windowSize > 0 && written < framesPerPeriod) {
                     int amount = std::min(framesPerPeriod-written,
                                           spectr.windowSize);
-                    memcpy(buffer, &unFft[unfftIndex], amount);
+//                    memcpy(buffer, &unFft[unfftIndex], amount);
+                    for(int i = 0; i < amount; i++) {
+                        buffer[i] = unFft[unfftIndex + i];
+                    }
                     written+=amount;
-                     += amount;
+                    unfftIndex += amount;
                     unfftIndex &= (spectr.windowSize-1);
                 }
             }
