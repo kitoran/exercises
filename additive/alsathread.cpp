@@ -43,7 +43,7 @@ void startAlsathread()
 //        bool signPositive = 1;
         std::vector<double> unFft;
         while(true) {
-            qDebug() << "hey";
+//            qDebug() << "hey";
             int unfftIndex = 0;
             output++;
             if(channel.full) {
@@ -51,6 +51,12 @@ void startAlsathread()
 //                fprintf(stderr, "Got medssage! %d", m.h);
                 spectr = channel.take();
 
+                if(spectr.data.data == 0) {
+                    qDebug() << "waitinf...";
+                    channel.wait();
+                    qDebug() << "waited!";
+                    continue;
+                }
 
                 logWindowSize = intLog2(spectr.windowSize);
                 int size = spectr.data.sized;
@@ -71,13 +77,7 @@ void startAlsathread()
                     unFft[i] /= window[i];
                 }
             }
-            qDebug() << "hey";
-            if(spectr.data.data == 0) {
-                qDebug() << "waitinf...";
-                channel.wait();
-                qDebug() << "waited!";
-                continue;
-            }
+//            qDebug() << "hey";
 /*
             if(spectr.mode == logarithmic) {
                 for(int j = 0; j < framesPerPeriod; j++) {
@@ -94,22 +94,22 @@ void startAlsathread()
                 while(spectr.windowSize > 0 && written < framesPerPeriod) {
                     int amount = std::min(framesPerPeriod-written,
                                           spectr.windowSize);
-                    memcpy(buffer, &unFft[0], amount);
+                    memcpy(buffer, &unFft[unfftIndex], amount);
                     written+=amount;
-                    unfftIndex += amount;
+                     += amount;
                     unfftIndex &= (spectr.windowSize-1);
                 }
             }
             if(phase > alsaSampleRate * 7) {
                 phase = 0;
             }
-            if(output%32 == 0) {
-//               fprintf(stderr,
-//                       "freq %lf freq1 %lf data %p height %d phase %d val %s",
-//                      double(alsaSampleRate)/spectr.h*9,
-//                      double(changes)*alsaSampleRate/phase,
-//                       spectr.data, spectr.h, phase, buffer[2]);
-            }
+//            if(output%32 == 0) {
+////               fprintf(stderr,
+////                       "freq %lf freq1 %lf data %p height %d phase %d val %s",
+////                      double(alsaSampleRate)/spectr.h*9,
+////                      double(changes)*alsaSampleRate/phase,
+////                       spectr.data, spectr.h, phase, buffer[2]);
+//            }
             writeFrames(buffer, framesPerPeriod);
         }
     });
