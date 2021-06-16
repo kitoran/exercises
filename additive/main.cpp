@@ -38,6 +38,19 @@ int main(int argc, char *argv[])
     std::complex< double>* transform;
     unsigned char hassh[MD5_DIGEST_LENGTH];
     MD5((uchar*)sampls, sizeOfSamplsInBytes, hassh);
+
+//    complex_stfft(sampls, end, windowSize, stepSize, &transform, &w);
+
+//    std::complex< double>* transform2;
+
+//    load(hassh, "complex_stfft", 1, (void**)(&transform2));
+
+//    double* maxp2;
+
+//    load(hassh, "complex_stfft_max", 1, (void**)(&maxp2));
+
+
+
     if(!load(hassh, "complex_stfft", 1, (void**)(&transform))) {
         complex_stfft(sampls, end, windowSize, stepSize, &transform, &w);
         save((transform), (w)*(windowSize)*sizeof(std::complex<double>),
@@ -45,7 +58,7 @@ int main(int argc, char *argv[])
         save(&max, (w)*(windowSize)*sizeof(std::complex<double>),
                                               hassh, "complex_stfft_max", 1 );
     } else {
-        int* maxp;
+        double* maxp;
 
         makeHammingWindow(windowSize);
         w = ((end) - windowSize)/stepSize;
