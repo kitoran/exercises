@@ -5,7 +5,10 @@
 
 
 inline std::vector<double> window;
+
 inline double max = 0;
+
+void makeHammingWindow(int windowSize);
 void stft(int16_t *data, int size,
           int window, int step, int samplerate,
           double** res, int* resH, int* resW);

@@ -11,7 +11,7 @@ struct message {
     uint windowSize{0};
     bool complex{0};
 };
-inline message m = {0, 0, spectrogram_mode::logarithmic, 0, false};
+//inline message m = {0, 0, spectrogram_mode::logarithmic, 0, false};
 void startAlsathread();
 inline Channel<message> channel;
 

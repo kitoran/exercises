@@ -24,7 +24,6 @@ using namespace std::chrono_literals;
 
 void startAlsathread()
 {
-
     std::thread th([](){
         double* lookup = sinLookupTable();
 
@@ -42,9 +41,9 @@ void startAlsathread()
 //        int samples = 0;
 //        int changes = 0;
 //        bool signPositive = 1;
+        std::vector<double> unFft;
         while(true) {
             qDebug() << "hey";
-            std::vector<double> unFft;
             int unfftIndex = 0;
             output++;
             if(channel.full) {
@@ -64,9 +63,10 @@ void startAlsathread()
                         frequencies.push_back(prod);
                     }
                 }
-                unFft.resize(m.windowSize);
+                unFft.resize(spectr.windowSize);
 
                 fft((std::complex<double>*)spectr.data.data, spectr.windowSize, &unFft[0]);
+                Q_ASSERT(spectr.windowSize == window.size());
                 for(int i = 0; i < spectr.windowSize; i++) {
                     unFft[i] /= window[i];
                 }
