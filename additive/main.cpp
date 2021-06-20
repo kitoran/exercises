@@ -9,6 +9,9 @@
 #include <openssl/md5.h>
 #include <storearray.h>
 
+
+extern const double frequencyMultiplent;
+extern const double freqMin;
 int main(int argc, char *argv[])
 {
     SF_INFO inpi;
@@ -32,10 +35,10 @@ int main(int argc, char *argv[])
     MainWindow win;
     const int windowSize = 1<<14;
     const int stepSize = 512;
-    int /*h,*/ w;
+    int h, w;
 //    stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
     //    stfft(sampls, end, windowSize, stepSize, &transform, &w);
-    std::complex< double>* transform;
+//    std::complex< double>* transform;
     unsigned char hassh[MD5_DIGEST_LENGTH];
     MD5((uchar*)sampls, sizeOfSamplsInBytes, hassh);
 
@@ -48,24 +51,39 @@ int main(int argc, char *argv[])
 //    double* maxp2;
 
 //    load(hassh, "complex_stfft_max", 1, (void**)(&maxp2));
+    double* transform;
+#define STR2(a) #a
+#define STR(a) STR2(a)
 
+#define FUNCTION stft
+    int size;
+    if(/*true ||*/ !load(hassh, STR(FUNCTION), 1, (void**)(&transform), &size)) {
+        FUNCTION(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
+        save((transform), (w)*(h)*sizeof(*transform),
+             hassh, STR(FUNCTION), 1 );
+        qDebug() << size  << w << h << sizeof(*transform) << (w)*(h)*sizeof(*transform);
 
-
-    if(!load(hassh, "complex_stfft", 1, (void**)(&transform))) {
-        complex_stfft(sampls, end, windowSize, stepSize, &transform, &w);
-        save((transform), (w)*(windowSize)*sizeof(std::complex<double>),
-             hassh, "complex_stfft", 1 );
-        save(&max, (w)*(windowSize)*sizeof(std::complex<double>),
-                                              hassh, "complex_stfft_max", 1 );
+        save(&max, sizeof(max),
+                                              hassh,  STR(FUNCTION) "_max", 1 );
+        save(&h, sizeof(h),
+                                              hassh,  STR(FUNCTION) "_h", 1 );
     } else {
-        double* maxp;
-
+//        double* maxp;
+//        typeof(h) * hp;
         makeHammingWindow(windowSize);
         w = ((end) - windowSize)/stepSize;
-        load(hassh, "complex_stfft_max", 1, (void**)(&maxp));
-        max = *maxp;
+        loadOne(hassh, STR(FUNCTION) "_max", 1, &max);
+        loadOne(hassh, STR(FUNCTION) "_h", 1, &h);
+        qDebug() << size  << w << h << sizeof(*transform) << (w)*(h)*sizeof(*transform);
+        Q_ASSERT(size == (w)*(h)*sizeof(*transform));
+//        max = *maxp;
+//        h = *hp;
 //       i'm not gonna free maxp
     }
+
+//    return 0;
+
+
 //    double *data = (double*)malloc(w*windowSize*sizeof(double));
 //    isolateMaxima(w, transform, windowSize, data);
 
@@ -73,10 +91,10 @@ int main(int argc, char *argv[])
 //    int rh;
 //        shiftandmul(transform, h, w, &shmul, &rh);
 //    multiplyFundamentalLinear(transform, windowSize, w, &shmul, &rh);
-//    win.g->setLogarithmicData(data, h, w, max, freqMin*
-//                                      pow(frequencyMultiplent,
-//                                            h));
-    win.g->setComplexData(transform, w, windowSize, windowSize, inpi.samplerate, max);
+    win.g->setLogarithmicData(transform, h, w, max, freqMin*
+                                      pow(frequencyMultiplent,
+                                            h));
+//    win.g->setComplexData(transform, w, windowSize, windowSize, inpi.samplerate, max);
 
 //    win.g->setLinearData(transform, w, h, windowSize, inpi.samplerate, max);
 //    win.g->setLinearData(transform, w, windowSize, windowSize, inpi.samplerate, max);

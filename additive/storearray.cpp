@@ -30,12 +30,12 @@ void save(void *data, int size, const unsigned char *hash, char *type, int versi
 
     snprintf(path, PATH_MAX, "%s-%s-%d", hexhash(hash), type, version);
     fprintf(stderr, "saving %s", path);
-    int d = explain_open_or_die(path, O_WRONLY | O_CREAT, 0777);
+    int d = explain_open_or_die(path, O_WRONLY | O_CREAT | O_TRUNC, 0777);
     write(d, data, size);
     close(d);
 }
 
-bool load(const unsigned char *hash, char *type, int version, void **data)
+bool load(const unsigned char *hash, char *type, int version, void **data, int *size_)
 {
     char path[PATH_MAX];
     snprintf(path, PATH_MAX, "%s-%s-%d", hexhash(hash), type, version);
@@ -51,6 +51,29 @@ bool load(const unsigned char *hash, char *type, int version, void **data)
 
     *data = malloc(size);
     read(d, *data, size);
+    if(size_) {
+        *size_ = size;
+    }
+    close (d);
+  return true;
+}
+
+bool loadOne(const unsigned char *hash, char *type, int version, void *data)
+{
+    char path[PATH_MAX];
+    snprintf(path, PATH_MAX, "%s-%s-%d", hexhash(hash), type, version);
+
+    int d = open(path, O_RDONLY);
+    if(d < 0) {
+        return false;
+    }
+
+    struct stat st;
+    fstat(d, &st);
+    __off_t size = st.st_size;
+
+//    *data = malloc(size);
+    read(d, data, size);
 
     close (d);
     return true;
