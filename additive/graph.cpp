@@ -7,7 +7,7 @@
 #include <QDebug>
 #include <QMouseEvent>
 extern const double freqMin=30;
-extern const double frequencyMultiplent = 1.01;//sqrt(sqrt(freqMax/freqMin));
+extern const double frequencyMultiplent = 1.05;//sqrt(sqrt(freqMax/freqMin));
 
 template <typename T>
 QDebug &operator<<(QDebug& d, std::complex<T> t) {
@@ -65,17 +65,20 @@ void graph::paintEvent(QPaintEvent */*event*/) {
 //    QPointF last(10, height()-10);
     p.setPen(Qt::NoPen);
     double cutoff = 10000;//samplerate;//10000.0;//*heights/samplerate;
-    double cutoffind = cutoff*heights/samplerate;
+    double cutoffind = mode == spectrogram_mode::linear?(cutoff*heights/44100)
+                :log(cutoff/freqMin)/log(frequencyMultiplent);//samplerate;
     for(int i = 0; i < widths; i++) {
         for(int j = 0; j < cutoffind; j++) {
             double left = (width()-20)/double(widths)*i;
             double right = (width()-20)/double(widths)*(i+1);
             double bottom = (height()-20)/double(cutoffind)*j;
             double top = (height()-20)/double(cutoffind)*(j+1);
-            int g = std::abs(data.c(i*heights+j))/max*255;
+            double value = complex?std::abs(data.c(i*heights+j))
+                                 :data.d(i*heights+j);
+            int g = value/max*255;
             p.setBrush(QColor(g,g,g));
             if(g < 0 || g > 255) {
-                qDebug() << "i" << i << "j" << j << "amplitude" << data.c(i*heights+j)
+                qDebug() << "i" << i << "j" << j << "amplitude" << value // data.c(i*heights+j)
                          << "max" << max <<
                             "color" << g;
             }
@@ -119,10 +122,17 @@ void graph::mouseMoveEvent(QMouseEvent *event)
 //    } else {
 //        val = data[ind];
 //    }
-    if(indw < 0 || indw > width()) {
+    if(indw < 0 || indw >= widths) {
         return;
     }
-    channel.blockAndPut({data.slicec(indw*heights, heights), mode, windowSize, true});
+    message m;
+    if(complex) {
+        m = {data.slicec(indw*heights, heights), mode, true};
+    } else {
+        m = {data.sliced(indw*heights, heights), mode, true};
+    }qDebug() << "putting message:" << m.data.data << m.data.sized ;
+    channel.blockAndPut(m);
+
     //    fprintf(stderr, "indh %d indw %d freq %lf val %lf", indh, indw, freq, val);
 //    fprintf(stderr, "freq %lf", freq);
 }
@@ -130,20 +140,30 @@ void graph::mouseMoveEvent(QMouseEvent *event)
 void graph::mousePressEvent(QMouseEvent *event)
 {
     int indw = double(event->x()-10) / (width()-20) * widths;
-
-    channel.blockAndPut({data.slicec(indw*heights, heights), mode, windowSize, true});
-    fprintf(stderr, "heights %d\n", heights);
-    for(int i = 0; i < heights; i++) {
-        if(data.c(indw*heights+i) != 0.) {
-            qDebug() << i << data.c(indw*heights+i) <<
-                    double(samplerate)/windowSize*i;
-
-        }
+    message m;
+    if(complex) {
+        m = message{data.slicec(indw*heights, heights), mode, true};
+    } else {
+        m = {data.sliced(indw*heights, heights), mode, true};
     }
+    qDebug() << "putting message:" << m.data.data << m.data.sized ;
+    channel.blockAndPut(m);
+
+
+    fprintf(stderr, "heights %d\n", heights);
+//    for(int i = 0; i < heights; i++) {
+//        if(data.c(indw*heights+i) != 0.) {
+//            qDebug() << i << data.c(indw*heights+i) <<
+//                    double(samplerate)/windowSize*i;
+
+//        }
+//    }
 }
 
 void graph::mouseReleaseEvent(QMouseEvent */*event*/)
 {
-    channel.blockAndPut({0, 0, mode});
+    message m = {0, 0, mode};
+    qDebug() << "putting message:" << m.data.data << m.data.sized;
+    channel.blockAndPut(m);
 }
 

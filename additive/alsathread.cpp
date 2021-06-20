@@ -25,8 +25,8 @@ using namespace std::chrono_literals;
 void startAlsathread()
 {
     std::thread th([](){
-        double* lookup = sinLookupTable();
-
+//        double* lookup = sinLookupTable();
+        int*lookup = sinLookupTableInt();
         std::vector<double> frequencies;
         using frameType = int16_t;
         frameType *buffer;
@@ -43,7 +43,10 @@ void startAlsathread()
 //        int changes = 0;
 //        bool signPositive = 1;
         std::vector<double> unFft;
-        channel.blockAndPut(spectr);
+        std::vector<int> spectrumInt;
+        channel.wait();
+        int spectrumSize;
+
         while(true) {
 //            qDebug() << "hey";
             int unfftIndex = 0;
@@ -53,6 +56,7 @@ void startAlsathread()
 //                fprintf(stderr, "Got medssage! %d", m.h);
                 spectr = channel.take();
 
+                spectrumSize = spectr.complex?spectr.data.sizec():spectr.data.sized;
                 if(spectr.data.data == 0) {
                     qDebug() << "waitinf...";
                     channel.wait();
@@ -60,7 +64,7 @@ void startAlsathread()
                     continue;
                 }
 
-                logWindowSize = intLog2(spectr.windowSize);
+                logWindowSize = intLog2(spectrumSize);
                 int size = spectr.data.sized;
                 if(spectr.complex) size /= 2;
                 if(size > frequencies.size()) {
@@ -71,40 +75,62 @@ void startAlsathread()
                         frequencies.push_back(prod);
                     }
                 }
-                unFft.resize(spectr.windowSize);
-
-                fft((std::complex<double>*)spectr.data.data, spectr.windowSize, &unFft[0]);
-                Q_ASSERT(spectr.windowSize == window.size());
-                for(int i = 0; i < spectr.windowSize; i++) {
-                    unFft[i] /= window[i];
+                spectrumInt.resize(spectrumSize);
+                for(int i = 0; i < spectrumSize; i++) {
+                    spectrumInt[i] = spectr.data.d(i)*(INT16_MAX/16)/max;
                 }
+//                unFft.resize(spectr.windowSize);
+
+//                fft((std::complex<double>*)spectr.data.data, spectr.windowSize, &unFft[0]);
+//                for(int i = 0; i < spectr.windowSize; i++) {
+//                    unFft[i] /= window[i];
+//                }
+//                if(spectrumSize != window.size()) {
+//                    qDebug() << spectrumSize <<
+//                                window.size() << spectr.data.data;
+//                        Q_ASSERT(false);
+//                }
             }
 //            qDebug() << "hey";
-/*
-            if(spectr.mode == logarithmic) {
+            clock_t  start = clock();
+            if(spectr.mode == spectrogram_mode::logarithmic) {
+
                 for(int j = 0; j < framesPerPeriod; j++) {
-                    double v = 0;
-                    for(int i = 0; i < spectr.spectrumSize; i++) {
-                        v += spectr.data[i]*lookup[int((frequencies[i]/alsaSampleRate
-                                                *phase+i)*LOOKUP_TABLE_SIZE)%LOOKUP_TABLE_SIZE]/max*3;
+                    int v = 0;
+                    for(int i = 0; i < spectrumSize; i++) {
+                        v += spectrumInt[i]*lookup[int((frequencies[i]/alsaSampleRate
+                                                *phase+i)*LOOKUP_TABLE_SIZE)%LOOKUP_TABLE_SIZE];
                     }
                     phase++;
-                    buffer[j] = v*400;
+                    buffer[j] = v/INT16_MAX;
                 }
-            } else */{
-                int written = 0;
-                while(spectr.windowSize > 0 && written < framesPerPeriod) {
-                    int amount = std::min(framesPerPeriod-written,
-                                          spectr.windowSize);
-//                    memcpy(buffer, &unFft[unfftIndex], amount);
-                    for(int i = 0; i < amount; i++) {
-                        buffer[i] = unFft[unfftIndex + i];
+            }  else  {
+
+                for(int j = 0; j < framesPerPeriod; j++) {
+                    double v = 0;
+                    for(int i = 1; i < spectrumSize; i++) {
+                        v += std::abs(spectr.data.c(i))*lookup[int((1.0/spectrumSize*i
+                                                *phase+i)*LOOKUP_TABLE_SIZE)%LOOKUP_TABLE_SIZE]/max/**3*/;
                     }
-                    written+=amount;
-                    unfftIndex += amount;
-                    unfftIndex &= (spectr.windowSize-1);
+                    phase++;
+                    buffer[j] = v*/*400*/INT16_MAX;
                 }
-            }
+
+//                int written = 0;
+//                while(spectr.windowSize > 0 && written < framesPerPeriod) {
+
+//                    int amount = std::min(framesPerPeriod-written,
+//                                          spectr.windowSize);
+//                    memcpy(buffer, &unFft[unfftIndex], amount);
+//                    for(int i = 0; i < amount; i++) {
+//                        buffer[i] = unFft[unfftIndex + i];
+//                    }
+//                    written+=amount;
+//                    unfftIndex += amount;
+//                    unfftIndex &= (spectr.windowSize-1);
+//                }
+            } /**/
+            clock_t afterLoop = clock();
             if(phase > alsaSampleRate * 7) {
                 phase = 0;
             }
@@ -116,6 +142,8 @@ void startAlsathread()
 ////                       spectr.data, spectr.h, phase, buffer[2]);
 //            }
             writeFrames(buffer, framesPerPeriod);
+            clock_t afterWrite = clock();
+            qDebug() << float(afterWrite-afterLoop)/CLOCKS_PER_SEC << float(afterLoop - start)/CLOCKS_PER_SEC;
         }
     });
     pthread_setname_np(th.native_handle(), "alsathread");

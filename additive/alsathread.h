@@ -8,7 +8,7 @@
 struct message {
     AmbiguousArray data;
     spectrogram_mode mode;
-    uint windowSize{0};
+//    uint spectrumSize{0};
     bool complex{0};
 };
 //inline message m = {0, 0, spectrogram_mode::logarithmic, 0, false};

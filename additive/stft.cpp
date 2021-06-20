@@ -40,7 +40,10 @@ void stft(int16_t *data, int size, int windowSize, int step, int samplerate, dou
     *resW = ((size) - windowSize)/step;
     *res = (double*)malloc((*resW)*(*resH)*sizeof(double));
     fprintf(stderr, "\n%ld bytes for doubles\n", (*resW)*(*resH)*sizeof(double));
+
+//    return;
 //    exit(0);
+
     double maxw;
     double maxh;
     std::vector<double> datum; datum.resize(windowSize);
