@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 
 #define FUNCTION stft
     int size;
-    if(/*true ||*/ !load(hassh, STR(FUNCTION), 1, (void**)(&transform), &size)) {
+    if(true || !load(hassh, STR(FUNCTION), 1, (void**)(&transform), &size)) {
         FUNCTION(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
         save((transform), (w)*(h)*sizeof(*transform),
              hassh, STR(FUNCTION), 1 );

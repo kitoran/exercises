@@ -92,7 +92,7 @@ void startAlsathread()
 //                }
             }
 //            qDebug() << "hey";
-            clock_t  start = clock();
+//            clock_t  start = clock();
             if(spectr.mode == spectrogram_mode::logarithmic) {
 
                 for(int j = 0; j < framesPerPeriod; j++) {
@@ -130,10 +130,10 @@ void startAlsathread()
 //                    unfftIndex &= (spectr.windowSize-1);
 //                }
             } /**/
-            clock_t afterLoop = clock();
-            if(phase > alsaSampleRate * 7) {
-                phase = 0;
-            }
+//            clock_t afterLoop = clock();
+//            if(phase > alsaSampleRate * 7) {
+//                phase = 0;
+//            }
 //            if(output%32 == 0) {
 ////               fprintf(stderr,
 ////                       "freq %lf freq1 %lf data %p height %d phase %d val %s",
@@ -142,8 +142,8 @@ void startAlsathread()
 ////                       spectr.data, spectr.h, phase, buffer[2]);
 //            }
             writeFrames(buffer, framesPerPeriod);
-            clock_t afterWrite = clock();
-            qDebug() << float(afterWrite-afterLoop)/CLOCKS_PER_SEC << float(afterLoop - start)/CLOCKS_PER_SEC;
+//            clock_t afterWrite = clock();
+//            qDebug() << float(afterWrite-afterLoop)/CLOCKS_PER_SEC << float(afterLoop - start)/CLOCKS_PER_SEC;
         }
     });
     pthread_setname_np(th.native_handle(), "alsathread");

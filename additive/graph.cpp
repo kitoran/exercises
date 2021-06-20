@@ -7,7 +7,7 @@
 #include <QDebug>
 #include <QMouseEvent>
 extern const double freqMin=30;
-extern const double frequencyMultiplent = 1.05;//sqrt(sqrt(freqMax/freqMin));
+extern const double frequencyMultiplent = 1.04;//sqrt(sqrt(freqMax/freqMin));
 
 template <typename T>
 QDebug &operator<<(QDebug& d, std::complex<T> t) {

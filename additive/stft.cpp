@@ -7,7 +7,7 @@
 
 const double hammingCoef = 0.53836;
 extern const double frequencyMultiplent;
-extern const double freqMax = 20000;
+extern const double freqMax = 40000;
 extern const double freqMin;
 
 void makeHammingWindow(int windowSize)
