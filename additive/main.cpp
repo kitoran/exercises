@@ -3,6 +3,7 @@
 #include "graph.h"
 #include "alsathread.h"
 #include "stft.h"
+#include "globals.h"
 #include "synthesis.h"
 #include "mainwindow.h"
 #include <sndfile.h>
@@ -10,8 +11,6 @@
 #include <storearray.h>
 
 
-extern const double frequencyMultiplent;
-extern const double freqMin;
 int main(int argc, char *argv[])
 {
     SF_INFO inpi;
@@ -27,14 +26,12 @@ int main(int argc, char *argv[])
     fprintf(stderr, "%ld", end);
     sf_seek(inp, 0, SEEK_SET);
     int sizeOfSamplsInBytes = end*sizeof(int16_t);
-    int16_t *sampls = (int16_t*)malloc(sizeOfSamplsInBytes);
+    sampls = (int16_t*)malloc(sizeOfSamplsInBytes);
     sf_read_short(inp, sampls, end);
     fprintf(stderr, "%ld", end);
     QApplication a(argc, argv);
 
     MainWindow win;
-    const int windowSize = 1<<14;
-    const int stepSize = 512;
     int h, w;
 //    stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
     //    stfft(sampls, end, windowSize, stepSize, &transform, &w);
@@ -55,31 +52,37 @@ int main(int argc, char *argv[])
 #define STR2(a) #a
 #define STR(a) STR2(a)
 
-#define FUNCTION stft
-    int size;
-    if(true || !load(hassh, STR(FUNCTION), 1, (void**)(&transform), &size)) {
-        FUNCTION(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
-        save((transform), (w)*(h)*sizeof(*transform),
-             hassh, STR(FUNCTION), 1 );
-        qDebug() << size  << w << h << sizeof(*transform) << (w)*(h)*sizeof(*transform);
+#define FUNCTION stfft
+//    int size;
+//    if(/*true || */!load(hassh, STR(FUNCTION), 1, (void**)(&transform), &size)) {
+        FUNCTION(sampls, end, windowSize, stepSize, /*inpi.samplerate, */&transform, /*&h, */&w);
+        h = windowSize;
+//        save((transform), (w)*(h)*sizeof(*transform),
+//             hassh, STR(FUNCTION), 1 );
+        qDebug() << /*size  << */w << h << sizeof(*transform) << (w)*(h)*sizeof(*transform);
 
-        save(&max, sizeof(max),
-                                              hassh,  STR(FUNCTION) "_max", 1 );
-        save(&h, sizeof(h),
-                                              hassh,  STR(FUNCTION) "_h", 1 );
-    } else {
+
+        auto mspectrogram = new MaximaSpectrogram;
+        mspectrogram ->max = max;
+        mspectrogram->maxima = maxesLinear(transform, h, w, inpi.samplerate);
+        spectrogram = mspectrogram;
+//        save(&max, sizeof(max),
+//                                              hassh,  STR(FUNCTION) "_max", 1 );
+//        save(&h, sizeof(h),
+//                                              hassh,  STR(FUNCTION) "_h", 1 );
+//    } else {
 //        double* maxp;
 //        typeof(h) * hp;
-        makeHammingWindow(windowSize);
-        w = ((end) - windowSize)/stepSize;
-        loadOne(hassh, STR(FUNCTION) "_max", 1, &max);
-        loadOne(hassh, STR(FUNCTION) "_h", 1, &h);
-        qDebug() << size  << w << h << sizeof(*transform) << (w)*(h)*sizeof(*transform);
-        Q_ASSERT(size == (w)*(h)*sizeof(*transform));
+//        makeHammingWindow(windowSize);
+//        w = ((end) - windowSize)/stepSize;
+//        loadOne(hassh, STR(FUNCTION) "_max", 1, &max);
+//        loadOne(hassh, STR(FUNCTION) "_h", 1, &h);
+//        qDebug() << size  << w << h << sizeof(*transform) << (w)*(h)*sizeof(*transform);
+//        Q_ASSERT(size == (w)*(h)*sizeof(*transform));
 //        max = *maxp;
 //        h = *hp;
 //       i'm not gonna free maxp
-    }
+//    }
 
 //    return 0;
 
@@ -91,11 +94,11 @@ int main(int argc, char *argv[])
 //    int rh;
 //        shiftandmul(transform, h, w, &shmul, &rh);
 //    multiplyFundamentalLinear(transform, windowSize, w, &shmul, &rh);
-    win.g->setLogarithmicData(transform, h, w, max, freqMin*
-                                      pow(frequencyMultiplent,
-                                            h));
+//    win.g->setLogarithmicData(transform, h, w, max, freqMin*
+//                                      pow(frequencyMultiplent,
+//                                            h));
 //    win.g->setComplexData(transform, w, windowSize, windowSize, inpi.samplerate, max);
-
+//    win.g->setData(transform, w, h, windowSize, inpi.samplerate, max);
 //    win.g->setLinearData(transform, w, h, windowSize, inpi.samplerate, max);
 //    win.g->setLinearData(transform, w, windowSize, windowSize, inpi.samplerate, max);
 //    win.g->setLogarithmicData(shmul, rh, w, max,
@@ -130,5 +133,6 @@ int main(int argc, char *argv[])
 
 //    ge.show();
      int r = a.exec();
+     abort();
      return r;
 }

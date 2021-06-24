@@ -3,7 +3,6 @@
 
 #include <sndfile.h>
 
-enum class spectrogram_mode {linear, logarithmic};
 void resynthesizeOne(double* data, int w, SF_INFO inpi, int stepSize, int h);
 void resynthesizeAll(double* data, int w, SF_INFO inpi, int stepSize, int h);
 

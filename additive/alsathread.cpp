@@ -1,4 +1,5 @@
 #include "alsathread.h"
+#include "globals.h"
 #include <thread>
 #include <QDebug>
 #include <signal.h>
@@ -13,9 +14,6 @@
 
 
 #include <QElapsedTimer>
-
-extern const double frequencyMultiplent;
-extern const double freqMin;
 
 extern uint alsaSampleRate;
 extern uint framesPerPeriod;
@@ -32,7 +30,7 @@ void startAlsathread()
         frameType *buffer;
         initAudio(1, SND_PCM_FORMAT_S16_LE);//SND_PCM_FORMAT_FLOAT64_LE
         buffer = (frameType *) malloc(sizeof(frameType)*framesPerPeriod);
-        message spectr = {{0, 0}, spectrogram_mode::linear};
+        message pos = {-1};
         uint phase = 0;
         int output = 0;
 
@@ -54,82 +52,18 @@ void startAlsathread()
             if(channel.full) {
 //                phase = 0;
 //                fprintf(stderr, "Got medssage! %d", m.h);
-                spectr = channel.take();
+                pos = channel.take();
 
-                spectrumSize = spectr.complex?spectr.data.sizec():spectr.data.sized;
-                if(spectr.data.data == 0) {
+//                spectrumSize = spectr.complex?spectr.data.sizec():spectr.data.sized;
+                if(pos.pos < 0) {
                     qDebug() << "waitinf...";
                     channel.wait();
                     qDebug() << "waited!";
                     continue;
                 }
-
-                logWindowSize = intLog2(spectrumSize);
-                int size = spectr.data.sized;
-                if(spectr.complex) size /= 2;
-                if(size > frequencies.size()) {
-                    int i = frequencies.size();
-                    for(; i < size; i++) {
-                        double mul = pow(frequencyMultiplent, i);
-                        double prod = freqMin * mul;
-                        frequencies.push_back(prod);
-                    }
-                }
-                spectrumInt.resize(spectrumSize);
-                for(int i = 0; i < spectrumSize; i++) {
-                    spectrumInt[i] = spectr.data.d(i)*(INT16_MAX/16)/max;
-                }
-//                unFft.resize(spectr.windowSize);
-
-//                fft((std::complex<double>*)spectr.data.data, spectr.windowSize, &unFft[0]);
-//                for(int i = 0; i < spectr.windowSize; i++) {
-//                    unFft[i] /= window[i];
-//                }
-//                if(spectrumSize != window.size()) {
-//                    qDebug() << spectrumSize <<
-//                                window.size() << spectr.data.data;
-//                        Q_ASSERT(false);
-//                }
             }
-//            qDebug() << "hey";
-//            clock_t  start = clock();
-            if(spectr.mode == spectrogram_mode::logarithmic) {
-
-                for(int j = 0; j < framesPerPeriod; j++) {
-                    int v = 0;
-                    for(int i = 0; i < spectrumSize; i++) {
-                        v += spectrumInt[i]*lookup[int((frequencies[i]/alsaSampleRate
-                                                *phase+i)*LOOKUP_TABLE_SIZE)%LOOKUP_TABLE_SIZE];
-                    }
-                    phase++;
-                    buffer[j] = v/INT16_MAX;
-                }
-            }  else  {
-
-                for(int j = 0; j < framesPerPeriod; j++) {
-                    double v = 0;
-                    for(int i = 1; i < spectrumSize; i++) {
-                        v += std::abs(spectr.data.c(i))*lookup[int((1.0/spectrumSize*i
-                                                *phase+i)*LOOKUP_TABLE_SIZE)%LOOKUP_TABLE_SIZE]/max/**3*/;
-                    }
-                    phase++;
-                    buffer[j] = v*/*400*/INT16_MAX;
-                }
-
-//                int written = 0;
-//                while(spectr.windowSize > 0 && written < framesPerPeriod) {
-
-//                    int amount = std::min(framesPerPeriod-written,
-//                                          spectr.windowSize);
-//                    memcpy(buffer, &unFft[unfftIndex], amount);
-//                    for(int i = 0; i < amount; i++) {
-//                        buffer[i] = unFft[unfftIndex + i];
-//                    }
-//                    written+=amount;
-//                    unfftIndex += amount;
-//                    unfftIndex &= (spectr.windowSize-1);
-//                }
-            } /**/
+            spectrogram->fillBuffer(buffer, framesPerPeriod, pos.pos, phase);
+            phase+=framesPerPeriod;
 //            clock_t afterLoop = clock();
 //            if(phase > alsaSampleRate * 7) {
 //                phase = 0;
