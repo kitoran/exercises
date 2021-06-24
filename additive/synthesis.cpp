@@ -5,8 +5,8 @@
 
 #include "stft.h"
 
-extern const double frequencyMultiplent;
-extern const double freqMin;
+#include "globals.h"
+
 void resynthesizeOne(double *data, int w, SF_INFO inpi, int stepSize, int h)
 {
     std::vector<harmonic> maxe = maxes(data, h, w);

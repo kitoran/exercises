@@ -30,8 +30,7 @@ struct harmonic {
     double amp;
 };
 std::vector<harmonic> maxes(double *data, int h, int w);
-std::vector<harmonic> maxesLinear(double *data, int h, int w, int samplerate,
-                                  int windowSize);
+std::vector<std::vector<harmonic> > maxesLinear(double *data, int h, int w, int samplerate);
 
 void shiftandmul(double *src, int h, int w, double** dest, int *resH);
 void multiplyFundamentalLinear(double *src, int h, int w, double** dest, int *resH, int harmonics, double treshold);

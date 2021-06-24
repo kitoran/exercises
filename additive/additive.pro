@@ -35,7 +35,9 @@ SOURCES += \
     alsathread.cpp \
     synthesis.cpp \
     mathext.cpp \
-    storearray.cpp
+    storearray.cpp \
+    spectrogram.cpp \
+    globals.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -45,7 +47,9 @@ HEADERS += \
     alsathread.h \
     synthesis.h \
     mathext.h \
-    storearray.h
+    storearray.h \
+    globals.h \
+    spectrogram.h
 
 FORMS += \
         mainwindow.ui

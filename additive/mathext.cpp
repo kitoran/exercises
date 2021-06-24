@@ -42,3 +42,4 @@ int intLog2(int l) {
     }
     return res;
 }
+

@@ -1,14 +1,13 @@
 #include "stft.h"
 #include <math.h>
+#include <algorithm>
 #include "mathext.h"
+#include "globals.h"
 #include <stdio.h>
 #include <vector>
 #include <complex>
 
 const double hammingCoef = 0.53836;
-extern const double frequencyMultiplent;
-extern const double freqMax = 40000;
-extern const double freqMin;
 
 void makeHammingWindow(int windowSize)
 {
@@ -85,7 +84,7 @@ void stfft(int16_t *data, int size, int windowSize, int step, double **res, int 
         for(int n = 0; n < windowSize; n++) {
             datum[n] = window[n] * data[i*step+n];
         }
-        fft(data + step*i, windowSize, (*res) + i*windowSize);
+        fft(/*data + step*i*/datum.data(), windowSize, (*res) + i*windowSize);
         if((i) %4 == 0) {
             fprintf(stderr, "%lf, %d of %d", max, i, *resW);
         }
@@ -131,24 +130,32 @@ std::vector<harmonic> maxes(double *data, int h, int w)
     return r;
 }
 
-//std::vector<harmonic> maxesLinear(double *data, int h, int w, int samplerate, int windowSize)
-//{
-//    std::vector<harmonic> r;
-//    r.reserve(w);
-//    for(int i = 0; i < w; i++) {
-//        double max = 0;
-//        int maxind = 0;
-//        for(int j = 0; j < h; j++) {
-//            if(data[i*h+j] > max) {
-//                max = data[i*h+j];
-//                maxind = j;
-//            }
-//        }
-//        double freq = freqMin * pow(frequencyMultiplent, maxind);
-//        r.push_back({freq, max});
-//    }
-//    return r;
-//}
+std::vector<std::vector<harmonic>> maxesLinear(double *data, int h, int w, int samplerate)
+{
+    std::vector<std::vector<harmonic>> r;
+    r.reserve(w);
+    for(int i = 0; i < w; i++) {
+        std::vector<harmonic> e;
+        for(int j = 1; j < h-1; j++) {
+            double freq = double(samplerate)/h*j;
+            if(data[i*h+j] > data[i*h+j-1]
+                 && data[i*h+j] > data[i*h+j+1]
+                 && freq < 20000
+                 && data[i*h+j] > max/200
+                    ) {
+                e.push_back({freq, data[i*h+j]});
+            }
+        }
+//        std::sort(e.begin(), e.end(), [](harmonic h1, harmonic h2) {
+//            if(h1.freq > 20000) h1.amp = 0;
+//            if(h2.freq > 20000) h2.amp = 0;
+
+//            return h1.amp > h2.amp; });
+//        if(e.size() > 100) e.resize(100);
+        r.push_back(e);
+    }
+    return r;
+}
 
 void shiftandmul(double *src, int h, int w, double **dest, int* resH)
 {
