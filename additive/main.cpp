@@ -10,10 +10,18 @@
 #include <openssl/md5.h>
 #include <storearray.h>
 
-
+QtMessageHandler h;
+void myHandler(QtMsgType a, const QMessageLogContext &b, const QString &c) {
+    if(c.contains("QApplication")) {
+        qDebug() << "f";
+    }
+    h(a,b,c);
+}
 int main(int argc, char *argv[])
 {
-    SF_INFO inpi;
+    startAlsathread();
+    h = qInstallMessageHandler(myHandler);
+
     inpi.format = 0;
     SNDFILE* inp = sf_open("/home/n/exercises/additive/02-201019_1328part.wav", SFM_READ, &inpi);
 
@@ -61,10 +69,26 @@ int main(int argc, char *argv[])
 //             hassh, STR(FUNCTION), 1 );
         qDebug() << /*size  << */w << h << sizeof(*transform) << (w)*(h)*sizeof(*transform);
 
+        double originalMax = max;
 
-        auto mspectrogram = new MaximaSpectrogram;
-        mspectrogram ->max = max;
-        mspectrogram->maxima = maxesLinear(transform, h, w, inpi.samplerate);
+        double* shifted;
+        int shiftedH;
+
+//        shiftandmulLinear(transform, h, w, &shifted, &shiftedH);
+        int hms;
+    std::vector<std::vector<continuousHarmonic> >  contharms = prepareHarmonics(maxesLinear(transform, h, w, inpi.samplerate), &hms);
+//        resynthesizeMaxima(maxesLinear(shifted, shiftedH, w, inpi.samplerate), stepSize, inpi, windowSize);
+//        resynthesizeMaxima(contharms, hms);
+//        exit(0);
+//        auto mspectrogram = new LinearSpectrogram(originalMax, transform, w, h, inpi.samplerate/windowSize);
+//        auto mspectrogram = new LinearSpectrogram(max, shifted, w, shiftedH, inpi.samplerate/windowSize);
+//                auto mspectrogram = new MaximaSpectrogram(max, maxesLinear(transform, h, w, inpi.samplerate));
+//        auto mspectrogram = new MaximaSpectrogram(max, maxesLinear(shifted, shiftedH, w, inpi.samplerate));
+        //        auto mspectrogram = new ContMaximaSpectrogram(max,
+        //                prepareHarmonics(maxesLinear(shifted, shiftedH, w, inpi.samplerate), &hms));
+//                auto mspectrogram = new MaximaSpectrogram(max, maxesLinear(transform, h, w, inpi.samplerate));
+                auto mspectrogram = new ContMaximaSpectrogram(max,
+                        contharms, hms);
         spectrogram = mspectrogram;
 //        save(&max, sizeof(max),
 //                                              hassh,  STR(FUNCTION) "_max", 1 );
@@ -111,7 +135,6 @@ int main(int argc, char *argv[])
 //resynthesizeMaxima(transform, w, inpi, h);
 //    resynthesizeAll(shmul, w, inpi, stepSize,rh);
     win.show();
-    startAlsathread();
 //    std::vector<aaAaa::aaSpline> splines;
 
 //    aaAaa::aaSpline spline;

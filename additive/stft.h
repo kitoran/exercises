@@ -29,10 +29,19 @@ struct harmonic {
     double freq;
     double amp;
 };
+
+struct continuousHarmonic {
+    harmonic h;
+    int prev;
+    int continuity;
+    bool hasRightCounterpart;
+};
+
 std::vector<harmonic> maxes(double *data, int h, int w);
 std::vector<std::vector<harmonic> > maxesLinear(double *data, int h, int w, int samplerate);
 
 void shiftandmul(double *src, int h, int w, double** dest, int *resH);
+void shiftandmulLinear(double *src, int h, int w, double** dest, int *resH);
 void multiplyFundamentalLinear(double *src, int h, int w, double** dest, int *resH, int harmonics, double treshold);
 void divideFundamentalLinear(double *src, int h, int w, double** dest, int *resH, int harmonics, double treshold);
 void isolateMaxima(int w, double *transform, int h, double *data);

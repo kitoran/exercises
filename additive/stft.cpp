@@ -66,7 +66,7 @@ void stft(int16_t *data, int size, int windowSize, int step, int samplerate, dou
             }
     //        if(ind >= 3202) break;
         }
-        if((i) %4 == 0) {
+        if((i) %64 == 0) {
             fprintf(stderr, "%lf, %d of %d", max, i, *resW);
         }
     }
@@ -85,7 +85,7 @@ void stfft(int16_t *data, int size, int windowSize, int step, double **res, int 
             datum[n] = window[n] * data[i*step+n];
         }
         fft(/*data + step*i*/datum.data(), windowSize, (*res) + i*windowSize);
-        if((i) %4 == 0) {
+        if((i) %64 == 0) {
             fprintf(stderr, "%lf, %d of %d", max, i, *resW);
         }
     }
@@ -146,12 +146,11 @@ std::vector<std::vector<harmonic>> maxesLinear(double *data, int h, int w, int s
                 e.push_back({freq, data[i*h+j]});
             }
         }
-//        std::sort(e.begin(), e.end(), [](harmonic h1, harmonic h2) {
-//            if(h1.freq > 20000) h1.amp = 0;
-//            if(h2.freq > 20000) h2.amp = 0;
-
-//            return h1.amp > h2.amp; });
-//        if(e.size() > 100) e.resize(100);
+        std::sort(e.begin(), e.end(), [](harmonic h1, harmonic h2) {
+            return h1.amp > h2.amp; });
+//        if(e.size() > 15) e.resize(1);
+        std::sort(e.begin(), e.end(), [](harmonic h1, harmonic h2) {
+            return h1.freq < h2.freq; });
         r.push_back(e);
     }
     return r;
@@ -160,7 +159,7 @@ std::vector<std::vector<harmonic>> maxesLinear(double *data, int h, int w, int s
 void shiftandmul(double *src, int h, int w, double **dest, int* resH)
 {
     max = 0;
-    constexpr int lastHarmonic = 10;
+    constexpr int lastHarmonic = 14;
     int shifts[lastHarmonic];
     for(int i = 0; i < lastHarmonic; i++) {
         shifts[i] = log(i+1)/log(frequencyMultiplent);
@@ -190,25 +189,28 @@ void shiftandmulLinear(double *src, int h, int w, double **dest, int *resH)
 {
 //    double lastmax = max;
     max = 0;
-    constexpr int lastHarmonic = 10;
+    constexpr int lastHarmonic =2;
     *resH = h/lastHarmonic;
     *dest = (double*)malloc(w*(*resH)*sizeof(double));
     for(int i = 0; i < w; i++) {
         for(int j = 0; j < *resH; j++) {
             double v = 1;
             for(int k = 0; k < lastHarmonic; k++) {
-                v *= src[i*h + j*(k+1)]/500000;
+                if(j*(k+1) < w/2) {
+                    v *= src[i*h + j*(k+1)]/500000;
+                }
             }
             double treshold = 455.500326/10000;
-            if(v > treshold) {
+//            if(v > treshold) {
                 v = log(v/treshold)/*+100*/;
-            }else v = 0;
+//            }else v = 0;
             (*dest)[i*(*resH)+j] = v;
             if(v > max) {
                 max = v;
             }
         }
     }
+
     fprintf(stderr, "shmul max %lf", max);
 }
 

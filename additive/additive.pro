@@ -5,7 +5,8 @@
 #-------------------------------------------------
 
 QT       += core gui opengl
-CONFIG += c++17
+QMAKE_CXXFLAGS += -std=gnu++2a
+#CONFIG+=c++17
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = additive
@@ -24,7 +25,8 @@ QMAKE_CXXFLAGS += -Wno-unuse-variable
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 QMAKE_CXXFLAGS += -Wno-sign-compare
-INCLUDEPATH += ../sound ../../library/ambiguousArray ../../library/dynamicArray
+INCLUDEPATH += ../sound ../../library/ambiguousArray ../../library/dynamicArray \
+               ../../library/newFile
 LIBS += -lsndfile -lssl -lcrypto -lexplain
 SOURCES += \
         main.cpp \
@@ -37,7 +39,8 @@ SOURCES += \
     mathext.cpp \
     storearray.cpp \
     spectrogram.cpp \
-    globals.cpp
+    globals.cpp \
+    soundext.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -49,7 +52,8 @@ HEADERS += \
     mathext.h \
     storearray.h \
     globals.h \
-    spectrogram.h
+    spectrogram.h \
+    soundext.h
 
 FORMS += \
         mainwindow.ui
