@@ -21,8 +21,16 @@ public:
 //                 int windowSize,
 //                 int samplerate,
 //                 double max_);
-
+    bool selecting{false};
+    int selectStart{-1};
+    int selectEnd{-1};
+    int rangeStartInArray();
+    int rangeEndInArray();
+    QImage spectrogramDrawing;
+//    QWidget
     void paintEvent(QPaintEvent *event);
+    void resizeEvent(QResizeEvent *event);
+    void selectRange();
     void mouseMoveEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);

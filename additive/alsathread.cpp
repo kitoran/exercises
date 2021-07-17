@@ -22,9 +22,10 @@ using namespace std::chrono_literals;
 
 void startAlsathread()
 {
+
     std::thread th([](){
 //        double* lookup = sinLookupTable();
-        int*lookup = sinLookupTableInt();
+//        int*lookup = sinLookupTableInt();
         std::vector<double> frequencies;
         using frameType = int16_t;
         frameType *buffer;
@@ -55,7 +56,7 @@ void startAlsathread()
                 pos = channel.take();
 
 //                spectrumSize = spectr.complex?spectr.data.sizec():spectr.data.sized;
-                if(pos.pos < 0) {
+                if(pos.pos < 0 || pos.pos >= spectrogram->width()) {
                     qDebug() << "waitinf...";
                     channel.wait();
                     qDebug() << "waited!";

@@ -7,8 +7,8 @@
 #define LOOKUP_TABLE_SIZE (1 << LOOKUP_POWER)
 inline double fastSin(double x);
 inline int fastReducedSinInt(int x);
-double* sinLookupTable();
-int* sinLookupTableInt();
+extern double* sinLookupTable;
+extern int* sinLookupTableInt;
 extern const double tau;
 int intLog2(int l);
 inline unsigned int hash(unsigned int x) {

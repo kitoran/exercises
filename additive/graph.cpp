@@ -1,6 +1,8 @@
 #include "graph.h"
 #include "globals.h"
 #include "spectrogram.h"
+#include "synthesis.h"
+#include "soundext.h"
 #include "math.h"
 #include "mathext.h"
 #include "alsathread.h"
@@ -21,6 +23,15 @@ graph::graph(QWidget *parent) : QWidget(parent){
 
 
 
+}
+
+int graph::rangeStartInArray()
+{
+    return double(selectStart-10) / (width()-20) * spectrogram->width();
+}
+int graph::rangeEndInArray()
+{
+    return double(selectEnd-10) / (width()-20) * spectrogram->width();
 }
 
 //void graph::setData(Spectrogram* data_) {
@@ -54,10 +65,33 @@ graph::graph(QWidget *parent) : QWidget(parent){
 //}
 
 void graph::paintEvent(QPaintEvent */*event*/) {
-    fprintf(stderr, "real %d %d need %d", width()-20, height()-20, spectrogram->width());
 
     QPainter p(this);
+    p.drawImage(0,0,spectrogramDrawing);
+    if(selectStart >= 0) {
+        p.setOpacity(0.3);
+        p.setBrush(QColor(255,255,255, 100));
+        p.drawRect(selectStart, 0, selectEnd-selectStart, height());
+    }
+
+//    QPainter p(this);
+//    spectrogram->draw(&p, width(), height());
+}
+
+void graph::resizeEvent(QResizeEvent *event)
+{
+//    fprintf(stderr, "real %d %d need %d", width()-20, height()-20, spectrogram->width());
+    spectrogramDrawing = QImage(event->size().width(), event->size().height(), QImage::Format_RGB32);
+    QPainter p(&spectrogramDrawing);
     spectrogram->draw(&p, width(), height());
+
+}
+
+void graph::selectRange()
+{
+    selecting = true;
+//    QCursor c();
+    setCursor(Qt::CrossCursor);
 }
 
 void graph::mouseMoveEvent(QMouseEvent *event)
@@ -87,6 +121,10 @@ void graph::mouseMoveEvent(QMouseEvent *event)
 //    qDebug() << "putting message:" << m.data.data << m.data.sized ;
     channel.blockAndPut(m);
 
+    if(selecting) {
+        selectEnd = event->x();
+        repaint();
+    }
     //    fprintf(stderr, "indh %d indw %d freq %lf val %lf", indh, indw, freq, val);
 //    fprintf(stderr, "freq %lf", freq);
 }
@@ -102,8 +140,13 @@ void graph::mousePressEvent(QMouseEvent *event)
 //    }
 //    qDebug() << "putting message:" << m.data.data << m.data.sized ;
     channel.blockAndPut(m);
-
-
+    if(selecting) {
+        if(event->buttons() & Qt::RightButton) {
+            selectStart = selectEnd = -1;
+            selecting = false;
+        }
+        selectStart = selectEnd = event->x();
+    }
 //    fprintf(stderr, "heights %d\n", heights);
 //    for(int i = 0; i < heights; i++) {
 //        if(data.c(indw*heights+i) != 0.) {
@@ -119,5 +162,16 @@ void graph::mouseReleaseEvent(QMouseEvent */*event*/)
     message m = {-1};
 //    qDebug() << "putting message:" << m.data.data << m.data.sized;
     channel.blockAndPut(m);
+    if(selecting) {
+        selecting = false;
+        setCursor(Qt::ArrowCursor);
+        if(selectEnd < selectStart) {
+            std::swap(selectStart, selectEnd);
+        }
+
+        ContMaximaSpectrogram* s = dynamic_cast<ContMaximaSpectrogram*>(spectrogram);
+        resynthesizeMaxima(s, rangeStartInArray(), rangeEndInArray());
+        alsaPlayBlock(audioOutput.data(), audioOutput.size());
+    }
 }
 

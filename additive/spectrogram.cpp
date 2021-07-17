@@ -2,6 +2,7 @@
 #include "globals.h"
 #include "mathext.h"
 #include "audio.h"
+#include "soundext.h"
 #include <QPainter>
 #include <QDebug>
 
@@ -157,22 +158,129 @@ void MaximaSpectrogram::fillBuffer(int16_t *buffer, int bufferSize, int pos, uns
                         *phase+i)*LOOKUP_TABLE_SIZE);
             int64_t deb15 = int64_t((hs[i].freq
                         *phase+i)*LOOKUP_TABLE_SIZE)%LOOKUP_TABLE_SIZE;
-            int64_t deb2 = lookup[int64_t((hs[i].freq
+            int64_t deb2 = sinLookupTableInt[int64_t((hs[i].freq
                                    *phase+i)*LOOKUP_TABLE_SIZE)
                    %LOOKUP_TABLE_SIZE];
             double deb3 = hs[i].amp;
-            v += hs[i].amp*lookup[int64_t((hs[i].freq
+            v += hs[i].amp*sinLookupTable[int64_t((hs[i].freq
                                     *phase/alsaSampleRate+i)*LOOKUP_TABLE_SIZE)
                     %LOOKUP_TABLE_SIZE]/max/*3*/;
         }
         phase++;
-        buffer[j] = v/10/*/*400   /INT16_MAX*/;
+        buffer[j] = v*800/*/*400   /INT16_MAX*/;
     }
 }
 
-int* MaximaSpectrogram::lookup = sinLookupTableInt();
+//int* MaximaSpectrogram::lookup = sinLookupTableInt();
 
 double MaximaSpectrogram::frequencyAtProportion(double proportion)
 {
     return proportion*cutoff;
+}
+
+double ContMaximaSpectrogram::frequencyAtProportion(double proportion)
+{
+    return proportion*cutoff;
+}
+
+void LinearSpectrogram::draw(QPainter *p, int w, int h)
+{
+    p->setPen(Qt::NoPen);
+    p->setBrush(Qt::black);
+    p->drawRect(10, 10, w-20, h-20);
+    int cutoffIndex = cutoff/freqStep;
+//    qDebug() << "final freq is" << indToFftFreq(h,
+    for(int i = 0; i < width_; i++) {
+        for(int j = 0; j < cutoffIndex; j++) {
+
+            double left = (w-20)/double(width_)*i;
+            double right = (w-20)/double(width_)*(i+1);
+            double bottom = (h-20)/double(cutoffIndex)*j;
+            double top = (h-20)/double(cutoffIndex)*(j+1);
+            if(j >= height) {
+                p->setBrush(Qt::darkBlue);
+            } else {
+                double value = data[i*height+j];
+                int g = value/max*255;
+                p->setBrush(QColor(g,g,g));
+                if(g < 0 || g > 255) {
+                    qDebug() << "i" << i << "j" << j << "amplitude" << value // data.c(i*heights+j)
+                             << "max" << max <<
+                                "color" << g;
+                }
+            }
+//            if(g > 100) {
+//                qDebug() << g;
+//            }
+
+            p->drawRect(QRectF(left+10, h-10-top, right-left, top-bottom));
+        }
+    }
+    drawAxes(p,w,h);
+}
+
+void LinearSpectrogram::fillBuffer(int16_t *, int bufferSize, int pos, unsigned int phase)
+{
+    abort();
+}
+
+double LinearSpectrogram::frequencyAtProportion(double proportion)
+{
+    return proportion*cutoff;
+}
+
+void ContMaximaSpectrogram::draw(QPainter *p, int w, int h)
+{
+    p->setPen(Qt::NoPen);
+    p->setBrush(Qt::black);
+    p->drawRect(10, 10, w-20, h-20);
+    int spectrWidth = maxima.size();
+    for(int i = 1; i < spectrWidth; i++) {
+        for(int j = 0; j < maxima[i].size(); j++) {
+            continuousHarmonic har = maxima[i][j];
+            double rightX = (w-20)/double(spectrWidth)*(i+1);
+            double rightY = (h-20)/double(cutoff)*har.h.freq;
+            double leftX = (w-20)/double(spectrWidth)*(i);
+            double leftY = har.prev == -1? rightY: (h-20)/double(cutoff)*maxima[i-1][har.prev].h.freq;
+            double value = maxima[i][j].h.amp;
+            int g = value/max*255;
+//            if(g > 100) {
+//                qDebug() << g;
+//            }
+            p->setPen(QColor(Qt::GlobalColor(maxima[i][j].continuity % Qt::transparent)));
+//            if(g < 0 || g > 255) {
+//                qDebug() << "i" << i << "j" << j << "amplitude" << value // data.c(i*heights+j)
+//                         << "max" << max <<
+//                            "color" << g;
+//            }
+            p->drawLine(leftX+10, h-10-leftY, rightX+10, h-10-rightY);
+        }
+    }
+    drawAxes(p,w,h);
+}
+
+void ContMaximaSpectrogram::fillBuffer(int16_t *buffer, int bufferSize, int pos, unsigned int phase)
+{
+    continuousHarmonic* hs = maxima[pos].data();
+    int size = maxima[pos].size();
+//    double ph  = phase;
+    for(int j = 0; j < bufferSize; j++) {
+        double v = 0;
+        for(int i = 0; i < size; i++) {
+//            auto deb32 = hs[i];
+//            int64_t deb = ((hs[i].freq
+//                        *phase+i)*LOOKUP_TABLE_SIZE);
+//            int64_t deb15 = int64_t((hs[i].freq
+//                        *phase+i)*LOOKUP_TABLE_SIZE)%LOOKUP_TABLE_SIZE;
+//            int64_t deb2 = sinLookupTableInt[int64_t((hs[i].freq
+//                                   *phase+i)*LOOKUP_TABLE_SIZE)
+//                   %LOOKUP_TABLE_SIZE];
+            double deb3 = hs[i].h.amp;
+            v += hs[i].h.amp*sinLookupTable[int64_t((hs[i].h.freq
+                                    *phase/alsaSampleRate+i)*LOOKUP_TABLE_SIZE)
+                    %LOOKUP_TABLE_SIZE]/max/*3*/;
+        }
+        phase++;
+        buffer[j] = v*800/*/*400   /INT16_MAX*/;
+    }
 }

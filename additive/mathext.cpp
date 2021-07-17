@@ -4,7 +4,7 @@
 
 
 const double tau = M_PI*2;
-double *sinLookupTable()
+double *makeSinLookupTable()
 {
     static bool initialized = false;
     static double lookup[LOOKUP_TABLE_SIZE];
@@ -16,8 +16,8 @@ double *sinLookupTable()
     }
     return lookup;
 }
-
-int *sinLookupTableInt()
+double *sinLookupTable = makeSinLookupTable();
+int * makeSinLookupTableInt()
 {
     static bool initialized = false;
     static int lookup[LOOKUP_TABLE_SIZE];
@@ -29,10 +29,10 @@ int *sinLookupTableInt()
     }
     return lookup;
 }
-
+int* sinLookupTableInt = makeSinLookupTableInt();
 inline double fastSin(double x)
 {
-    return sinLookupTable()
+    return sinLookupTable
             [int(x/tau*LOOKUP_TABLE_SIZE)%LOOKUP_TABLE_SIZE];
 }
 int intLog2(int l) {
