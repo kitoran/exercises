@@ -4,7 +4,6 @@
 #include <inttypes.h>
 
 int freqToFftIndex(double freq, int sampleRate);
-void alsaPlayBlock(int16_t *buffer, int size);
 
 //template<typename T>
 //struct frameType {
