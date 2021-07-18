@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "math.h"
-#include "soundext.h"
+#include "audio.h"
 #include "spectrogram.h"
 #include "synthesis.h"
 #include "globals.h"

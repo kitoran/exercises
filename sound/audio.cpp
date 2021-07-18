@@ -90,3 +90,17 @@ void drainAudio()
     snd_pcm_drain(handle);
     snd_pcm_close(handle);
 }
+
+void alsaPlayBlock(const int16_t* buffer, int size) {
+    int index = 0;
+    while(index + framesPerBuffer <size) {
+//        for(int i = 0; i < framesPerBuffer; i++) {
+//            assert(fabs(buffer[index + framesPerBuffer+i]) <= 1/denominator);
+//        }
+        writeFrames(buffer+index, framesPerBuffer);
+        index+=framesPerBuffer;
+    }
+    if(index < size) {
+        writeFrames(buffer+index, size-index);
+    }
+}

@@ -2,7 +2,7 @@
 #include "globals.h"
 #include "spectrogram.h"
 #include "synthesis.h"
-#include "soundext.h"
+#include "audio.h"
 #include "math.h"
 #include "mathext.h"
 #include "alsathread.h"
