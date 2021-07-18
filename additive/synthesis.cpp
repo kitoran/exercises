@@ -135,18 +135,17 @@ void resynthesizeMaxima(ContMaximaSpectrogram* s, int start, int end)
                     amp = (prev.amp * (stepSize-s) + prepared[i][j].h.amp * (s))/stepSize/max;
                 } else {
                 }
-                amp = prepared[i][j].h.amp;// * s / stepSize;
-                if(fabs(amp) > max) {
-                    abort();
-                }
-                freq = prepared[i][j].h.freq;
-//                v += sin(phases[prepared[i][j].continuity])*amp/170000;
-//                double integralDummy;
-//                phases[prepared[i][j].continuity] +=freq/inpi.samplerate*tau;
-//                        modf(prepared[i][j].continuity/tau
-//                  + , &integralDummy)*tau;
-                v += sinLookupTable[
-                        int64_t(fabs((i*stepSize+s)*LOOKUP_TABLE_SIZE*freq/inpi.samplerate /*+ hash(freq)*/))%LOOKUP_TABLE_SIZE]*amp/denominator/max;
+//                amp = prepared[i][j].h.amp;// * s / stepSize;
+//                if(fabs(amp) > max) {
+//                    abort();
+//                }
+//                freq = prepared[i][j].h.freq;
+                v += sin(phases[prepared[i][j].continuity])*amp/denominator;
+                double integralDummy;
+                phases[prepared[i][j].continuity] +=freq/inpi.samplerate*tau;
+                phases[prepared[i][j].continuity] = modf(prepared[i][j].continuity/tau, &integralDummy)*tau;
+//                v += sinLookupTable[
+//                        int64_t(fabs((i*stepSize+s)*LOOKUP_TABLE_SIZE*freq/inpi.samplerate /*+ hash(freq)*/))%LOOKUP_TABLE_SIZE]*amp/denominator/max;
             }
             outb[s] = v*5000;
         }
