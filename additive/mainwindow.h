@@ -22,9 +22,11 @@ public:
 private slots:
     void on_toolButton_clicked();
 
-    void on_lineEdit_3_textChanged(const QString &arg1);
+    void on_denominator_textChanged(const QString &arg1);
 
     void on_toolButton_2_clicked();
+
+    void on_pushButton_clicked();
 
 private:
     Ui::MainWindow *ui;

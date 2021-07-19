@@ -259,7 +259,7 @@ void ContMaximaSpectrogram::draw(QPainter *p, int w, int h)
     drawAxes(p,w,h);
 }
 
-void ContMaximaSpectrogram::fillBuffer(int16_t *buffer, int bufferSize, int pos, unsigned int phase)
+void ContMaximaSpectrogram::fillBuffer(int16_t *buffer, int bufferSize, int pos, uint64_t phase)
 {
     continuousHarmonic* hs = maxima[pos].data();
     int size = maxima[pos].size();

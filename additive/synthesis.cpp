@@ -120,41 +120,42 @@ void resynthesizeMaxima(ContMaximaSpectrogram* s, int start, int end)
 //    audioOutput = (double*)malloc(audioOutputSize*sizeof(double));
     double phases[hms] = {0};
 
+
+
     for(int i = start+1; i < end; i++) {
         int16_t outb[stepSize];
-        for(int s = 0; s < stepSize; s++) {
-            double v = 0;
-            for(int j = 0; j < prepared[i].size(); j++) {
-                double amp;
-                double freq;
-                if(prepared[i][j].prev >= 0) {
-                    int deb = prepared[i][j].prev;
-                    int d2 = prepared[i-1].size();
-                    harmonic prev = prepared[i-1][prepared[i][j].prev].h;
-                    freq = (prev.freq * (stepSize-s) + prepared[i][j].h.freq * (s))/stepSize;
-                    amp = (prev.amp * (stepSize-s) + prepared[i][j].h.amp * (s))/stepSize/max;
-                } else {
-                }
-//                amp = prepared[i][j].h.amp;// * s / stepSize;
+//        for(int s = 0; s < stepSize; s++) {
+//            double v = 0;
+//            for(int j = 0; j < prepared[i].size(); j++) {
+//                double amp;
+//                double freq;
+//                if(prepared[i][j].prev >= 0) {
+//                    int deb = prepared[i][j].prev;
+//                    int d2 = prepared[i-1].size();
+//                    harmonic prev = prepared[i-1][prepared[i][j].prev].h;
+//                    freq = (prev.freq * (stepSize-s) + prepared[i][j].h.freq * (s))/stepSize;
+//                    amp = (prev.amp * (stepSize-s) + prepared[i][j].h.amp * (s))/stepSize/max;
+//                } else {
+//                }
+//                amp = prepared[i][j].h.amp/max;// * s / stepSize;
 //                if(fabs(amp) > max) {
 //                    abort();
 //                }
 //                freq = prepared[i][j].h.freq;
-                v += sin(phases[prepared[i][j].continuity])*amp/denominator;
-                double integralDummy;
-                phases[prepared[i][j].continuity] +=freq/inpi.samplerate*tau;
-                phases[prepared[i][j].continuity] = modf(prepared[i][j].continuity/tau, &integralDummy)*tau;
-//                v += sinLookupTable[
-//                        int64_t(fabs((i*stepSize+s)*LOOKUP_TABLE_SIZE*freq/inpi.samplerate /*+ hash(freq)*/))%LOOKUP_TABLE_SIZE]*amp/denominator/max;
-            }
-            outb[s] = v*5000;
-        }
-//        if(play) {
-            memcpy(audioOutput.data()+(i-start)*stepSize, outb, stepSize);
+//                v += sin(phases[prepared[i][j].continuity])*amp/denominator;
+//                double integralDummy;
+//                phases[prepared[i][j].continuity] +=freq/inpi.samplerate*tau;
+//                phases[prepared[i][j].continuity] = modf(prepared[i][j].continuity/tau, &integralDummy)*tau;
+////                v += sinLookupTable[
+////                        int64_t(fabs((i*stepSize+s)*LOOKUP_TABLE_SIZE*freq/inpi.samplerate /*+ hash(freq)*/))%LOOKUP_TABLE_SIZE]*amp/denominator/max;
+//            }
+//            outb[s] = v*5000;
 //        }
-//        if(!play) {
-//            sf_write_double(out, outb, stepSize);
-//        }
+
+        s->fillBuffer(outb, stepSize, i, (int64_t)i*stepSize);
+
+        memcpy(audioOutput.data()+(i-start)*stepSize, outb, stepSize
+               *sizeof(outb[0]));
         if((i) %4 == 0) {
             fprintf(stderr, "hey %d of %lud", i, prepared.size());
         }
