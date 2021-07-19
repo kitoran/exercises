@@ -2,9 +2,13 @@
 #include "ui_mainwindow.h"
 #include "math.h"
 #include "audio.h"
+#include <QDebug>
 #include "spectrogram.h"
 #include "synthesis.h"
 #include "globals.h"
+#include <sndfile.h>
+#include "newfile.h"
+
 MainWindow::MainWindow(/*QWidget *parent,*/
 /*                       double *data_,
                        int size_,
@@ -30,7 +34,7 @@ void MainWindow::on_toolButton_clicked()
     alsaPlayBlock(audioOutput.data(), audioOutput.size());
  }
 
-void MainWindow::on_lineEdit_3_textChanged(const QString &arg1)
+void MainWindow::on_denominator_textChanged(const QString &arg1)
 {
     denominator = arg1.toDouble();
 }
@@ -38,4 +42,23 @@ void MainWindow::on_lineEdit_3_textChanged(const QString &arg1)
 void MainWindow::on_toolButton_2_clicked()
 {
     g->selectRange();
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    const char* e = "/tmp/imsorrybutifwontdothisproperly.wav";
+//    std::string filneavd = ;
+    SF_INFO outi = inpi; outi.channels = 1;
+    SNDFILE* out = sf_open(
+                    e,
+                    SFM_WRITE,
+                    &outi);
+    qDebug() << "FILENAME IS" << e;
+    sf_write_short(out, audioOutput.data(), audioOutput.size());
+    sf_close(out);
+
+    char command[900] = "audacity \0";
+    strcat(command, e);
+    qDebug() << "command IS" << command;
+    system(command);
 }

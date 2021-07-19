@@ -32,7 +32,7 @@ void startAlsathread()
         initAudio(1, SND_PCM_FORMAT_S16_LE);//SND_PCM_FORMAT_FLOAT64_LE
         buffer = (frameType *) malloc(sizeof(frameType)*framesPerPeriod);
         message pos = {-1};
-        uint phase = 0;
+        uint64_t phase = 0;
         int output = 0;
 
         int logWindowSize = 0;

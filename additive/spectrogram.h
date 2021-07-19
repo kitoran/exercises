@@ -12,7 +12,7 @@ public:
     virtual int width() = 0;
     double max;
     virtual void draw(QPainter*, int, int) = 0;
-    virtual void fillBuffer(int16_t*, int bufferSize, int pos, unsigned int phase) = 0;
+    virtual void fillBuffer(int16_t*, int bufferSize, int pos, uint64_t phase) = 0;
     void drawAxes(QPainter*, int, int);
     virtual double frequencyAtProportion(double p) = 0;
 };
@@ -41,7 +41,7 @@ class ContMaximaSpectrogram : public Spectrogram
         : Spectrogram(max__), maxima(maxima_), harmonics(harmonics_)
     { }
     void draw(QPainter* p, int w, int h) override ;
-    void fillBuffer(int16_t *, int bufferSize, int pos, unsigned int phase);
+    void fillBuffer(int16_t *, int bufferSize, int pos, uint64_t phase);
     double frequencyAtProportion(double proportion) override;
 };
 class LinearSpectrogram : public Spectrogram
