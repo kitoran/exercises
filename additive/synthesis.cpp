@@ -124,11 +124,12 @@ void resynthesizeMaxima(ContMaximaSpectrogram* s, int start, int end)
 
     for(int i = start+1; i < end; i++) {
         int16_t outb[stepSize];
-//        for(int s = 0; s < stepSize; s++) {
-//            double v = 0;
-//            for(int j = 0; j < prepared[i].size(); j++) {
-//                double amp;
-//                double freq;
+
+        for(int s = 0; s < stepSize; s++) {
+            double v = 0;
+            for(int j = 0; j < prepared[i].size(); j++) {
+                double amp;
+                double freq;
 //                if(prepared[i][j].prev >= 0) {
 //                    int deb = prepared[i][j].prev;
 //                    int d2 = prepared[i-1].size();
@@ -137,22 +138,25 @@ void resynthesizeMaxima(ContMaximaSpectrogram* s, int start, int end)
 //                    amp = (prev.amp * (stepSize-s) + prepared[i][j].h.amp * (s))/stepSize/max;
 //                } else {
 //                }
-//                amp = prepared[i][j].h.amp/max;// * s / stepSize;
+                amp = prepared[i][j].h.amp/max;// * s / stepSize;
 //                if(fabs(amp) > max) {
 //                    abort();
 //                }
-//                freq = prepared[i][j].h.freq;
-//                v += sin(phases[prepared[i][j].continuity])*amp/denominator;
-//                double integralDummy;
-//                phases[prepared[i][j].continuity] +=freq/inpi.samplerate*tau;
+                freq = prepared[i][j].h.freq;
+                int deb = prepared[i][j].continuity;
+                v += sin(phases[prepared[i][j].continuity])*amp;
+                double integralDummy;
+                phases[prepared[i][j].continuity] +=freq/inpi.samplerate*tau;
 //                phases[prepared[i][j].continuity] = modf(prepared[i][j].continuity/tau, &integralDummy)*tau;
-////                v += sinLookupTable[
-////                        int64_t(fabs((i*stepSize+s)*LOOKUP_TABLE_SIZE*freq/inpi.samplerate /*+ hash(freq)*/))%LOOKUP_TABLE_SIZE]*amp/denominator/max;
-//            }
-//            outb[s] = v*5000;
-//        }
+//                v += amp*sinLookupTable[int64_t((freq
+//                                                *(i*stepSize+s)/inpi.samplerate+i)*LOOKUP_TABLE_SIZE)
+//                                %LOOKUP_TABLE_SIZE]
+                        /*/denominator*/ ;
+            }
+            outb[s] = v*800;
+        }
 
-        s->fillBuffer(outb, stepSize, i, (int64_t)i*stepSize);
+//        s->fillBuffer(outb, stepSize, i, (int64_t)i*stepSize);
 
         memcpy(audioOutput.data()+(i-start)*stepSize, outb, stepSize
                *sizeof(outb[0]));
