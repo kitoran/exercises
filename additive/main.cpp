@@ -40,7 +40,6 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     MainWindow win;
-    int h, w;
 //    stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
     //    stfft(sampls, end, windowSize, stepSize, &transform, &w);
 //    std::complex< double>* transform;
@@ -56,27 +55,28 @@ int main(int argc, char *argv[])
 //    double* maxp2;
 
 //    load(hassh, "complex_stfft_max", 1, (void**)(&maxp2));
-    double* transform;
+
 #define STR2(a) #a
 #define STR(a) STR2(a)
 
 #define FUNCTION stfft
 //    int size;
 //    if(/*true || */!load(hassh, STR(FUNCTION), 1, (void**)(&transform), &size)) {
-        FUNCTION(sampls, end, windowSize, stepSize, /*inpi.samplerate, */&transform, /*&h, */&w);
-        h = windowSize;
+        FUNCTION(sampls, end, windowSize, stepSize, /*inpi.samplerate, */&originalFourierTransform, /*&h, */&originalFourierTransformW);
+        originalFourierTransformH = windowSize;
 //        save((transform), (w)*(h)*sizeof(*transform),
 //             hassh, STR(FUNCTION), 1 );
-        qDebug() << /*size  << */w << h << sizeof(*transform) << (w)*(h)*sizeof(*transform);
+        qDebug() << /*size  << */originalFourierTransformW << originalFourierTransformH << sizeof(*originalFourierTransform) << (originalFourierTransformW)*(originalFourierTransformH)*sizeof(*originalFourierTransform);
 
         double originalMax = max;
 
         double* shifted;
         int shiftedH;
 
-//        shiftandmulLinear(transform, h, w, &shifted, &shiftedH);
+        shiftandmulLinear(originalFourierTransform, originalFourierTransformH, originalFourierTransformW, &shifted, &shiftedH);
         int hms;
-    std::vector<std::vector<continuousHarmonic> >  contharms = prepareHarmonics(maxesLinear(transform, h, w, inpi.samplerate), &hms);
+        //    std::vector<std::vector<continuousHarmonic> >  contharms = prepareHarmonics(maxesLinear(transform, h, w, inpi.samplerate), &hms);
+            std::vector<std::vector<continuousHarmonic> >  contharms = prepareHarmonics(maxesLinear(shifted, shiftedH, originalFourierTransformW, inpi.samplerate), &hms);
 //        resynthesizeMaxima(maxesLinear(shifted, shiftedH, w, inpi.samplerate), stepSize, inpi, windowSize);
 //        resynthesizeMaxima(contharms, hms);
 //        exit(0);

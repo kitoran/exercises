@@ -28,9 +28,20 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_toolButton_clicked()
 {
-    ContMaximaSpectrogram* s = dynamic_cast<ContMaximaSpectrogram*>(spectrogram);
-    resynthesizeMaxima(s, g->rangeStartInArray(), g->rangeEndInArray());
+
+//    ContMaximaSpectrogram* s = dynamic_cast<ContMaximaSpectrogram*>(spectrogram);
+//    resynthesizeMaxima(s, g->rangeStartInArray(), g->rangeEndInArray());
 //    alsaPlayBlock(audioOutput.data(), audioOutput.size());
+
+    double* shifted;
+    int shiftedH;
+    shiftandmulLinear(originalFourierTransform, originalFourierTransformH,
+                      originalFourierTransformW, &shifted, &shiftedH);
+    int hms;
+    std::vector<std::vector<continuousHarmonic> >  contharms = prepareHarmonics(maxesLinear(shifted, shiftedH, originalFourierTransformW, inpi.samplerate), &hms);
+    spectrogram = new ContMaximaSpectrogram(max,
+            contharms, hms);
+    g->repaint();
     alsaPlayBlock(audioOutput.data(), audioOutput.size());
  }
 
@@ -61,4 +72,9 @@ void MainWindow::on_pushButton_clicked()
     strcat(command, e);
     qDebug() << "command IS" << command;
     system(command);
+}
+
+void MainWindow::on_numberOfHarmonicsLineEdit_textChanged(const QString &arg1)
+{
+    numberOfHarmonics = arg1.toInt();
 }

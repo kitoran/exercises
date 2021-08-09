@@ -74,13 +74,6 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="7">
-     <widget class="QLabel" name="label_6">
-      <property name="text">
-       <string>number of harmonics</string>
-      </property>
-     </widget>
-    </item>
     <item row="0" column="2">
      <widget class="QLabel" name="label_5">
       <property name="text">
@@ -92,16 +85,6 @@
      <widget class="QLabel" name="label">
       <property name="text">
        <string>method</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="7">
-     <widget class="QSpinBox" name="spinBox">
-      <property name="singleStep">
-       <number>1</number>
-      </property>
-      <property name="value">
-       <number>10</number>
       </property>
      </widget>
     </item>
@@ -180,6 +163,20 @@
      <widget class="QPushButton" name="pushButton">
       <property name="text">
        <string>audacity</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="6" colspan="2">
+     <widget class="QLabel" name="label_6">
+      <property name="text">
+       <string>number of harmonics</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="6" colspan="2">
+     <widget class="QLineEdit" name="numberOfHarmonicsLineEdit">
+      <property name="text">
+       <string>10</string>
       </property>
      </widget>
     </item>

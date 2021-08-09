@@ -189,13 +189,14 @@ void shiftandmulLinear(double *src, int h, int w, double **dest, int *resH)
 {
 //    double lastmax = max;
     max = 0;
-    constexpr int lastHarmonic =2;
-    *resH = h/lastHarmonic;
+//    constexpr int lastHarmonic =2;
+
+    *resH = h/numberOfHarmonics;
     *dest = (double*)malloc(w*(*resH)*sizeof(double));
     for(int i = 0; i < w; i++) {
         for(int j = 0; j < *resH; j++) {
             double v = 1;
-            for(int k = 0; k < lastHarmonic; k++) {
+            for(int k = 0; k < numberOfHarmonics; k++) {
                 if(j*(k+1) < w/2) {
                     v *= src[i*h + j*(k+1)]/500000;
                 }
