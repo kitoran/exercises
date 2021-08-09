@@ -15,6 +15,9 @@ extern Spectrogram *spectrogram;
 extern const int cutoff;
 extern std::vector<int16_t> audioOutput;
 extern double denominator;
+inline int numberOfHarmonics = 10;
+inline double* originalFourierTransform{0};
+inline int originalFourierTransformH{-1}, originalFourierTransformW{-1};
 
 struct SF_INFO;
 extern SF_INFO inpi;

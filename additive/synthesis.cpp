@@ -48,7 +48,7 @@ void resynthesizeAll(double *data, int w, SF_INFO inpi, int stepSize, int h)
     SNDFILE* out = sf_open("/home/n/exercises/additive/resynthAllFlute.wav", SFM_WRITE, &outi);
 
     //    double phases[h] = {0};
-    double frequencies[h] = {0};
+    double frequencies[h];// = {0};
     for(int i = 0; i < h; i++) {
         double mul = pow(frequencyMultiplent, i);
         double prod = freqMin * mul;
@@ -118,8 +118,8 @@ void resynthesizeMaxima(ContMaximaSpectrogram* s, int start, int end)
     if(end == -1) end = prepared.size();
     audioOutput.resize((end - start)*stepSize);
 //    audioOutput = (double*)malloc(audioOutputSize*sizeof(double));
-    double phases[hms] = {0};
-
+    double phases[hms];// = {0};
+    for(int i = 0; i < hms; i++) phases[i] = 0;
 
 
     for(int i = start+1; i < end; i++) {

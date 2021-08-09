@@ -28,6 +28,8 @@ private slots:
 
     void on_pushButton_clicked();
 
+    void on_numberOfHarmonicsLineEdit_textChanged(const QString &arg1);
+
 private:
     Ui::MainWindow *ui;
 };
