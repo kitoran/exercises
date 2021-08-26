@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 #include "math.h"
 #include "audio.h"
-#include <QDebug>
 #include "spectrogram.h"
 #include "synthesis.h"
 #include "globals.h"
@@ -64,13 +63,13 @@ void MainWindow::on_pushButton_clicked()
                     e,
                     SFM_WRITE,
                     &outi);
-    qDebug() << "FILENAME IS" << e;
+    fprintf(stderr, "FILENAME IS %s", e);
     sf_write_short(out, audioOutput.data(), audioOutput.size());
     sf_close(out);
 
     char command[900] = "audacity \0";
     strcat(command, e);
-    qDebug() << "command IS" << command;
+    fprintf(stderr, "command IS %s", command);
     system(command);
 }
 

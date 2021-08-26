@@ -4,9 +4,12 @@
 #
 #-------------------------------------------------
 
-QT       += core gui opengl
+QT       -= core
 QMAKE_CXXFLAGS += -std=gnu++2a
+QMAKE_CFLAGS += -std=gnu11 -Wstrict-overflow=5
 #CONFIG+=c++17
+CONFIG+=link_pkgconfig
+PKGCONFIG += gtk+-3.0
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = additive
@@ -29,18 +32,19 @@ INCLUDEPATH += ../sound ../../library/ambiguousArray ../../library/dynamicArray 
                ../../library/newFile
 LIBS += -lsndfile -lssl -lcrypto -lexplain
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp \
-    graph.cpp \
-    stft.cpp \
-    ../sound/audio.cpp \
-    alsathread.cpp \
-    synthesis.cpp \
-    mathext.cpp \
-    storearray.cpp \
-    spectrogram.cpp \
-    globals.cpp \
-    soundext.cpp
+    ../sound/audio.c \
+    alsathread.c \
+    globals.c \
+    graph.c \
+    main.c \
+    mathext.c \
+    soundext.c \
+    spectrogram.c \
+    stft.c \
+    storearray.c \
+    synthesis.c \
+    stb_ds.c \
+    mainwindow.c
 
 HEADERS += \
         mainwindow.h \
@@ -53,9 +57,14 @@ HEADERS += \
     storearray.h \
     globals.h \
     spectrogram.h \
-    soundext.h
+    soundext.h \
+    stb_ds.h \
+    ui_mainwindow.h
 
 FORMS += \
         mainwindow.ui
 
 RESOURCES +=
+
+DISTFILES += \
+    mainwindowg.glade

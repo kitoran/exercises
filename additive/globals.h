@@ -1,6 +1,5 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
-#include <vector>
 #include <inttypes.h>
 extern const double freqMax;
 extern const double freqMin;
@@ -10,15 +9,13 @@ extern const int windowSize;
 extern const int stepSize;
 
 extern int16_t *sampls;
-class Spectrogram;
-extern Spectrogram *spectrogram;
+extern struct Spectrogram *spectrogram;
 extern const int cutoff;
-extern std::vector<int16_t> audioOutput;
+extern int16_t* audioOutput;
 extern double denominator;
-inline int numberOfHarmonics = 10;
-inline double* originalFourierTransform{0};
-inline int originalFourierTransformH{-1}, originalFourierTransformW{-1};
+extern int numberOfHarmonics;
+extern double* originalFourierTransform;
+extern int originalFourierTransformH, originalFourierTransformW;
 
-struct SF_INFO;
-extern SF_INFO inpi;
+extern struct SF_INFO inpi;
 #endif // GLOBALS_H1

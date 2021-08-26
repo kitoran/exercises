@@ -1,5 +1,4 @@
-#include <QtWidgets/QApplication>
-#include <complex>
+#include <gtk/gtk.h>
 #include "graph.h"
 #include "alsathread.h"
 #include "stft.h"
@@ -9,18 +8,11 @@
 #include <sndfile.h>
 #include <openssl/md5.h>
 #include <storearray.h>
-
-QtMessageHandler h;
-void myHandler(QtMsgType a, const QMessageLogContext &b, const QString &c) {
-    if(c.contains("QApplication")) {
-        qDebug() << "f";
-    }
-    h(a,b,c);
-}
+#include "mathext.h"
 int main(int argc, char *argv[])
 {
+    initializeMathExt();
     startAlsathread();
-    h = qInstallMessageHandler(myHandler);
 
     inpi.format = 0;
     SNDFILE* inp = sf_open("/home/n/exercises/additive/02-201019_1328part.wav", SFM_READ, &inpi);
@@ -37,14 +29,23 @@ int main(int argc, char *argv[])
     sampls = (int16_t*)malloc(sizeOfSamplsInBytes);
     sf_read_short(inp, sampls, end);
     fprintf(stderr, "%ld", end);
-    QApplication a(argc, argv);
 
-    MainWindow win;
+    gtk_init(&argc, &argv);
+
+    GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_widget_show(window);
+
+    g_signal_connect(window, "destroy",
+        G_CALLBACK(gtk_main_quit), NULL);
+
+    gtk_main();
+
+    struct MainWindow win;
 //    stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
     //    stfft(sampls, end, windowSize, stepSize, &transform, &w);
 //    std::complex< double>* transform;
     unsigned char hassh[MD5_DIGEST_LENGTH];
-    MD5((uchar*)sampls, sizeOfSamplsInBytes, hassh);
+    MD5((unsigned char*)(sampls), sizeOfSamplsInBytes, hassh);
 
 //    complex_stfft(sampls, end, windowSize, stepSize, &transform, &w);
 
@@ -66,7 +67,10 @@ int main(int argc, char *argv[])
         originalFourierTransformH = windowSize;
 //        save((transform), (w)*(h)*sizeof(*transform),
 //             hassh, STR(FUNCTION), 1 );
-        qDebug() << /*size  << */originalFourierTransformW << originalFourierTransformH << sizeof(*originalFourierTransform) << (originalFourierTransformW)*(originalFourierTransformH)*sizeof(*originalFourierTransform);
+        fprintf(stderr, "%d, %d, %d, %d", originalFourierTransformW,
+                        originalFourierTransformH,
+                sizeof(*originalFourierTransform),
+                (originalFourierTransformW)*(originalFourierTransformH)*sizeof(*originalFourierTransform));
 
         double originalMax = max;
 
@@ -76,7 +80,7 @@ int main(int argc, char *argv[])
         shiftandmulLinear(originalFourierTransform, originalFourierTransformH, originalFourierTransformW, &shifted, &shiftedH);
         int hms;
         //    std::vector<std::vector<continuousHarmonic> >  contharms = prepareHarmonics(maxesLinear(transform, h, w, inpi.samplerate), &hms);
-            std::vector<std::vector<continuousHarmonic> >  contharms = prepareHarmonics(maxesLinear(shifted, shiftedH, originalFourierTransformW, inpi.samplerate), &hms);
+        struct continuousHarmonic** contharmsStbArray  = prepareHarmonics(maxesLinear(shifted, shiftedH, originalFourierTransformW, inpi.samplerate), &hms);
 //        resynthesizeMaxima(maxesLinear(shifted, shiftedH, w, inpi.samplerate), stepSize, inpi, windowSize);
 //        resynthesizeMaxima(contharms, hms);
 //        exit(0);
@@ -87,8 +91,8 @@ int main(int argc, char *argv[])
         //        auto mspectrogram = new ContMaximaSpectrogram(max,
         //                prepareHarmonics(maxesLinear(shifted, shiftedH, w, inpi.samplerate), &hms));
 //                auto mspectrogram = new MaximaSpectrogram(max, maxesLinear(transform, h, w, inpi.samplerate));
-                auto mspectrogram = new ContMaximaSpectrogram(max,
-                        contharms, hms);
+        struct Spectrogram* mspectrogram = newContMaximaSpectrogram(max,
+                        contharmsStbArray, hms);
         spectrogram = mspectrogram;
 //        save(&max, sizeof(max),
 //                                              hassh,  STR(FUNCTION) "_max", 1 );
@@ -134,7 +138,6 @@ int main(int argc, char *argv[])
     //    resynthesizeMaxima(transform, w, inpi, h);
 //resynthesizeMaxima(transform, w, inpi, h);
 //    resynthesizeAll(shmul, w, inpi, stepSize,rh);
-    win.show();
 //    std::vector<aaAaa::aaSpline> splines;
 
 //    aaAaa::aaSpline spline;
@@ -155,7 +158,5 @@ int main(int argc, char *argv[])
 
 
 //    ge.show();
-     int r = a.exec();
-     abort();
-     return r;
+     return 0;
 }

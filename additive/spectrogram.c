@@ -3,11 +3,12 @@
 #include "mathext.h"
 #include "audio.h"
 #include "soundext.h"
-#include <QPainter>
-#include <QDebug>
+#include <gdk/gdk.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#include <stdbool.h>
 
 //draw() {
-//p.setPen(Qt::NoPen);
+//p.setPen(transparent());
 //double cutoff = 10000;//samplerate;//10000.0;//*heights/samplerate;
 //double cutoffind = mode == spectrogram_mode::linear?(cutoff*heights/44100)
 //            :log(cutoff/freqMin)/log(frequencyMultiplent);//samplerate;
@@ -32,8 +33,35 @@
 //}
 //}
 
-void Spectrogram::drawAxes(QPainter *p, int w, int h) {
-    p->setPen(Qt::darkMagenta);
+GdkRGBA transparent() {
+    static GdkRGBA r;
+    static bool ined = false;
+    if(!ined) {
+        bool rt
+            = gkd_rgba_parse("transparent", &r);
+           assert(rt);
+           ined=true;
+    }
+    return r;
+}
+GdkRGBA black() {
+    static GdkRGBA r;
+    static bool ined = false;
+    if(!ined) {
+        bool rt
+            = gkd_rgba_parse("black", &r);
+           assert(rt);
+           ined=true;
+    }
+    return r;
+}
+
+void dqrawAxes(struct Spectrogram* sg, struct gdk_gc *p, int w, int h) {
+    GdkRGBA c;
+    bool r =   gdk_rgba_parse                     ("DarkMagenta",
+                                                    &c);
+    assert(r);
+    gdk_gc_set_foreground(p);
 //    double sortabase = log(freqMax/freqMin)/(height()-20);
     for(int y = 0; y < h-20; y += 100) {
         double freq;
@@ -42,11 +70,14 @@ void Spectrogram::drawAxes(QPainter *p, int w, int h) {
 //        } else {
 //             freq = double(y) / (height()-20) * cutoff;
 //        }
-        freq = frequencyAtProportion(double(y) / (h-20));
-        p->drawLine(QPointF{10., h-10.-y},
-                   QPointF{w-10., h-10.-y});
-        p->drawText(QPointF{10., h-10.-y},
-                   QString::number(freq, ' ', 2));
+        freq = frequencyAtProportion((double)(y) / (h-20));
+        gdk_drawLine(p, 10., h-10.-y,
+                   w-10., h-10.-y);
+
+        char text[20];
+        sprintf(text, "%2.lf", freq);
+        gdk_drawText(p, 10., h-10.-y,
+                   text);
     }
 }
 
@@ -57,8 +88,8 @@ void Spectrogram::drawAxes(QPainter *p, int w, int h) {
 //logWindowSize = intLog2(spectrumSize);
 //int size = spectr.data.sized;
 //if(spectr.complex) size /= 2;
-//if(size > frequencies.size() && spectr.mode == spectrogram_mode::logarithmic) {
-//    int i = frequencies.size();
+//if(size > arrlen(frequencies) && spectr.mode == spectrogram_mode::logarithmic) {
+//    int i = arrlen(frequencies);
 //    for(; i < size; i++) {
 //        double mul = pow(frequencyMultiplent, i);
 //        double prod = freqMin * mul;
@@ -115,54 +146,53 @@ void Spectrogram::drawAxes(QPainter *p, int w, int h) {
 
 //}
 
-void MaximaSpectrogram::draw(QPainter *p, int w, int h)
+void MaximaSpectrogramdraw(struct MaximaSpectrogram* self, struct gdk_gc* gc, int w, int h)
 {
-    p->setPen(Qt::NoPen);
-    p->setBrush(Qt::black);
-    p->drawRect(10, 10, w-20, h-20);
-    int spectrWidth = maxima.size();
+    gdk_set_foreground(gc, transparent());
+    gdk_set_background(gc, black());
+    gdk_draw_rect(gc, 10, 10, w-20, h-20);
+    int spectrWidth = arrlen(self->maxima);
     for(int i = 0; i < spectrWidth; i++) {
-        for(int j = 0; j < maxima[i].size(); j++) {
-            harmonic har = maxima[i][j];
-            double left = (w-20)/double(spectrWidth)*i;
-            double right = (w-20)/double(spectrWidth)*(i+1);
-            double bottom = (h-20)/double(cutoff)*har.freq;
+        for(int j = 0; j < arrlen(self->maxima[i]); j++) {
+            struct harmonic har = self->maxima[i][j];
+            double left = (w-20)/(double)(spectrWidth)*i;
+            double right = (w-20)/(double)(spectrWidth)*(i+1);
+            double bottom = (h-20)/(double)(cutoff)*har.freq;
             double top = bottom+1;/*(h-20)/double(cutoff)*(j+1);*/
-            double value = maxima[i][j].amp;
+            double value = self->maxima[i][j].amp;
             int g = value/max*255;
 //            if(g > 100) {
 //                qDebug() << g;
 //            }
-            p->setBrush(QColor(g,g,g));
+            gdk_set_background(gc, QColor(g,g,g));
             if(g < 0 || g > 255) {
-                qDebug() << "i" << i << "j" << j << "amplitude" << value // data.c(i*heights+j)
-                         << "max" << max <<
-                            "color" << g;
+                fprintf(stderr, "i %d j %d amplitude %lf max %lf color %d",
+                        i, j, value, max, g);
             }
-            p->drawRect(QRectF(left+10, h-10-top, right-left, top-bottom));
+            gdk_draw_rect(gc, left+10, h-10-top, right-left, top-bottom);
         }
     }
-    drawAxes(p,w,h);
+    drawAxes(self, gc,w,h);
 }
 
-void MaximaSpectrogram::fillBuffer(int16_t *buffer, int bufferSize, int pos, unsigned int phase)
+void MaximaSpectrogramfillBuffer(struct MaximaSpectrogram* self, int16_t *buffer, int bufferSize, int pos, unsigned int phase)
 {
-    harmonic* hs = maxima[pos].data();
-    int size = maxima[pos].size();
+    struct harmonic* hs = self->maxima[pos];
+    int size = arrlen(self->maxima[pos]);
 //    double ph  = phase;
     for(int j = 0; j < bufferSize; j++) {
         double v = 0;
         for(int i = 0; i < size; i++) {
-            auto deb32 = hs[i];
+            struct harmonic deb32 = hs[i];
             int64_t deb = ((hs[i].freq
                         *phase+i)*LOOKUP_TABLE_SIZE);
-            int64_t deb15 = int64_t((hs[i].freq
+            int64_t deb15 = (int64_t)((hs[i].freq
                         *phase+i)*LOOKUP_TABLE_SIZE)%LOOKUP_TABLE_SIZE;
-            int64_t deb2 = sinLookupTableInt[int64_t((hs[i].freq
+            int64_t deb2 = sinLookupTableInt[(int64_t)((hs[i].freq
                                    *phase+i)*LOOKUP_TABLE_SIZE)
                    %LOOKUP_TABLE_SIZE];
             double deb3 = hs[i].amp;
-            v += hs[i].amp*sinLookupTable[int64_t((hs[i].freq
+            v += hs[i].amp*sinLookupTable[(int64_t)((hs[i].freq
                                     *phase/alsaSampleRate+i)*LOOKUP_TABLE_SIZE)
                     %LOOKUP_TABLE_SIZE]/max/*3*/;
         }
@@ -173,96 +203,101 @@ void MaximaSpectrogram::fillBuffer(int16_t *buffer, int bufferSize, int pos, uns
 
 //int* MaximaSpectrogram::lookup = sinLookupTableInt();
 
-double MaximaSpectrogram::frequencyAtProportion(double proportion)
+double MaximaSpectrogramfrequencyAtProportion(double proportion)
 {
     return proportion*cutoff;
 }
 
-double ContMaximaSpectrogram::frequencyAtProportion(double proportion)
+double ContMaximaSpectrogramfrequencyAtProportion(struct ContMaximaSpectrogram* self, double proportion)
 {
     return proportion*cutoff;
 }
 
-void LinearSpectrogram::draw(QPainter *p, int w, int h)
+void LinearSpectrogramdraw(struct LinearSpectrogram* self, struct gdk_gc *gc, int w, int h)
 {
-    p->setPen(Qt::NoPen);
-    p->setBrush(Qt::black);
-    p->drawRect(10, 10, w-20, h-20);
-    int cutoffIndex = cutoff/freqStep;
+    gdk_set_foreground(gc, transparent());
+    gdk_set_background(gc, black());
+    gtk_drawRect(gc, 10, 10, w-20, h-20);
+    int cutoffIndex = cutoff/self->freqStep;
 //    qDebug() << "final freq is" << indToFftFreq(h,
-    for(int i = 0; i < width_; i++) {
+    for(int i = 0; i < self->width_; i++) {
         for(int j = 0; j < cutoffIndex; j++) {
 
-            double left = (w-20)/double(width_)*i;
-            double right = (w-20)/double(width_)*(i+1);
-            double bottom = (h-20)/double(cutoffIndex)*j;
-            double top = (h-20)/double(cutoffIndex)*(j+1);
-            if(j >= height) {
-                p->setBrush(Qt::darkBlue);
+            double left = (w-20)/(double)(self->width_)*i;
+            double right = (w-20)/(double)(self->width_)*(i+1);
+            double bottom = (h-20)/(double)(cutoffIndex)*j;
+            double top = (h-20)/(double)(cutoffIndex)*(j+1);
+            if(j >= self->height) {
+                GdkRGBA db = {0,0,0.5,1};
+                gdk_set_background(gc, db);
             } else {
-                double value = data[i*height+j];
-                int g = value/max*255;
-                p->setBrush(QColor(g,g,g));
-                if(g < 0 || g > 255) {
-                    qDebug() << "i" << i << "j" << j << "amplitude" << value // data.c(i*heights+j)
-                             << "max" << max <<
-                                "color" << g;
+                double value = self->data[i*self->height+j];
+                double norm = value/max;
+                GdkRGBA color = {norm,norm,norm,1};
+                gdk_set_background(gc, color);
+                if(norm < 0 || norm > 1) {
+                    fprintf(stderr, "i %d j %d amplitude %lf max %lf color %lf",
+                            i, j, value, max, norm);
                 }
             }
 //            if(g > 100) {
 //                qDebug() << g;
 //            }
 
-            p->drawRect(QRectF(left+10, h-10-top, right-left, top-bottom));
+            gtk_drawRect(gc, left+10, h-10-top, right-left, top-bottom);
         }
     }
-    drawAxes(p,w,h);
+    drawAxes(self,gc,w,h);
 }
 
-void LinearSpectrogram::fillBuffer(int16_t *, int bufferSize, int pos, unsigned int phase)
+void LinearSpectrogramfillBuffer(struct LinearSpectrogram* self,int16_t *z, int bufferSize, int pos, unsigned int phase)
 {
     abort();
 }
 
-double LinearSpectrogram::frequencyAtProportion(double proportion)
+double LinearSpectrogramfrequencyAtProportion(struct LinearSpectrogram* self, double proportion)
 {
     return proportion*cutoff;
 }
 
-void ContMaximaSpectrogram::draw(QPainter *p, int w, int h)
+void ContMaximaSpectrogramdraw(struct ContMaximaSpectrogram* self, struct gdk_gc *gc, int w, int h)
 {
-    p->setPen(Qt::NoPen);
-    p->setBrush(Qt::black);
-    p->drawRect(10, 10, w-20, h-20);
-    int spectrWidth = maxima.size();
+    gdk_set_foreground(gc, transparent());
+    gdk_set_background(gc, black());
+    gtk_drawRect(gc, 10, 10, w-20, h-20);
+    int spectrWidth = arrlen(self->maxima);
     for(int i = 1; i < spectrWidth; i++) {
-        for(int j = 0; j < maxima[i].size(); j++) {
-            continuousHarmonic har = maxima[i][j];
-            double rightX = (w-20)/double(spectrWidth)*(i+1);
-            double rightY = (h-20)/double(cutoff)*har.h.freq;
-            double leftX = (w-20)/double(spectrWidth)*(i);
-            double leftY = har.prev == -1? rightY: (h-20)/double(cutoff)*maxima[i-1][har.prev].h.freq;
-            double value = maxima[i][j].h.amp;
+        for(int j = 0; j < arrlen(self->maxima[i]); j++) {
+            struct continuousHarmonic har = self->maxima[i][j];
+            double rightX = (w-20)/(double)(spectrWidth)*(i+1);
+            double rightY = (h-20)/(double)(cutoff)*har.h.freq;
+            double leftX = (w-20)/(double)(spectrWidth)*(i);
+            double leftY = har.prev == -1? rightY: (h-20)/(double)(cutoff)*self->maxima[i-1][har.prev].h.freq;
+            double value = self->maxima[i][j].h.amp;
             int g = value/max*255;
 //            if(g > 100) {
 //                qDebug() << g;
 //            }
-            p->setPen(QColor(Qt::GlobalColor(maxima[i][j].continuity % Qt::transparent)));
+
+
+            assert(false);//gdk_set_foreground(gc, QColor(Qt::GlobalColor(self->maxima[i][j].continuity % Qt::transparent)));
+
+
 //            if(g < 0 || g > 255) {
 //                qDebug() << "i" << i << "j" << j << "amplitude" << value // data.c(i*heights+j)
 //                         << "max" << max <<
 //                            "color" << g;
 //            }
-            p->drawLine(leftX+10, h-10-leftY, rightX+10, h-10-rightY);
+            gdk_drawLine(gc, leftX+10, h-10-leftY, rightX+10, h-10-rightY);
         }
     }
-    drawAxes(p,w,h);
+    drawAxes(gc,w,h);
 }
 
-void ContMaximaSpectrogram::fillBuffer(int16_t *buffer, int bufferSize, int pos, uint64_t phase)
+void ContMaximaSpectrogramfillBuffer(struct ContMaximaSpectrogram* self, int16_t *buffer, int bufferSize, int pos, uint64_t phase)
 {
-    continuousHarmonic* hs = maxima[pos].data();
-    int size = maxima[pos].size();
+    struct continuousHarmonic* hs = self->maxima[pos];
+    int size = arrlen(self->maxima[pos]);
 //    double ph  = phase;
     for(int j = 0; j < bufferSize; j++) {
         double v = 0;
@@ -276,11 +311,23 @@ void ContMaximaSpectrogram::fillBuffer(int16_t *buffer, int bufferSize, int pos,
 //                                   *phase+i)*LOOKUP_TABLE_SIZE)
 //                   %LOOKUP_TABLE_SIZE];
             double deb3 = hs[i].h.amp;
-            v += hs[i].h.amp*sinLookupTable[int64_t((hs[i].h.freq
+            v += hs[i].h.amp*sinLookupTable[(int64_t)((hs[i].h.freq
                                     *phase/alsaSampleRate+i)*LOOKUP_TABLE_SIZE)
                     %LOOKUP_TABLE_SIZE]/max/*3*/;
         }
         phase++;
         buffer[j] = v*800/*/*400   /INT16_MAX*/;
     }
+}
+
+int MaximaSpectrogramWidth(struct MaximaSpectrogram*self) {
+    return (arrlen(self->maxima));
+}
+
+int ContMaximaSpectrogramwidth(struct ContMaximaSpectrogram*self) {
+    return arrlen(self->maxima);
+}
+
+int LinearSpectrogramwidth(struct LinearSpectrogram*self) {
+    return self->width_;
 }

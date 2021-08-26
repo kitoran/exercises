@@ -1,21 +1,21 @@
 #include "stft.h"
 #include <math.h>
-#include <algorithm>
 #include "mathext.h"
 #include "globals.h"
 #include <stdio.h>
-#include <vector>
-#include <complex>
+#include <complex.h>
 
 const double hammingCoef = 0.53836;
 
+double* windowStbArray = NULL;
+
 void makeHammingWindow(int windowSize)
 {
-    window.resize(windowSize);
+    arrsetlen(windowStbArray, windowSize);
     double anotherCoef = 1 - hammingCoef;
     for(int i = 0; i < windowSize; i++) {
 //        int n = i-windowSize/2;
-        window[i] = hammingCoef - anotherCoef*cos(tau*i/windowSize);
+        windowStbArray[i] = hammingCoef - anotherCoef*cos(tau*i/windowSize);
     }
 }
 
@@ -30,11 +30,12 @@ void stft(int16_t *data, int size, int windowSize, int step, int samplerate, dou
 //        double prod = freqMin * mul;
 //        frequencies[i] = prod;
 //    }
-    std::complex<double> primroots[*resH];
+    double complex primroots[*resH];
     for(int i = 0; i < *resH; i++) {
         double mul = pow(frequencyMultiplent, i);
         double prod = freqMin * mul;
-        primroots[i] = std::polar(1.0, (double)tau*prod/samplerate);
+        double argument = tau*prod/samplerate;
+        primroots[i] = CMPLX(cos(argument), sin(argument));
     }
     *resW = ((size) - windowSize)/step;
     *res = (double*)malloc((*resW)*(*resH)*sizeof(double));
@@ -45,20 +46,20 @@ void stft(int16_t *data, int size, int windowSize, int step, int samplerate, dou
 
     double maxw;
     double maxh;
-    std::vector<double> datum; datum.resize(windowSize);
+    double * datumStbArray = NULL; arrsetlen(datumStbArray, windowSize);
     for(int i = 0; i < *resW; i++) {
         for(int n = 0; n < windowSize; n++) {
-            datum[n] = window[n] * data[i*step+n];
+            datumStbArray[n] = windowStbArray[n] * data[i*step+n];
         }
         for(int ind = 0; ind < *resH; ind++) {
-            std::complex<double> acc = 0;
-            const std::complex<double> primroot = primroots[ind];
-            std::complex<double> root = 1;
+            complex double acc = 0;
+            const complex double primroot = primroots[ind];
+            complex double root = 1;
             for(int j = 0; j < windowSize; j++) {
-                acc += root * ((double)(datum[j])/1000.);
+                acc += root * ((double)(datumStbArray[j])/1000.);
                 root *= primroot;
             }
-            (*res)[i*(*resH) + ind] = abs(acc);
+            (*res)[i*(*resH) + ind] = cabs(acc);
             if(max < (*res)[i*(*resH) + ind]) {
                 max = (*res)[i*(*resH) + ind];
                 maxw = i;
@@ -79,12 +80,12 @@ void stfft(int16_t *data, int size, int windowSize, int step, double **res, int 
     makeHammingWindow(windowSize);
     *resW = ((size) - windowSize)/step;
     *res = (double*)malloc((*resW)*(windowSize)*sizeof(double));
-    std::vector<double> datum; datum.resize(windowSize);
+    double* datumStbArray = NULL; arrsetlen(datumStbArray, windowSize);
     for(int i = 0; i < *resW; i++) {
         for(int n = 0; n < windowSize; n++) {
-            datum[n] = window[n] * data[i*step+n];
+            datumStbArray[n] = windowStbArray[n] * data[i*step+n];
         }
-        fft(/*data + step*i*/datum.data(), windowSize, (*res) + i*windowSize);
+        fft(/*data + step*i*/datumStbArray, windowSize, (*res) + i*windowSize);
         if((i) %64 == 0) {
             fprintf(stderr, "%lf, %d of %d", max, i, *resW);
         }
@@ -92,16 +93,16 @@ void stfft(int16_t *data, int size, int windowSize, int step, double **res, int 
     fprintf(stderr, "max %lf ", max);
 }
 
-void complex_stfft(int16_t *data, int size, int windowSize, int step, std::complex<double> **res, int *resW)
+void complex_stfft(int16_t *data, int size, int windowSize, int step, complex double **res, int *resW)
 {
     max = 0;
     makeHammingWindow(windowSize);
     *resW = ((size) - windowSize)/step;
-    *res = (std::complex<double>*)malloc((*resW)*(windowSize)*sizeof(std::complex<double>));
-    std::vector<double> datum; datum.resize(windowSize);
+    *res = (complex double*)malloc((*resW)*(windowSize)*sizeof(complex double));
+    double* datumStbArray = NULL; arrsetlen(datumStbArray, windowSize);
     for(int i = 0; i < *resW; i++) {
         for(int n = 0; n < windowSize; n++) {
-            datum[n] = window[n] * data[i*step+n];
+            datumStbArray[n] = windowStbArray[n] * data[i*step+n];
         }
         complex_fft(data + step*i, windowSize, (*res) + i*windowSize);
         if((i) %4 == 0) {
@@ -111,10 +112,10 @@ void complex_stfft(int16_t *data, int size, int windowSize, int step, std::compl
     fprintf(stderr, "max %lf ", max);
 }
 
-std::vector<harmonic> maxes(double *data, int h, int w)
+struct harmonic *maxesStbArray(double *data, int h, int w)
 {
-    std::vector<harmonic> r;
-    r.reserve(w);
+    struct harmonic* rStbArray = NULL;
+    arrsetcap(rStbArray, w);
     for(int i = 0; i < w; i++) {
         double max = 0;
         int maxind = 0;
@@ -125,41 +126,48 @@ std::vector<harmonic> maxes(double *data, int h, int w)
             }
         }
         double freq = freqMin * pow(frequencyMultiplent, maxind);
-        r.push_back({freq, max});
+        struct harmonic hc = {freq, max};
+        arrput(rStbArray, hc);
     }
-    return r;
+    return rStbArray;
 }
 
-std::vector<std::vector<harmonic>> maxesLinear(double *data, int h, int w, int samplerate)
+struct harmonic** maxesLinearStbArray(double *data, int h, int w, int samplerate)
 {
-    std::vector<std::vector<harmonic>> r;
-    r.reserve(w);
+    struct harmonic** rStbArray = NULL;
+    arrsetcap(rStbArray, w);
     for(int i = 0; i < w; i++) {
-        std::vector<harmonic> e;
+        struct harmonic* eStbArray = NULL;
         for(int j = 1; j < h-1; j++) {
-            double freq = double(samplerate)/h*j;
+            double freq = (double)(samplerate)/h*j;
             if(data[i*h+j] > data[i*h+j-1]
                  && data[i*h+j] > data[i*h+j+1]
                  && freq < 20000
                  && data[i*h+j] > max/200
                     ) {
-                e.push_back({freq, data[i*h+j]});
+                struct harmonic hc = {freq, data[i*h+j]};
+                arrput(eStbArray, hc);
             }
         }
-        std::sort(e.begin(), e.end(), [](harmonic h1, harmonic h2) {
-            return h1.amp > h2.amp; });
+        int ampMore(const void * a, const void * b) {
+            return ((struct harmonic*)a)->amp > ((struct harmonic*)b)->amp;
+        }
+//        qsort(e, arrlen(e), sizeof(*e), ampMore);
+        int freqLess(const void * a, const void * b) {
+            return ((struct harmonic*)a)->freq < ((struct harmonic*)b)->freq;
+        }
 //        if(e.size() > 15) e.resize(1);
-        std::sort(e.begin(), e.end(), [](harmonic h1, harmonic h2) {
-            return h1.freq < h2.freq; });
-        r.push_back(e);
+        qsort(eStbArray, arrlen(eStbArray), sizeof(*eStbArray), freqLess);
+
+        arrput(rStbArray, eStbArray);
     }
-    return r;
+    return rStbArray;
 }
 
 void shiftandmul(double *src, int h, int w, double **dest, int* resH)
 {
     max = 0;
-    constexpr int lastHarmonic = 14;
+    int lastHarmonic = 14;
     int shifts[lastHarmonic];
     for(int i = 0; i < lastHarmonic; i++) {
         shifts[i] = log(i+1)/log(frequencyMultiplent);
@@ -215,8 +223,8 @@ void shiftandmulLinear(double *src, int h, int w, double **dest, int *resH)
     fprintf(stderr, "shmul max %lf", max);
 }
 
-std::complex<double> primeroot(int p) {
-    static std::vector<std::complex<double>> r;
+complex double primeroot(int p) {
+    static std::vector<complex double> r;
     if(r.size() > p) {
         return r[p];
     }
@@ -230,7 +238,7 @@ std::complex<double> primeroot(int p) {
 //#pragma GCC push_options
 static const double ftcoef = 1/sqrt(tau);
 template<typename inptype>
-void fftRec(inptype *data, int logsize, int logstep, std::complex<double> *res) {
+void fftRec(inptype *data, int logsize, int logstep, complex double *res) {
     if(logsize == 0) {
         *res = *data*ftcoef;
         return;
@@ -238,21 +246,20 @@ void fftRec(inptype *data, int logsize, int logstep, std::complex<double> *res) 
     fftRec(data, logsize-1, logstep+1, res);
     fftRec(data+(1 << logstep), logsize-1, logstep+1, res+(1 << (logsize-1)));
 
-    std::complex<double> proot = primeroot(logsize);
-    std::complex<double> root = 1;
+    complex double proot = primeroot(logsize);
+    complex double root = 1;
     for(int i = 0; i < (1 << (logsize-1)); i++) {
-        std::complex<double> e = res[i];
-        std::complex<double> o = res[i+(1 << (logsize-1))];
+        complex double e = res[i];
+        complex double o = res[i+(1 << (logsize-1))];
         res[i] = e + root * o;
         res[i+(1 << (logsize-1))] = e - root * o;
         root *= proot;
     }
 }
 
-template<typename inptype>
-void fft(inptype *data, int size, double *res)
+void fft(int32_t *data, int size, double *res)
 {
-    std::complex<double> actualRes[size];
+    complex double actualRes[size];
     int logsize = intLog2(size);
 
     fftRec(data, logsize, 0, &actualRes[0]);
@@ -267,10 +274,10 @@ void fft(inptype *data, int size, double *res)
 
 template void fft(int16_t *data, int size, double *res);
 template void fft(double *data, int size, double *res);
-template void fft(std::complex<double> *data, int size, double *res);
+template void fft(complex double *data, int size, double *res);
 //#pragma GCC pop_options
 template<typename inptype>
-void complex_fft(inptype *data, int size, std::complex<double> *res)
+void complex_fft(inptype *data, int size, complex double *res)
 {
     int logsize = intLog2(size);
 
@@ -282,8 +289,8 @@ void complex_fft(inptype *data, int size, std::complex<double> *res)
         }
     }
 }
-template void complex_fft(int16_t *data, int size, std::complex<double> *res);
-template void complex_fft(double *data, int size, std::complex<double> *res);
+template void complex_fft(int16_t *data, int size, complex double *res);
+template void complex_fft(double *data, int size, complex double *res);
 
 
 void isolateMaxima(int w, double *transform, int h,  double *data)

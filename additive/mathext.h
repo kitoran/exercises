@@ -5,6 +5,9 @@
 
 #define LOOKUP_POWER 15
 #define LOOKUP_TABLE_SIZE (1 << LOOKUP_POWER)
+
+void initializeMathExt();
+
 inline double fastSin(double x);
 inline int fastReducedSinInt(int x);
 extern double* sinLookupTable;
