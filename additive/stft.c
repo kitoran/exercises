@@ -73,6 +73,7 @@ void stft(int16_t *data, int size, int windowSize, int step, int samplerate, dou
     }
     fprintf(stderr, "max %lf maxw %lf maxh %lf", max, maxw, maxh);
 }
+void fftDouble(double *data, int size, double *res);
 
 void stfft(int16_t *data, int size, int windowSize, int step, double **res, int *resW)
 {
@@ -85,7 +86,7 @@ void stfft(int16_t *data, int size, int windowSize, int step, double **res, int 
         for(int n = 0; n < windowSize; n++) {
             datumStbArray[n] = windowStbArray[n] * data[i*step+n];
         }
-        fft(/*data + step*i*/datumStbArray, windowSize, (*res) + i*windowSize);
+        fftDouble(/*data + step*i*/datumStbArray, windowSize, (*res) + i*windowSize);
         if((i) %64 == 0) {
             fprintf(stderr, "%lf, %d of %d", max, i, *resW);
         }
@@ -93,6 +94,7 @@ void stfft(int16_t *data, int size, int windowSize, int step, double **res, int 
     fprintf(stderr, "max %lf ", max);
 }
 
+void complex_fftInt16(int16_t *data, int size, complex double *res);
 void complex_stfft(int16_t *data, int size, int windowSize, int step, complex double **res, int *resW)
 {
     max = 0;
@@ -104,7 +106,7 @@ void complex_stfft(int16_t *data, int size, int windowSize, int step, complex do
         for(int n = 0; n < windowSize; n++) {
             datumStbArray[n] = windowStbArray[n] * data[i*step+n];
         }
-        complex_fft(data + step*i, windowSize, (*res) + i*windowSize);
+        complex_fftInt16(data + step*i, windowSize, (*res) + i*windowSize);
         if((i) %4 == 0) {
             fprintf(stderr, "%lf, %d of %d", max, i, *resW);
         }
@@ -224,45 +226,26 @@ void shiftandmulLinear(double *src, int h, int w, double **dest, int *resH)
 }
 
 complex double primeroot(int p) {
-    static std::vector<complex double> r;
-    if(r.size() > p) {
+    static complex double* r = NULL;
+    if(arrlen(r) > p) {
         return r[p];
     }
-    int oldsize = r.size();
-    r.resize(p+1);
+    int oldsize = arrlen(r);
+    arrsetlen(r, p+1);
     for(int i = oldsize; i <= p; i++) {
-        r[i] = std::polar(1., tau/(1 << i));
+        r[i] = CMPLX(cos(tau/(1 << i)), sin(tau/(1 << i)));
     }
     return r[p];
 }
 //#pragma GCC push_options
-static const double ftcoef = 1/sqrt(tau);
-template<typename inptype>
-void fftRec(inptype *data, int logsize, int logstep, complex double *res) {
-    if(logsize == 0) {
-        *res = *data*ftcoef;
-        return;
-    }
-    fftRec(data, logsize-1, logstep+1, res);
-    fftRec(data+(1 << logstep), logsize-1, logstep+1, res+(1 << (logsize-1)));
-
-    complex double proot = primeroot(logsize);
-    complex double root = 1;
-    for(int i = 0; i < (1 << (logsize-1)); i++) {
-        complex double e = res[i];
-        complex double o = res[i+(1 << (logsize-1))];
-        res[i] = e + root * o;
-        res[i+(1 << (logsize-1))] = e - root * o;
-        root *= proot;
-    }
-}
-
+static const double ftcoef = 0.3989422804;//it's1/sqrt(tau);
+#include "fftrec.c"
 void fft(int32_t *data, int size, double *res)
 {
     complex double actualRes[size];
     int logsize = intLog2(size);
 
-    fftRec(data, logsize, 0, &actualRes[0]);
+    fftRecInt32(data, logsize, 0, &actualRes[0]);
     for(int i = 0; i < size; i++) {
         res[i] = std::abs(actualRes[i]);
         if(max < (res[i])) {
