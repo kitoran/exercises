@@ -1,6 +1,7 @@
 #include "mathext.h"
 #include "math.h"
 #include "inttypes.h"
+#include <stdbool.h>
 
 
 const double tau = M_PI*2;
@@ -16,7 +17,7 @@ double *makeSinLookupTable()
     }
     return lookup;
 }
-double *sinLookupTable = makeSinLookupTable();
+double *sinLookupTable = 0;
 int * makeSinLookupTableInt()
 {
     static bool initialized = false;
@@ -29,12 +30,14 @@ int * makeSinLookupTableInt()
     }
     return lookup;
 }
-int* sinLookupTableInt = makeSinLookupTableInt();
+int* sinLookupTableInt = 0;
+
 inline double fastSin(double x)
 {
     return sinLookupTable
-            [int(x/tau*LOOKUP_TABLE_SIZE)%LOOKUP_TABLE_SIZE];
+            [(int)(x/tau*LOOKUP_TABLE_SIZE)%LOOKUP_TABLE_SIZE];
 }
+
 int intLog2(int l) {
     int res = 0;
     while(l >>= 1) {
@@ -43,3 +46,9 @@ int intLog2(int l) {
     return res;
 }
 
+
+void initializeMathExt()
+{
+    sinLookupTable = makeSinLookupTable();
+    sinLookupTableInt = makeSinLookupTableInt();
+}

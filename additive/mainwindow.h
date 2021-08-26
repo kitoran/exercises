@@ -1,37 +1,19 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
+#include <gtk/gtk.h>
 
-#include <QMainWindow>
-
-namespace Ui {
-class MainWindow;
-}
-class graph;
-class MainWindow : public QMainWindow
+struct graph;
+struct MainWindow
 {
-    Q_OBJECT
-
-public:
-    explicit MainWindow(/*QWidget *parent = 0,*/
-                        /*double* data,
-                        int size,
-                        double max*/);
-    ~MainWindow();
-
-    graph* g;
-private slots:
-    void on_toolButton_clicked();
-
-    void on_denominator_textChanged(const QString &arg1);
-
-    void on_toolButton_2_clicked();
-
-    void on_pushButton_clicked();
-
-    void on_numberOfHarmonicsLineEdit_textChanged(const QString &arg1);
-
-private:
-    Ui::MainWindow *ui;
+    GtkWidget parent;
+    struct graph* g;
 };
+void MainWindowon_toolButton_clicked(struct MainWindow);
+void MainWindowon_denominator_textChanged(struct MainWindow, const char* arg1);
+void MainWindowon_toolButton_2_clicked(struct MainWindow);
+void MainWindowon_pushButton_clicked(struct MainWindow);
+void MainWindowon_numberOfHarmonicsLineEdit_textChanged(struct MainWindow, const char* arg1);
+
+
 
 #endif // MAINWINDOW_H
