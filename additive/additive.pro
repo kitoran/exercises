@@ -44,7 +44,8 @@ SOURCES += \
     storearray.c \
     synthesis.c \
     stb_ds.c \
-    mainwindow.c
+    mainwindow.c \
+    fftrec.c
 
 HEADERS += \
         mainwindow.h \
