@@ -9,19 +9,22 @@
 struct graphClass {
 
 };
-
+struct _cairo_surface;
 struct graph
 {
-    GtkWidget parent;
+    GtkWidget p;
 
     _Bool selecting;
     int selectStart;
     int selectEnd;
-    struct GdkPixbuf *spectrogramDrawing;
+    struct _cairo_surface *spectrogramDrawing;
+//    int spectrogramWidth;
+//    int spectrogramHeight;
 //    QWidget
 
 
 };
+void initializeGraph(struct graph *g);
 int rangeEndInArray(struct graph*g);
 int rangeStartInArray(struct graph*);
 void paintEvent(struct graph*,GdkEventVisibility*event);

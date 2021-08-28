@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
         originalFourierTransformH = windowSize;
 //        save((transform), (w)*(h)*sizeof(*transform),
 //             hassh, STR(FUNCTION), 1 );
-        fprintf(stderr, "%d, %d, %d, %d", originalFourierTransformW,
+        fprintf(stderr, "%d, %d, %lu, %lu", originalFourierTransformW,
                         originalFourierTransformH,
                 sizeof(*originalFourierTransform),
                 (originalFourierTransformW)*(originalFourierTransformH)*sizeof(*originalFourierTransform));
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
         shiftandmulLinear(originalFourierTransform, originalFourierTransformH, originalFourierTransformW, &shifted, &shiftedH);
         int hms;
         //    std::vector<std::vector<continuousHarmonic> >  contharms = prepareHarmonics(maxesLinear(transform, h, w, inpi.samplerate), &hms);
-        struct continuousHarmonic** contharmsStbArray  = prepareHarmonics(maxesLinear(shifted, shiftedH, originalFourierTransformW, inpi.samplerate), &hms);
+        struct continuousHarmonic** contharmsStbArray  = prepareHarmonicsStbArray(maxesLinear(shifted, shiftedH, originalFourierTransformW, inpi.samplerate), &hms);
 //        resynthesizeMaxima(maxesLinear(shifted, shiftedH, w, inpi.samplerate), stepSize, inpi, windowSize);
 //        resynthesizeMaxima(contharms, hms);
 //        exit(0);

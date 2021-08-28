@@ -35,3 +35,41 @@ void fftRecInt32(int32_t *data, int logsize, int logstep, complex double *res) {
         root *= proot;
     }
 }
+
+void fftRecDouble(double *data, int logsize, int logstep, complex double *res) {
+    if(logsize == 0) {
+        *res = *data*ftcoef;
+        return;
+    }
+    fftRecDouble(data, logsize-1, logstep+1, res);
+    fftRecDouble(data+(1 << logstep), logsize-1, logstep+1, res+(1 << (logsize-1)));
+
+    complex double proot = primeroot(logsize);
+    complex double root = 1;
+    for(int i = 0; i < (1 << (logsize-1)); i++) {
+        complex double e = res[i];
+        complex double o = res[i+(1 << (logsize-1))];
+        res[i] = e + root * o;
+        res[i+(1 << (logsize-1))] = e - root * o;
+        root *= proot;
+    }
+}
+
+void fftRecComplexDouble(complex double *data, int logsize, int logstep, complex double *res) {
+    if(logsize == 0) {
+        *res = *data*ftcoef;
+        return;
+    }
+    fftRecComplexDouble(data, logsize-1, logstep+1, res);
+    fftRecComplexDouble(data+(1 << logstep), logsize-1, logstep+1, res+(1 << (logsize-1)));
+
+    complex double proot = primeroot(logsize);
+    complex double root = 1;
+    for(int i = 0; i < (1 << (logsize-1)); i++) {
+        complex double e = res[i];
+        complex double o = res[i+(1 << (logsize-1))];
+        res[i] = e + root * o;
+        res[i+(1 << (logsize-1))] = e - root * o;
+        root *= proot;
+    }
+}

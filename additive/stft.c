@@ -240,41 +240,8 @@ complex double primeroot(int p) {
 //#pragma GCC push_options
 static const double ftcoef = 0.3989422804;//it's1/sqrt(tau);
 #include "fftrec.c"
-void fft(int32_t *data, int size, double *res)
-{
-    complex double actualRes[size];
-    int logsize = intLog2(size);
-
-    fftRecInt32(data, logsize, 0, &actualRes[0]);
-    for(int i = 0; i < size; i++) {
-        res[i] = std::abs(actualRes[i]);
-        if(max < (res[i])) {
-            max = (res[i]);
-//            maxh = i;
-        }
-    }
-}
-
-template void fft(int16_t *data, int size, double *res);
-template void fft(double *data, int size, double *res);
-template void fft(complex double *data, int size, double *res);
+#include "fft.c"
 //#pragma GCC pop_options
-template<typename inptype>
-void complex_fft(inptype *data, int size, complex double *res)
-{
-    int logsize = intLog2(size);
-
-    fftRec(data, logsize, 0, &res[0]);
-    for(int i = 0; i < size; i++) {
-        if(max < std::abs(res[i])) {
-            max = std::abs(res[i]);
-//            maxh = i;
-        }
-    }
-}
-template void complex_fft(int16_t *data, int size, complex double *res);
-template void complex_fft(double *data, int size, complex double *res);
-
 
 void isolateMaxima(int w, double *transform, int h,  double *data)
 {

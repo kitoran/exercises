@@ -1,6 +1,6 @@
 #ifndef STOREARRAY_H
 #define STOREARRAY_H
-
+#include <stdbool.h>
 void save(void* data, int size, const unsigned char* hash, char* type, int version);
 
 bool load(const unsigned char* hash, char* type, int version, void** data, int* size);

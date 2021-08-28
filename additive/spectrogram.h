@@ -13,9 +13,8 @@ struct Spectrogram
     void (*fillBuffer)(void*, int16_t*, int bufferSize, int pos, uint64_t phase);
     double (*frequencyAtProportion)(void*, double p);
 };
-
-struct gdk_gc;
-void dqrawAxes(struct Spectrogram *sg, struct gdk_gc *p, int w, int h);
+struct _cairo;
+void dqrawAxes(struct Spectrogram *sg, struct _cairo *p, int w, int h);
 
 struct MaximaSpectrogram
 {

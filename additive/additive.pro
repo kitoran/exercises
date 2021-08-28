@@ -45,7 +45,7 @@ SOURCES += \
     synthesis.c \
     stb_ds.c \
     mainwindow.c \
-    fftrec.c
+    complex_fft.c
 
 HEADERS += \
         mainwindow.h \
@@ -64,6 +64,10 @@ HEADERS += \
 
 FORMS += \
         mainwindow.ui
+
+OTHER_FILES += \
+    fftrec.c \
+    fft.c
 
 RESOURCES +=
 
