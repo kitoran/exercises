@@ -4,7 +4,7 @@
 #include "audio.h"
 #include "soundext.h"
 #include <gdk/gdk.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
+#include <cairo.h>
 #include <stdbool.h>
 
 //draw() {
@@ -38,7 +38,7 @@ GdkRGBA transparent() {
     static bool ined = false;
     if(!ined) {
         bool rt
-            = gkd_rgba_parse("transparent", &r);
+            = gdk_rgba_parse(&r, "transparent");
            assert(rt);
            ined=true;
     }
@@ -49,19 +49,19 @@ GdkRGBA black() {
     static bool ined = false;
     if(!ined) {
         bool rt
-            = gkd_rgba_parse("black", &r);
+            = gdk_rgba_parse( &r, "black");
            assert(rt);
            ined=true;
     }
     return r;
 }
 
-void dqrawAxes(struct Spectrogram* sg, struct gdk_gc *p, int w, int h) {
+void dqrawAxes(struct Spectrogram* sg, cairo_t *p, int w, int h) {
     GdkRGBA c;
-    bool r =   gdk_rgba_parse                     ("DarkMagenta",
-                                                    &c);
+    bool r =   gdk_rgba_parse(
+                &c, "DarkMagenta");
     assert(r);
-    gdk_gc_set_foreground(p);
+    cairo_set_source_rgb(p, c.red, c.green, c.blue);
 //    double sortabase = log(freqMax/freqMin)/(height()-20);
     for(int y = 0; y < h-20; y += 100) {
         double freq;
@@ -70,14 +70,15 @@ void dqrawAxes(struct Spectrogram* sg, struct gdk_gc *p, int w, int h) {
 //        } else {
 //             freq = double(y) / (height()-20) * cutoff;
 //        }
-        freq = frequencyAtProportion((double)(y) / (h-20));
-        gdk_drawLine(p, 10., h-10.-y,
+        freq = sg->frequencyAtProportion(sg, (double)(y) / (h-20));
+        cairo_move_to(p, 10., h-10.-y);
+        cairo_line_to(p,
                    w-10., h-10.-y);
 
         char text[20];
         sprintf(text, "%2.lf", freq);
-        gdk_drawText(p, 10., h-10.-y,
-                   text);
+        cairo_move_to(p, 10., h-10.-y);
+        cairo_show_text(p, text);
     }
 }
 
@@ -146,7 +147,7 @@ void dqrawAxes(struct Spectrogram* sg, struct gdk_gc *p, int w, int h) {
 
 //}
 
-void MaximaSpectrogramdraw(struct MaximaSpectrogram* self, struct gdk_gc* gc, int w, int h)
+void MaximaSpectrogramdraw(struct MaximaSpectrogram* self, cairo_t* gc, int w, int h)
 {
     gdk_set_foreground(gc, transparent());
     gdk_set_background(gc, black());

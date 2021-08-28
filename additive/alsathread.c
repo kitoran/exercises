@@ -19,10 +19,11 @@ extern uint framesPerPeriod;
 
 
 
-void alsathread() {
+void* alsathread(void* d) {
+    (void)d;
     //        double* lookup = sinLookupTable();
     //        int*lookup = sinLookupTableInt();
-    double* frequenciesStbArray = 0;//
+//    double* frequenciesStbArray = 0;//
     typedef int16_t frameType;
     frameType *buffer;
     initAudio(1, SND_PCM_FORMAT_S16_LE);//SND_PCM_FORMAT_FLOAT64_LE
@@ -31,16 +32,16 @@ void alsathread() {
     uint64_t phase = 0;
     int output = 0;
 
-    int logWindowSize = 0;
+//    int logWindowSize = 0;
     //        QElapsedTimer t;
     //        t.start();
     //        int samples = 0;
     //        int changes = 0;
     //        bool signPositive = 1;
-    double* unFftStbArray;
-    int* spectrumIntStbArray;
+//    double* unFftStbArray;
+//    int* spectrumIntStbArray;
     wait(&channel);
-    int spectrumSize;
+//    int spectrumSize;
 
     while(true) {
         //            qDebug() << "hey";
@@ -76,13 +77,15 @@ void alsathread() {
         //            clock_t afterWrite = clock();
         //            qDebug() << float(afterWrite-afterLoop)/CLOCKS_PER_SEC << float(afterLoop - start)/CLOCKS_PER_SEC;
     }
+    return NULL;
 }
 
 
 void startAlsathread()
 {
     pthread_t newthread;
-    pthread_create(&newthread, 0, alsathread, 0);
+
+    pthread_create(&newthread, 0, &alsathread, 0);
 
     pthread_setname_np(newthread, "alsathread");
 }

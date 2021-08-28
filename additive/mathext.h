@@ -8,8 +8,8 @@
 
 void initializeMathExt();
 
-inline double fastSin(double x);
-inline int fastReducedSinInt(int x);
+double fastSin(double x);//should be inline
+int fastReducedSinInt(int x); //should be inline
 extern double* sinLookupTable;
 extern int* sinLookupTableInt;
 extern const double tau;
