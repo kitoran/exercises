@@ -11,7 +11,7 @@ extern const int stepSize;
 extern int16_t *sampls;
 extern struct Spectrogram *spectrogram;
 extern const int cutoff;
-extern int16_t* audioOutput;
+extern int16_t* audioOutputStb;
 extern double denominator;
 extern int numberOfHarmonics;
 extern double* originalFourierTransform;

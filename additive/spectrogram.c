@@ -56,7 +56,7 @@ GdkRGBA black() {
     return r;
 }
 
-void dqrawAxes(struct Spectrogram* sg, cairo_t *p, int w, int h) {
+void drawAxes(struct Spectrogram* sg, cairo_t *p, int w, int h) {
     GdkRGBA c;
     bool r =   gdk_rgba_parse(
                 &c, "DarkMagenta");
@@ -147,11 +147,10 @@ void dqrawAxes(struct Spectrogram* sg, cairo_t *p, int w, int h) {
 
 //}
 
-void MaximaSpectrogramdraw(struct MaximaSpectrogram* self, cairo_t* gc, int w, int h)
+void MaximaSpectrogramdraw(struct MaximaSpectrogram* self, cairo_t* p, int w, int h)
 {
-    gdk_set_foreground(gc, transparent());
-    gdk_set_background(gc, black());
-    gdk_draw_rect(gc, 10, 10, w-20, h-20);
+    cairo_set_source_rgb(p, 0, 0, 0);
+    cairo_rectangle(p, 10, 10, w-20, h-20);
     int spectrWidth = arrlen(self->maxima);
     for(int i = 0; i < spectrWidth; i++) {
         for(int j = 0; j < arrlen(self->maxima[i]); j++) {
@@ -165,15 +164,15 @@ void MaximaSpectrogramdraw(struct MaximaSpectrogram* self, cairo_t* gc, int w, i
 //            if(g > 100) {
 //                qDebug() << g;
 //            }
-            gdk_set_background(gc, QColor(g,g,g));
+            cairo_set_source_rgb(p, g,g,g);
             if(g < 0 || g > 255) {
                 fprintf(stderr, "i %d j %d amplitude %lf max %lf color %d",
                         i, j, value, max, g);
             }
-            gdk_draw_rect(gc, left+10, h-10-top, right-left, top-bottom);
+            cairo_rectangle(p, left+10, h-10-top, right-left, top-bottom);
         }
     }
-    drawAxes(self, gc,w,h);
+    drawAxes(&self->ff, p,w,h);
 }
 
 void MaximaSpectrogramfillBuffer(struct MaximaSpectrogram* self, int16_t *buffer, int bufferSize, int pos, unsigned int phase)
@@ -185,14 +184,14 @@ void MaximaSpectrogramfillBuffer(struct MaximaSpectrogram* self, int16_t *buffer
         double v = 0;
         for(int i = 0; i < size; i++) {
             struct harmonic deb32 = hs[i];
-            int64_t deb = ((hs[i].freq
-                        *phase+i)*LOOKUP_TABLE_SIZE);
-            int64_t deb15 = (int64_t)((hs[i].freq
-                        *phase+i)*LOOKUP_TABLE_SIZE)%LOOKUP_TABLE_SIZE;
-            int64_t deb2 = sinLookupTableInt[(int64_t)((hs[i].freq
-                                   *phase+i)*LOOKUP_TABLE_SIZE)
-                   %LOOKUP_TABLE_SIZE];
-            double deb3 = hs[i].amp;
+//            int64_t deb = ((hs[i].freq
+//                        *phase+i)*LOOKUP_TABLE_SIZE);
+//            int64_t deb15 = (int64_t)((hs[i].freq
+//                        *phase+i)*LOOKUP_TABLE_SIZE)%LOOKUP_TABLE_SIZE;
+//            int64_t deb2 = sinLookupTableInt[(int64_t)((hs[i].freq
+//                                   *phase+i)*LOOKUP_TABLE_SIZE)
+//                   %LOOKUP_TABLE_SIZE];
+//            double deb3 = hs[i].amp;
             v += hs[i].amp*sinLookupTable[(int64_t)((hs[i].freq
                                     *phase/alsaSampleRate+i)*LOOKUP_TABLE_SIZE)
                     %LOOKUP_TABLE_SIZE]/max/*3*/;
@@ -211,14 +210,14 @@ double MaximaSpectrogramfrequencyAtProportion(double proportion)
 
 double ContMaximaSpectrogramfrequencyAtProportion(struct ContMaximaSpectrogram* self, double proportion)
 {
+    (void)self;
     return proportion*cutoff;
 }
 
-void LinearSpectrogramdraw(struct LinearSpectrogram* self, struct gdk_gc *gc, int w, int h)
+void LinearSpectrogramdraw(struct LinearSpectrogram* self, cairo_t *p, int w, int h)
 {
-    gdk_set_foreground(gc, transparent());
-    gdk_set_background(gc, black());
-    gtk_drawRect(gc, 10, 10, w-20, h-20);
+    cairo_set_source_rgb(p, 0, 0, 0);
+    cairo_rectangle(p, 10, 10, w-20, h-20);
     int cutoffIndex = cutoff/self->freqStep;
 //    qDebug() << "final freq is" << indToFftFreq(h,
     for(int i = 0; i < self->width_; i++) {
@@ -229,13 +228,12 @@ void LinearSpectrogramdraw(struct LinearSpectrogram* self, struct gdk_gc *gc, in
             double bottom = (h-20)/(double)(cutoffIndex)*j;
             double top = (h-20)/(double)(cutoffIndex)*(j+1);
             if(j >= self->height) {
-                GdkRGBA db = {0,0,0.5,1};
-                gdk_set_background(gc, db);
+                cairo_set_source_rgb(p, 0,0,0.5);
             } else {
                 double value = self->data[i*self->height+j];
                 double norm = value/max;
-                GdkRGBA color = {norm,norm,norm,1};
-                gdk_set_background(gc, color);
+                cairo_set_source_rgb(p, norm,norm,norm);
+//                gdk_set_background(gc, color);
                 if(norm < 0 || norm > 1) {
                     fprintf(stderr, "i %d j %d amplitude %lf max %lf color %lf",
                             i, j, value, max, norm);
@@ -245,10 +243,10 @@ void LinearSpectrogramdraw(struct LinearSpectrogram* self, struct gdk_gc *gc, in
 //                qDebug() << g;
 //            }
 
-            gtk_drawRect(gc, left+10, h-10-top, right-left, top-bottom);
+            cairo_rectangle(p, left+10, h-10-top, right-left, top-bottom);
         }
     }
-    drawAxes(self,gc,w,h);
+    drawAxes(self,p,w,h);
 }
 
 void LinearSpectrogramfillBuffer(struct LinearSpectrogram* self,int16_t *z, int bufferSize, int pos, unsigned int phase)
@@ -292,7 +290,7 @@ void ContMaximaSpectrogramdraw(struct ContMaximaSpectrogram* self, struct gdk_gc
             gdk_drawLine(gc, leftX+10, h-10-leftY, rightX+10, h-10-rightY);
         }
     }
-    drawAxes(gc,w,h);
+    drawAxes(&self->ff, gc,w,h);
 }
 
 void ContMaximaSpectrogramfillBuffer(struct ContMaximaSpectrogram* self, int16_t *buffer, int bufferSize, int pos, uint64_t phase)
@@ -332,3 +330,10 @@ int ContMaximaSpectrogramwidth(struct ContMaximaSpectrogram*self) {
 int LinearSpectrogramwidth(struct LinearSpectrogram*self) {
     return self->width_;
 }
+
+const struct Spectrogram contMaximaSpectrogramVtable = {
+    ContMaximaSpectrogramwidth,
+    ContMaximaSpectrogramdraw,
+    ContMaximaSpectrogramfillBuffer,
+    ContMaximaSpectrogramfrequencyAtProportion
+};

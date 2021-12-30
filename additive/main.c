@@ -1,4 +1,4 @@
-#include <gtk/gtk.h>
+﻿#include <gtk/gtk.h>
 #include "graph.h"
 #include "alsathread.h"
 #include "stft.h"
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 
     gtk_main();
 
-    struct MainWindow win;
+    GtkGrid* win = gtk_grid_new();
 //    stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
     //    stfft(sampls, end, windowSize, stepSize, &transform, &w);
 //    std::complex< double>* transform;
@@ -91,9 +91,12 @@ int main(int argc, char *argv[])
         //        auto mspectrogram = new ContMaximaSpectrogram(max,
         //                prepareHarmonics(maxesLinear(shifted, shiftedH, w, inpi.samplerate), &hms));
 //                auto mspectrogram = new MaximaSpectrogram(max, maxesLinear(transform, h, w, inpi.samplerate));
-        struct Spectrogram* mspectrogram = newContMaximaSpectrogram(max,
-                        contharmsStbArray, hms);
-        spectrogram = mspectrogram;
+        struct ContMaximaSpectrogram mspectrogram = {
+            contMaximaSpectrogramVtable,
+
+                        contharmsStbArray,
+                    hms};
+        spectrogram = &mspectrogram.ff;
 //        save(&max, sizeof(max),
 //                                              hassh,  STR(FUNCTION) "_max", 1 );
 //        save(&h, sizeof(h),

@@ -1,4 +1,4 @@
-#ifndef SPECTRUM_H
+﻿#ifndef SPECTRUM_H
 #define SPECTRUM_H
 #include <inttypes.h>
 #include <stft.h>
@@ -14,25 +14,26 @@ struct Spectrogram
     double (*frequencyAtProportion)(void*, double p);
 };
 struct _cairo;
-void dqrawAxes(struct Spectrogram *sg, struct _cairo *p, int w, int h);
+void drawAxes(struct Spectrogram *sg, struct _cairo *p, int w, int h);
 
 struct MaximaSpectrogram
 {
-    const struct Spectrogram ff;
+    struct Spectrogram ff;
     struct harmonic**  maxima;
     double max;
 };
-
-struct ContMaximaSpectrogram
+typedef struct ContMaximaSpectrogram
 {
-    const struct Spectrogram ff;
+    struct Spectrogram ff;
     struct continuousHarmonic** maxima;
     int harmonics;
-};
+} ContMaximaSpectrogram;
+
+extern const struct Spectrogram contMaximaSpectrogramVtable;
 
 struct LinearSpectrogram
 {
-    const struct Spectrogram ff;
+    struct Spectrogram ff;
     double* data;
     int width_;
     int height;
