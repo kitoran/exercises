@@ -45,7 +45,9 @@ SOURCES += \
     synthesis.c \
     stb_ds.c \
     mainwindow.c \
-    complex_fft.c
+    complex_fft.c \
+    ../../library/newFile/newfile.c \
+    intpool.c
 
 HEADERS += \
         mainwindow.h \
@@ -60,7 +62,8 @@ HEADERS += \
     spectrogram.h \
     soundext.h \
     stb_ds.h \
-    ui_mainwindow.h
+    ui_mainwindow.h \
+    intpool.h
 
 FORMS += \
         mainwindow.ui

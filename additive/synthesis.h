@@ -9,6 +9,7 @@ void resynthesizeOne(double* data, int w, SF_INFO inpi, int stepSize, int h);
 void resynthesizeAll(double* data, int w, SF_INFO inpi, int stepSize, int h);
 
 void resynthesizeAllLinear(double* data, int w, int stepSize, SF_INFO inpi, int specrtSize, int windowSize);
+struct ContMaximaSpectrogram;
 void resynthesizeMaxima(struct ContMaximaSpectrogram *s, int start, int end);
 
 struct continuousHarmonic** prepareHarmonicsStbArray(struct harmonic* const* dataStbArray

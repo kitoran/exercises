@@ -1,4 +1,4 @@
-#ifndef STFT_H
+﻿#ifndef STFT_H
 #define STFT_H
 #include <inttypes.h>
 #include "stb_ds.h"
@@ -20,17 +20,17 @@ void stfft(int16_t *data, int size,
           double** res, int* resW); // resH = window
 void complex_stfft(int16_t *data, int size, int windowSize, int step, double _Complex **res, int *resW);
 
-struct harmonic {
+typedef struct harmonic {
     double freq;
     double amp;
-};
+} harmonic;
 
-struct continuousHarmonic {
+typedef struct continuousHarmonic {
     struct harmonic h;
     int prev;
     int continuity;
     _Bool hasRightCounterpart;
-};
+} continuousHarmonic;
 
 struct harmonic* maxesStbArray(double *data, int h, int w);
 struct harmonic** maxesLinear(double *data, int h, int w, int samplerate);

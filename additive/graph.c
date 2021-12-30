@@ -208,7 +208,7 @@ void mouseReleaseEvent(struct graph* g, GdkEventButton *event)
 
         struct ContMaximaSpectrogram* s = (struct ContMaximaSpectrogram*)spectrogram;
         resynthesizeMaxima(s, rangeStartInArray(g), rangeEndInArray(g));
-        alsaPlayBlock(audioOutput, arrlen(audioOutput));
+        alsaPlayBlock(audioOutputStb, arrlen(audioOutputStb));
     }
 }
 
