@@ -89,7 +89,7 @@ QPointF toPoint(std::complex<float> end) {
 }
 std::complex<float> toNumber(QPointF end) {
     float xe = end.x()*(ri-le)/w + le;
-    float ye = -(end.y()*(up-dow)/h+dow);
+    float ye = ((h-1-end.y())*(up-dow)/h+dow);
     return std::complex<float>(xe, ye);
 }
 
@@ -118,7 +118,7 @@ void Widget::doPic() {
             for(int xp = 0; xp < w; xp++) {
                 for(int yp = 0; yp < w; yp++) {
                     double x = xp*(ri-le)/w+le;
-                    double y = (w-1-yp)*(up-dow)/h+dow;
+                    double y = (h-1-(double(yp)+0.1))*(up-dow)/h+dow;
 
                     std::complex<float> c(x, y);
                     std::complex<float> p = 0;//c/3.f;
@@ -134,7 +134,7 @@ void Widget::doPic() {
                             if( rere.real()>=0.95 &&rere.real()<=1.05&&
                                 rere.imag()>=-0.05&&rere.imag()<=0.05) {
 
-                                i.setPixelColor(xp, yp, QColor::fromHsv((std::arg(p)+tau/2)/tau*360, 255, float(iter)*170/200+85));
+                                i.setPixelColor(xp, yp, QColor::fromHsv((std::arg(p)+tau/2)/tau*360, 255, sqrt(sqrt(float(iter)/200))*255));
                                 break;
                             }
                             p = p - (rere-std::complex<float>(1,0))/(std::complex<float>(3,0)*p*p - c/**std::complex<float>(2,0)*p*/);
@@ -176,7 +176,7 @@ void Widget::doPic() {
 
     //        pa2.drawLine(QPointF(xc,yc),QPointF(xe,ye));
 
-    //        saveFrame(false);
+            saveFrame(false);
     //    }
 
         fprintf(stderr, "%d\n", t.elapsed());
