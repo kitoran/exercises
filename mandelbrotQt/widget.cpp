@@ -79,6 +79,12 @@ constexpr float tau = 6.283185307179586;
 // 226
 // 3390
 // 241
+QPointF toPoint(std::complex<float> end) {
+    double xe = double( end.real()  -le)*w/(ri-le);
+    double ye = double(-end.imag() - dow)*h/(up-dow);
+    return {xe, ye};
+}
+
 void Widget::paintEvent(QPaintEvent *)
 {
     QImage i(w, h, QImage::Format_RGB32);
@@ -92,8 +98,10 @@ void Widget::paintEvent(QPaintEvent *)
     };
     QElapsedTimer t; t.start();
 
-    for(float angle = 0; angle < tau*2; angle += tau/(5*25)) {
+    for(float angle = 0; angle < tau*2; angle += tau/(/*5**/25)) {
 //    for(float angle = tau/4-0.1; angle < tau/4+0.01; angle += tau/30) {
+//    for(int branch = 0; branch < (1<<6); branch++) {
+//    float angle = 0;
         std::complex<float> roo = std::polar<float>(1, angle);
         std::complex<float> ere = std::log(roo);
         if(angle >= tau/2) ere += std::complex<float>(0, tau);
@@ -104,35 +112,62 @@ void Widget::paintEvent(QPaintEvent *)
                 double y = (w-1-yp)*(up-dow)/h+dow;
 
                 std::complex<float> c(x, y);
-                std::complex<float> p = c;
+                std::complex<float> p = 0;
                 int iter = 0;
-                for(; iter < 200; iter++) {
-    //                if(p.real().outside2by2() || p.imag().outside2by2()) {
-                    if(p.real()>=2 ||p.real()<=-2||
-                    p.imag()>=2||p.imag()<=-2) {
-                        i.setPixelColor(xp, yp, QColor::fromHsv(float(iter)*360/200, 255, 127));
-                        break;
+
+//                bool cut = false;
+//                if(p.real() >= 0 && fabs(p.imag()) < 1.0/100) {
+//                    i.setPixelColor(xp, yp, Qt::gray);
+//                } else {
+                    for(; iter < 200; iter++) {
+        //                if(p.real().outside2by2() || p.imag().outside2by2()) {
+                        if(p.real()>=2 ||p.real()<=-2||
+                        p.imag()>=2||p.imag()<=-2) {
+                            i.setPixelColor(xp, yp, QColor::fromHsv(float(iter)*360/200, 255, 127));
+                            break;
+                        }
+                        if(iter != 2) {
+                            p = std::exp((std::log(-p)+std::complex<float>(0, tau/2))*2.5f)+c;
+                        } else {
+                            p = std::exp((std::log(p/roo)+ere)*2.5f)+c;
+                        }
                     }
-                    p = std::exp((std::log(p/roo)+ere)*2.5f)+c;
-                }
-                if(iter == 200) {
-                    i.setPixelColor(xp, yp, Qt::black);
-                }
-                p = 0;
-                iter = 0;
-                for(; iter < 3; iter++) {
-                    p = std::exp((std::log(p/roo)+ere)*2.5f)+c;
-                    std::complex<float> rf = p / roo;
-                    if(rf.real() <= 0 && fabs(rf.imag()) < 1.0/100) {
-                        i.setPixelColor(xp, yp, Qt::gray);
+                    if(iter == 200) {
+                        i.setPixelColor(xp, yp, Qt::black);
                     }
+                    p = 0;
+//                    p = std::exp((std::log(-p)+std::complex<float>(0, tau/2))*2.5f)+c;
+                    iter = 0;
+                    for(; iter < 3; iter++) {
+                        if(iter != 2) {
+                            p = std::exp((std::log(-p)+std::complex<float>(0, tau/2))*2.5f)+c;
+                        } else {
+                            p = std::exp((std::log(p/roo)+ere)*2.5f)+c;
+                        }
+                        std::complex<float> rf = p / roo;
+                        if(rf.real() <= 0 && fabs(rf.imag()) < 1.0/50) {
+                            i.setPixelColor(xp, yp, Qt::gray);
+                        }
+//                    }
                 }
             }
         }
 
-        saveFrame(false);
 //        QPainter pa2(&i);
 //        pa2.setPen(QColor(255,255,255,127));
+//        for(int iters = 0; iters < 3; iters++) {
+//            QPointF prev;
+
+//            for(float cutpoint = 0; cutpoint > -3; cutpoint-=0.05) {
+//                std::complex<float> curc = cutpoint;
+//                for(int i = 0; i < iters; i++) {
+//                    curc = std::exp(std::log(curc - cutpoint)/2.5f - ere)*roo;
+//                }
+//                QPointF cur = toPoint(curc);
+//                pa2.drawLine(prev, cur);
+//            }
+//        }/
+        saveFrame(false);
 //        double xc = double(-le)*w/(ri-le);
 //        double yc = double(-dow)*h/(up-dow);
 
@@ -142,7 +177,7 @@ void Widget::paintEvent(QPaintEvent *)
 
 //        pa2.drawLine(QPointF(xc,yc),QPointF(xe,ye));
 
-//        saveFrame(true);
+//        saveFrame(false);
     }
 
     fprintf(stderr, "%d\n", t.elapsed());
