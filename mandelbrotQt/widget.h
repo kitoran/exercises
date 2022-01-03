@@ -16,6 +16,15 @@ public:
     ~Widget();
     void paintEvent(QPaintEvent*) override;
 
+    QImage i;
+    QPoint start;
+    QPoint curm;
+    bool rect = false;
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+
+    void doPic();
 private:
     Ui::Widget *ui;
 };
