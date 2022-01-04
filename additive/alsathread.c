@@ -1,4 +1,4 @@
-#include "alsathread.h"
+﻿#include "alsathread.h"
 #include "globals.h"
 #include <pthread.h>
 #include <stdio.h>
@@ -16,12 +16,12 @@
 
 extern uint alsaSampleRate;
 extern uint framesPerPeriod;
-
-
+struct Channel channel;
+_Thread_local char thread_name[30];
 
 void* alsathread(void* d) {
     (void)d;
-    //        double* lookup = sinLookupTable();
+    //        vdouble* lookup = sinLookupTable();
     //        int*lookup = sinLookupTableInt();
 //    double* frequenciesStbArray = 0;//
     typedef int16_t frameType;
@@ -50,7 +50,7 @@ void* alsathread(void* d) {
         if(channel.full) {
             //                phase = 0;
             //                fprintf(stderr, "Got medssage! %d", m.h);
-            take(&channel, &pos, sizeof(pos));
+            takeC(&channel, &pos, sizeof(pos));
 
             //                spectrumSize = spectr.complex?spectr.data.sizec():spectr.data.sized;
             if(pos.pos < 0 || pos.pos >= spectrogram->width(spectrogram)) {

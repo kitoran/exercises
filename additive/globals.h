@@ -1,4 +1,4 @@
-#ifndef GLOBALS_H
+﻿#ifndef GLOBALS_H
 #define GLOBALS_H
 #include <inttypes.h>
 extern const double freqMax;
@@ -17,5 +17,6 @@ extern int numberOfHarmonics;
 extern double* originalFourierTransform;
 extern int originalFourierTransformH, originalFourierTransformW;
 
+extern double max;
 extern struct SF_INFO inpi;
 #endif // GLOBALS_H1

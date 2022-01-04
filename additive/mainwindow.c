@@ -32,7 +32,7 @@ void createMainWindow(GtkGrid* grid){
 //    g->setData(data_, size_, max_);
 }
 
-void MainWindowon_toolButton_clicked(GtkWidget*a, void*data)
+void MainWindowon_toolButton_clicked()
 {
 
 //    ContMaximaSpectrogram* s = dynamic_cast<ContMaximaSpectrogram*>(spectrogram);
@@ -53,19 +53,19 @@ void MainWindowon_toolButton_clicked(GtkWidget*a, void*data)
     alsaPlayBlock(audioOutputStb, arrlen(audioOutputStb));
  }
 
-void MainWindowon_denominator_textChanged(GtkWidget*d, void* c)
+void MainWindowon_denominator_textChanged(const char* text)
 {
     double r;
-    sscanf(c, "%lf", &r);
+    sscanf(text, "%lf", &r);
     denominator = r;
 }
 
-void MainWindowon_toolButton_2_clicked(GtkWidget*a, void*b)
+void MainWindowon_toolButton_2_clicked()
 {
     selectRange(widget);
 }
 
-void MainWindowon_pushButton_clicked(GtkWidget*a, void*b)
+void MainWindowon_pushButton_clicked()
 {
     const char* e = "/tmp/imsorrybutifwontdothisproperly.wav";
 //    std::string filneavd = ;
@@ -75,7 +75,7 @@ void MainWindowon_pushButton_clicked(GtkWidget*a, void*b)
                     SFM_WRITE,
                     &outi);
     fprintf(stderr, "FILENAME IS %s", e);
-    sf_write_short(out, audioOutputStb.data(), audioOutputStb.size());
+    sf_write_short(out, audioOutputStb, arrlen(audioOutputStb));
     sf_close(out);
 
     char command[900] = "audacity \0";
@@ -84,8 +84,8 @@ void MainWindowon_pushButton_clicked(GtkWidget*a, void*b)
     system(command);
 }
 
-void MainWindowon_numberOfHarmonicsLineEdit_textChanged(GtkWidget*f, void* e)
+void MainWindowon_numberOfHarmonicsLineEdit_textChanged(const char *text)
 {
 //    numberOfHarmonics = arg1.toInt();
-    sscanf(s, "%d", &numberOfHarmonics );
+    sscanf(text, "%d", &numberOfHarmonics );
 }

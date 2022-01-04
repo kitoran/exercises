@@ -13,8 +13,9 @@ struct Spectrogram
     void (*fillBuffer)(void*, int16_t*, int bufferSize, int pos, uint64_t phase);
     double (*frequencyAtProportion)(void*, double p);
 };
-struct _cairo;
-void drawAxes(struct Spectrogram *sg, struct _cairo *p, int w, int h);
+//struct _cdCanvas;
+struct GuiImage;
+void drawAxes(struct Spectrogram *sg, struct GuiImage* image, int w, int h);
 
 struct MaximaSpectrogram
 {
