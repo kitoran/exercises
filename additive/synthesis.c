@@ -179,7 +179,7 @@ double intervalInSemitones(double frq1, double freq2) {
     return fabs(log(frq1/freq2)/log12RootOf2);
 }
 
-continuousHarmonic** prepareHarmonicsStbVector(const harmonic** dataStbArray, int *continuities) {
+continuousHarmonic** prepareHarmonicsStbArray(const harmonic*const* dataStbArray, int *continuities) {
     *continuities = 0;
 
     for(int i = 0; i < arrlen(dataStbArray); i++) {

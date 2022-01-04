@@ -1,11 +1,10 @@
-#include "spectrogram.h"
+﻿#include "spectrogram.h"
 #include "globals.h"
 #include "mathext.h"
 #include "audio.h"
 #include "soundext.h"
-#include <gdk/gdk.h>
-#include <cairo.h>
 #include <stdbool.h>
+#include "gui.h"
 
 //draw() {
 //p.setPen(transparent());
@@ -56,12 +55,9 @@ GdkRGBA black() {
     return r;
 }
 
-void drawAxes(struct Spectrogram* sg, cairo_t *p, int w, int h) {
-    GdkRGBA c;
-    bool r =   gdk_rgba_parse(
-                &c, "DarkMagenta");
-    assert(r);
-    cairo_set_source_rgb(p, c.red, c.green, c.blue);
+void drawAxes(struct Spectrogram* sg, GuiImage* image, int w, int h) {
+
+    XSetForeground(xdisplay, image.gc, GuiDarkMagenta);
 //    double sortabase = log(freqMax/freqMin)/(height()-20);
     for(int y = 0; y < h-20; y += 100) {
         double freq;
@@ -259,11 +255,12 @@ double LinearSpectrogramfrequencyAtProportion(struct LinearSpectrogram* self, do
     return proportion*cutoff;
 }
 
-void ContMaximaSpectrogramdraw(struct ContMaximaSpectrogram* self, struct gdk_gc *gc, int w, int h)
+void ContMaximaSpectrogramdraw(struct ContMaximaSpectrogram* self, cdCanvas *canvas, int w, int h)
 {
-    gdk_set_foreground(gc, transparent());
-    gdk_set_background(gc, black());
-    gtk_drawRect(gc, 10, 10, w-20, h-20);
+//    cdCanvasSetForeground(canvas, CD_TRANSPARENT);
+    //set_foreground
+    cdCanvasSetBackground(canvas, CD_BLACK);
+    cdCanvasRect(canvas, 10, w-20, 10, h-20);
     int spectrWidth = arrlen(self->maxima);
     for(int i = 1; i < spectrWidth; i++) {
         for(int j = 0; j < arrlen(self->maxima[i]); j++) {
@@ -287,10 +284,10 @@ void ContMaximaSpectrogramdraw(struct ContMaximaSpectrogram* self, struct gdk_gc
 //                         << "max" << max <<
 //                            "color" << g;
 //            }
-            gdk_drawLine(gc, leftX+10, h-10-leftY, rightX+10, h-10-rightY);
+            cdCanvasLine(canvas, leftX+10, h-10-leftY, rightX+10, h-10-rightY);
         }
     }
-    drawAxes(&self->ff, gc,w,h);
+    drawAxes(&self->ff, canvas,w,h);
 }
 
 void ContMaximaSpectrogramfillBuffer(struct ContMaximaSpectrogram* self, int16_t *buffer, int bufferSize, int pos, uint64_t phase)

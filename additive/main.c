@@ -1,4 +1,4 @@
-﻿#include <gtk/gtk.h>
+﻿
 #include "graph.h"
 #include "alsathread.h"
 #include "stft.h"
@@ -9,6 +9,9 @@
 #include <openssl/md5.h>
 #include <storearray.h>
 #include "mathext.h"
+
+
+#include "gui.h"
 int main(int argc, char *argv[])
 {
     initializeMathExt();
@@ -30,18 +33,9 @@ int main(int argc, char *argv[])
     sf_read_short(inp, sampls, end);
     fprintf(stderr, "%ld", end);
 
-    gtk_init(&argc, &argv);
+    startDrawing();
 
-    GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_widget_show(window);
-
-    g_signal_connect(window, "destroy",
-        G_CALLBACK(gtk_main_quit), NULL);
-
-    gtk_main();
-
-    GtkGrid* win = gtk_grid_new();
-//    stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
+    //    stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
     //    stfft(sampls, end, windowSize, stepSize, &transform, &w);
 //    std::complex< double>* transform;
     unsigned char hassh[MD5_DIGEST_LENGTH];
@@ -80,7 +74,7 @@ int main(int argc, char *argv[])
         shiftandmulLinear(originalFourierTransform, originalFourierTransformH, originalFourierTransformW, &shifted, &shiftedH);
         int hms;
         //    std::vector<std::vector<continuousHarmonic> >  contharms = prepareHarmonics(maxesLinear(transform, h, w, inpi.samplerate), &hms);
-        struct continuousHarmonic** contharmsStbArray  = prepareHarmonicsStbArray(maxesLinear(shifted, shiftedH, originalFourierTransformW, inpi.samplerate), &hms);
+        struct continuousHarmonic** contharmsStbArray  = prepareHarmonicsStbArray((const harmonic*const* )maxesLinearStbArray(shifted, shiftedH, originalFourierTransformW, inpi.samplerate), &hms);
 //        resynthesizeMaxima(maxesLinear(shifted, shiftedH, w, inpi.samplerate), stepSize, inpi, windowSize);
 //        resynthesizeMaxima(contharms, hms);
 //        exit(0);

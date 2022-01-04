@@ -5,7 +5,6 @@
 
 extern double* windowStbArray;
 
-extern double max;
 
 void makeHammingWindow(int windowSize);
 void stft(int16_t *data, int size,
@@ -33,7 +32,7 @@ typedef struct continuousHarmonic {
 } continuousHarmonic;
 
 struct harmonic* maxesStbArray(double *data, int h, int w);
-struct harmonic** maxesLinear(double *data, int h, int w, int samplerate);
+struct harmonic** maxesLinearStbArray(double *data, int h, int w, int samplerate);
 
 void shiftandmul(double *src, int h, int w, double** dest, int *resH);
 void shiftandmulLinear(double *src, int h, int w, double** dest, int *resH);
