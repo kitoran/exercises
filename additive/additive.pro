@@ -22,6 +22,14 @@ TEMPLATE = app
 DEFINES += QT_DEPRECATED_WARNINGS
 LIBS += -lGL -lGLU -lasound
 
+unix:!macx: LIBS += -L$$PWD/../../library/build-guiS-Desktop-Debug/gui/ -lgui
+
+INCLUDEPATH += $$PWD/../gui
+DEPENDPATH += $$PWD/../gui
+
+unix:!macx: PRE_TARGETDEPS += $$PWD/../../library/build-guiS-Desktop-Debug/gui/libgui.a
+
+
 QMAKE_CXXFLAGS += -Wno-unused-variable  -Werror=implicit-function-declaration
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.

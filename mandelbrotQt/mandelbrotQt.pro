@@ -29,7 +29,8 @@ SOURCES += \
         widget.cpp
 
 HEADERS += \
-        widget.h
+        widget.h \
+        shittyintrospection.h
 
 FORMS += \
         widget.ui
