@@ -56,8 +56,7 @@ GdkRGBA black() {
 }
 
 void drawAxes(struct Spectrogram* sg, GuiImage* image, int w, int h) {
-
-    XSetForeground(xdisplay, image.gc, GuiDarkMagenta);
+//    XSetForeground(xdisplay, image.gc, GuiDarkMagenta);
 //    double sortabase = log(freqMax/freqMin)/(height()-20);
     for(int y = 0; y < h-20; y += 100) {
         double freq;
@@ -67,14 +66,18 @@ void drawAxes(struct Spectrogram* sg, GuiImage* image, int w, int h) {
 //             freq = double(y) / (height()-20) * cutoff;
 //        }
         freq = sg->frequencyAtProportion(sg, (double)(y) / (h-20));
-        cairo_move_to(p, 10., h-10.-y);
-        cairo_line_to(p,
-                   w-10., h-10.-y);
-
+//        XDrawLine(xdisplay, image.i, image.gc,
+//                  10, h-10-y,
+//                   w-10, h-10-y);
+        drawHorizontalLine(image, 10, w-10, h-10-y, 0);
         char text[20];
-        sprintf(text, "%2.lf", freq);
-        cairo_move_to(p, 10., h-10.-y);
-        cairo_show_text(p, text);
+        int len = sprintf(text, "%2.lf", freq);
+        XTextItem ti = {
+            text,
+            len,
+                    0,
+                    None};
+        XDrawText(xdisplay, image.i, image.gc,  10., h-10.-y, &ti, 1);
     }
 }
 
@@ -143,10 +146,11 @@ void drawAxes(struct Spectrogram* sg, GuiImage* image, int w, int h) {
 
 //}
 
-void MaximaSpectrogramdraw(struct MaximaSpectrogram* self, cairo_t* p, int w, int h)
+void MaximaSpectrogramdraw(struct MaximaSpectrogram* self, GuiImageRef r, int w, int h)
 {
-    cairo_set_source_rgb(p, 0, 0, 0);
-    cairo_rectangle(p, 10, 10, w-20, h-20);
+    XSetForeground(xdisplay, r.gc, 0x0000000);
+//    cairo_set_source_rgb(p, 0, 0, 0);
+    XDrawRectangle(xdisplay, r.i, r.gc, 10, 10, w-20, h-20);
     int spectrWidth = arrlen(self->maxima);
     for(int i = 0; i < spectrWidth; i++) {
         for(int j = 0; j < arrlen(self->maxima[i]); j++) {
@@ -160,15 +164,15 @@ void MaximaSpectrogramdraw(struct MaximaSpectrogram* self, cairo_t* p, int w, in
 //            if(g > 100) {
 //                qDebug() << g;
 //            }
-            cairo_set_source_rgb(p, g,g,g);
+            XSetForeground(xdisplay, r.gc, rgb(g,g,g));
             if(g < 0 || g > 255) {
                 fprintf(stderr, "i %d j %d amplitude %lf max %lf color %d",
                         i, j, value, max, g);
             }
-            cairo_rectangle(p, left+10, h-10-top, right-left, top-bottom);
+            XDrawRectangle(xdisplay, r.i, r.gc, left+10, h-10-top, right-left, top-bottom);
         }
     }
-    drawAxes(&self->ff, p,w,h);
+    drawAxes(&self->ff, r, w, h);
 }
 
 void MaximaSpectrogramfillBuffer(struct MaximaSpectrogram* self, int16_t *buffer, int bufferSize, int pos, unsigned int phase)
@@ -210,10 +214,11 @@ double ContMaximaSpectrogramfrequencyAtProportion(struct ContMaximaSpectrogram* 
     return proportion*cutoff;
 }
 
-void LinearSpectrogramdraw(struct LinearSpectrogram* self, cairo_t *p, int w, int h)
+void LinearSpectrogramdraw(struct LinearSpectrogram* self, GuiImageRef r, int w, int h)
 {
-    cairo_set_source_rgb(p, 0, 0, 0);
-    cairo_rectangle(p, 10, 10, w-20, h-20);
+
+    XSetForeground(xdisplay, r.gc, 0x0000000);
+    XDrawRectangle(xdisplay, r.i, r.gc, 10, 10, w-20, h-20);
     int cutoffIndex = cutoff/self->freqStep;
 //    qDebug() << "final freq is" << indToFftFreq(h,
     for(int i = 0; i < self->width_; i++) {
@@ -224,11 +229,12 @@ void LinearSpectrogramdraw(struct LinearSpectrogram* self, cairo_t *p, int w, in
             double bottom = (h-20)/(double)(cutoffIndex)*j;
             double top = (h-20)/(double)(cutoffIndex)*(j+1);
             if(j >= self->height) {
-                cairo_set_source_rgb(p, 0,0,0.5);
+
+                XSetForeground(xdisplay, r.gc, rgbf(0,0,0.5));
             } else {
                 double value = self->data[i*self->height+j];
                 double norm = value/max;
-                cairo_set_source_rgb(p, norm,norm,norm);
+                XSetForeground(xdisplay, r.gc, rgbf(norm,norm,norm));
 //                gdk_set_background(gc, color);
                 if(norm < 0 || norm > 1) {
                     fprintf(stderr, "i %d j %d amplitude %lf max %lf color %lf",
@@ -239,10 +245,10 @@ void LinearSpectrogramdraw(struct LinearSpectrogram* self, cairo_t *p, int w, in
 //                qDebug() << g;
 //            }
 
-            cairo_rectangle(p, left+10, h-10-top, right-left, top-bottom);
+            XDrawRectangle(xdisplay, r.i, r.gc, left+10, h-10-top, right-left, top-bottom);
         }
     }
-    drawAxes(self,p,w,h);
+    drawAxes(self,r,w,h);
 }
 
 void LinearSpectrogramfillBuffer(struct LinearSpectrogram* self,int16_t *z, int bufferSize, int pos, unsigned int phase)
@@ -255,12 +261,13 @@ double LinearSpectrogramfrequencyAtProportion(struct LinearSpectrogram* self, do
     return proportion*cutoff;
 }
 
-void ContMaximaSpectrogramdraw(struct ContMaximaSpectrogram* self, cdCanvas *canvas, int w, int h)
+void ContMaximaSpectrogramdraw(struct ContMaximaSpectrogram* self, GuiImageRef r, int w, int h)
 {
 //    cdCanvasSetForeground(canvas, CD_TRANSPARENT);
     //set_foreground
-    cdCanvasSetBackground(canvas, CD_BLACK);
-    cdCanvasRect(canvas, 10, w-20, 10, h-20);
+
+    XSetForeground(xdisplay, r.gc, 0x0000000);
+    XDrawRectangle(xdisplay, r.i, r.gc, 10, w-20, 10, h-20);
     int spectrWidth = arrlen(self->maxima);
     for(int i = 1; i < spectrWidth; i++) {
         for(int j = 0; j < arrlen(self->maxima[i]); j++) {
@@ -284,10 +291,10 @@ void ContMaximaSpectrogramdraw(struct ContMaximaSpectrogram* self, cdCanvas *can
 //                         << "max" << max <<
 //                            "color" << g;
 //            }
-            cdCanvasLine(canvas, leftX+10, h-10-leftY, rightX+10, h-10-rightY);
+            XDrawLine(xdisplay, r.i, r.gc, leftX+10, h-10-leftY, rightX+10, h-10-rightY);
         }
     }
-    drawAxes(&self->ff, canvas,w,h);
+    drawAxes(&self->ff, r,w,h);
 }
 
 void ContMaximaSpectrogramfillBuffer(struct ContMaximaSpectrogram* self, int16_t *buffer, int bufferSize, int pos, uint64_t phase)

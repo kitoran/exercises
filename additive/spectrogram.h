@@ -15,7 +15,7 @@ struct Spectrogram
 };
 //struct _cdCanvas;
 struct GuiImage;
-void drawAxes(struct Spectrogram *sg, struct GuiImage* image, int w, int h);
+void drawAxes(struct Spectrogram *sg, struct GuiImage *image, int w, int h);
 
 struct MaximaSpectrogram
 {
