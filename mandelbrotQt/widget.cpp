@@ -7,7 +7,7 @@
 #include <QElapsedTimer>
 #include <complex>
 
-#define IterATIONnUMBER 100
+#define IterATIONnUMBER 400
 using namespace std::complex_literals;
 const int w = 700, h = 700;
 //const float le = -1.75-0.02, ri = -1.75+0.02,
@@ -98,10 +98,12 @@ std::complex<float> toNumber(QPointF end) {
 }
 
 inline std::complex<float> func(std::complex<float> p, std::complex<float> c) {
-    return std::conj(std::exp((std::log(p/**roo*/)/*+ere*/)*3n .f
-//                    std::complex<float>(0.f,  1)
-                    )) + c;
+//    return std::conj(std::exp((std::log(p/**roo*/)/*+ere*/)*3.f
+////                    std::complex<float>(0.f,  1)
+//                    )) + c;
 //    return c*p*(1.f-p);
+//    return std::conj(std::exp((std::log(p))*(-2.f))) + c;
+    return std::conj(std::exp((std::log(p))*(2.f))) + c;
 }
 
 void Widget::doPic() {
@@ -127,11 +129,12 @@ void Widget::doPic() {
             if(angle > 3*tau/2) ere += std::complex<float>(0, tau);
             for(int xp = 0; xp < w; xp++) {
                 for(int yp = 0; yp < w; yp++) {
+                    std::complex<float> oneOfPrevs;
                     float x = xp*(ri-le)/w+le;
                     float y = (h-1-(float(yp)+0.1))*(up-dow)/h+dow;
 
                     std::complex<float> c(x, y);
-                    std::complex<float> p = 0;//0.5f;///3.f;
+                    std::complex<float> p = c;//0.5f;///3.f;
                     int iter = 0;
 
     //                bool cut = false;
@@ -145,22 +148,40 @@ void Widget::doPic() {
                             //                                rere.imag()>=-0.05&&rere.imag()<=0.05) {
                             //                            if( p.real()>=2 || p.real()<=-2 ||
                             //                                p.imag()>2 || p.imag()<=-2 ) {
-                            if( std::norm(p) >= 8 ) {
+                            //                            if( std::norm(p) >= 8 ) {
+
+                            //                                //                                i.setPixelColor(xp, yp, QColor::fromHsv((std::arg(p)+tau/2)/tau*360, 255, sqrt(sqrt(float(iter)/200))*255));
+                            //                                i.setPixelColor(xp, yp, QColor::fromHsv(float(iter)/200*360, 255, 127));
+                            //                                break;
+                            //                            }
+//                            std::complex<float> rrr = p;
+#define gerger 16
+                            if(iter%gerger == 0) {
+                                oneOfPrevs = p;
+                            }
+                            p = func(p, c);
+                            if( std::norm(p-oneOfPrevs) < 0.000001 ) {
 
                                 //                                i.setPixelColor(xp, yp, QColor::fromHsv((std::arg(p)+tau/2)/tau*360, 255, sqrt(sqrt(float(iter)/200))*255));
-                                i.setPixelColor(xp, yp, QColor::fromHsv(float(iter)/200*360, 255, 127));
+                                i.setPixelColor(xp, yp, QColor::fromHsv(float(iter%gerger )/gerger *360, 255, 127));
                                 break;
                             }
-//                            std::complex<float> rrr = p;
-                            p = func(p, c);
 //                            float
 //                            p = p - (rere-std::complex<float>(1,0))/(std::complex<float>(3,0)*p*p - c/**std::complex<float>(2,0)*p*/);
     // z -> (z - e)(z - e2)(z - 1) = z3 - 1
     // ' -> 3z2
                         }
+//                        for
                         if(iter == IterATIONnUMBER) {
                             i.setPixelColor(xp, yp, Qt::black);
                         }
+//                        int index = IterATIONnUMBER%16;
+//                        for(int ii = 1; ii <= 8; ii++) {
+//                            bool notCylle = false;
+//                            for(int j = 1; j <= ii; j++) {
+
+//                            }
+//                        }
 
                     }
                 if(xp%64==0)
@@ -263,8 +284,8 @@ void Widget::drawTrajectory(int x, int y)
 {
     trajectory.fill(0);
     QPainter p(&trajectory);
-    std::complex<float> fff = 0.f;//toNumber(prev);
     std::complex<float> c = toNumber(QPointF(x,y));
+    std::complex<float> fff = c;//0.f;//toNumber(prev);
     QPointF prev = toPoint(fff);//(x, y);
     p.setPen(Qt::white);
     for(int i = 0; i < IterATIONnUMBER; i++) {
