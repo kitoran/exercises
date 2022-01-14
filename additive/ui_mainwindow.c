@@ -8,17 +8,11 @@
 
 void setupUi(Painter *p)
 {
-//    int deb1, deb2;
-//    if(xEvent.type == ResizeRequest) {
-//        deb1 = xEvent.xresizerequest.width;
-//        deb2 = xEvent.xresizerequest.height;
-//        guiSetSize(rootWindow, deb1, deb2);
-//    }
-//    Size size = guiGetSize();
+    Size size = guiGetSize();
 //    fprintf(stderr, "got size %d x %d", size.width, size.height);
-//    int gh = getGridBottom() + 5;
-//    graphProcessEvent(&widget/*, p*/, 0, gh, size.width, size.height-gh);
-//    //    gtk_grid_attach(layout, widget, 4, 0, 1, 17);
+    int gh = getGridBottom() + 5;
+    graphProcessEvent(&widget/*, p*/, 0, gh, size.width, size.height-gh);
+    //    gtk_grid_attach(layout, widget, 4, 0, 1, 17);
 
     setCurrentGridPos(0, 8);
     char label_2[] = "window (sampls)";

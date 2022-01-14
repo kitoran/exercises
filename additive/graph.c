@@ -33,7 +33,7 @@ void initializeGraph(struct graph *g) {
             g->window);
     XSelectInput(xdisplay, g->window , 0);
 
-//    XMapWindow(xdisplay, g->window);
+    XMapWindow(xdisplay, g->window);
 //    g->spectrogramData = NULL;
   //  g->spectrogramWidth = 0;
    // g->spectrogramHeight = 0;
@@ -84,16 +84,17 @@ void drawGraph(graph *g,/* Painter *p,*/ int x, int y) {
 //                                                                 g->spectrogramWidth,
 //                                                                 g->spectrogramHeight, 0);
 //    gdk_draw_pixbuf(g, gc, , 0, 0, 0, 0, -1, -1, 0, 0, 0);
-    fprintf(stderr, "move window to %d %d\n", x, y);
+//    fprintf(stderr, "move window to %d %d\n", x, y);
     XMoveWindow(xdisplay, g->window, x, y);
-
+    XSetWindowBackground(xdisplay, g->window, 0xffffff);
     GC gc = XCreateGC(xdisplay, g->window, 0, NULL);
     XSetGraphicsExposures(xdisplay, gc, False);
     if(g->spectrogramDrawing) {
-//        XCopyArea(xdisplay, g->spectrogramDrawing, g->window,
-//                  gc, 0,0, g->width,
-//                  g->height, 0, 0);
+        XCopyArea(xdisplay, g->spectrogramDrawing, g->window,
+                  gc, 0,0, g->width,
+                  g->height, 0, 0);
     }
+//    XClearWindow(xdisplay, g->window);
 
     Painter p = {
         g->window,
@@ -129,6 +130,7 @@ void resizeEvent(struct graph* g)
         g->spectrogramDrawing,
         XCreateGC(xdisplay, g->spectrogramDrawing, 0, NULL)
     };
+    guiFillRectangle(&p, 0, 0, g->width, g->height);
     spectrogram->draw(spectrogram, &p, g->width, g->height);
     XFreeGC(xdisplay, p.gc);
 
@@ -151,6 +153,7 @@ void mouseMoveEvent(struct graph* g, int x) {
 
 //    int indh = double(height()-event->y()-10) / (height()-20) * heights;
     int indw = (double)(x-10) / (g->width-20) * spectrogram->width(spectrogram);
+    fprintf(stderr, "moveevent %d (of %d), %d\n", x, g->width, indw);
 //    double freq = 0;// = freqMin * log(freqMax/freqMin)/log(double(height()-event->y()-10) / (height()-20));//pow(frequencyMultiplent, indh);
 //    if(mode == spectrogram_mode::linear) {
 //        double(y) / (height()-20) * 1000;
@@ -163,7 +166,7 @@ void mouseMoveEvent(struct graph* g, int x) {
 //    } else {
 //        val = data[ind];
 //    }
-    if(indw < 0 || indw >= g->width) {
+    if(indw < 0 || indw >= spectrogram->width(spectrogram)) {
         return;
     }
     struct message m;
@@ -232,14 +235,19 @@ void mouseReleaseEvent(struct graph* g)
 
 
 void graphProcessEvent(graph *g, /*Painter *p, */int x, int y, int w, int h) {
-    g->width = MAX(2, w);
-    g->height = MAX(2, h);
-    if(xEvent.type == Expose) {
+//    if(xEvent.type == Expose) {
         drawGraph(g, /*p,*/ x, y);
-    } else if(xEvent.type == ResizeRequest) {
+   /* } else*/
+    if(w != g->width || h != g->height) {
+        g->width = MAX(2, w);
+        g->height = MAX(2, h);
         resizeEvent(g);
-    } else if(xEvent.xbutton.x >= x && xEvent.xbutton.x <= x+w &&
-              xEvent.xbutton.y >= y && xEvent.xbutton.y <= y+h) {
+    }
+    if((xEvent.type == MotionNotify ||
+              xEvent.type == ButtonPress ||
+              xEvent.type == ButtonRelease) &&
+              xEvent.xmotion.x >= x && xEvent.xmotion.x <= x+w &&
+              xEvent.xmotion.y >= y && xEvent.xmotion.y <= y+h) {
         if(xEvent.type == MotionNotify) {
             mouseMoveEvent(g, xEvent.xmotion.x - x);
         } else if(xEvent.type == ButtonPress) {
