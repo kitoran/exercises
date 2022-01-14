@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
         gridStart.x = 5;
         gridStart.y = 5;
 
-        guiSetSize(rootWindow, 992, 402);
+//        guiSetSize(rootWindow, 992, 402);
         GC gc2 = XCreateGC(xdisplay, rootWindow, 0, NULL);
         Painter pa = {rootWindow, gc2};
         while(true) {

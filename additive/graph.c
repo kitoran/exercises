@@ -29,7 +29,11 @@ void initializeGraph(struct graph *g) {
                                     0,
                                     0x00000000
                                 );
-    XMapWindow(xdisplay, g->window);
+    fprintf(stderr, "created window %d",
+            g->window);
+    XSelectInput(xdisplay, g->window , 0);
+
+//    XMapWindow(xdisplay, g->window);
 //    g->spectrogramData = NULL;
   //  g->spectrogramWidth = 0;
    // g->spectrogramHeight = 0;
@@ -84,10 +88,11 @@ void drawGraph(graph *g,/* Painter *p,*/ int x, int y) {
     XMoveWindow(xdisplay, g->window, x, y);
 
     GC gc = XCreateGC(xdisplay, g->window, 0, NULL);
+    XSetGraphicsExposures(xdisplay, gc, False);
     if(g->spectrogramDrawing) {
-        XCopyArea(xdisplay, g->spectrogramDrawing, g->window,
-                  gc, 0,0, g->width,
-                  g->height, 0, 0);
+//        XCopyArea(xdisplay, g->spectrogramDrawing, g->window,
+//                  gc, 0,0, g->width,
+//                  g->height, 0, 0);
     }
 
     Painter p = {
@@ -117,7 +122,7 @@ void resizeEvent(struct graph* g)
     if(g->spectrogramDrawing) {
         XFreePixmap(xdisplay, g->spectrogramDrawing);
     }
-    fprintf(stderr, "%d x %d \n", g->width, g->height);
+    fprintf(stderr, "createpixmap %d x %d \n", g->width, g->height);
     g->spectrogramDrawing = XCreatePixmap(xdisplay, rootWindow, g->width, g->height, xDepth);
 
     Painter p = {
@@ -227,17 +232,20 @@ void mouseReleaseEvent(struct graph* g)
 
 
 void graphProcessEvent(graph *g, /*Painter *p, */int x, int y, int w, int h) {
-    g->width = w;
-    g->height = h;
+    g->width = MAX(2, w);
+    g->height = MAX(2, h);
     if(xEvent.type == Expose) {
         drawGraph(g, /*p,*/ x, y);
     } else if(xEvent.type == ResizeRequest) {
         resizeEvent(g);
-    } else if(xEvent.type == MotionNotify) {
-        mouseMoveEvent(g, xEvent.xmotion.x - x);
-    } else if(xEvent.type == ButtonPress) {
-        mousePressEvent(g, xEvent.xbutton.x - x);
-    } else if(xEvent.type == ButtonRelease) {
-        mouseReleaseEvent(g);
+    } else if(xEvent.xbutton.x >= x && xEvent.xbutton.x <= x+w &&
+              xEvent.xbutton.y >= y && xEvent.xbutton.y <= y+h) {
+        if(xEvent.type == MotionNotify) {
+            mouseMoveEvent(g, xEvent.xmotion.x - x);
+        } else if(xEvent.type == ButtonPress) {
+            mousePressEvent(g, xEvent.xbutton.x - x);
+        } else if(xEvent.type == ButtonRelease) {
+            mouseReleaseEvent(g);
+        }
     }
 }
