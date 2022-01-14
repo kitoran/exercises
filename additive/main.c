@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     startAlsathread();
 
     inpi.format = 0;
-    SNDFILE* inp = sf_open("/home/n/exercises/additive/02-201019_1328part.wav", SFM_READ, &inpi);
+    SNDFILE* inp = sf_open("/home/n/exercises/additive/02 Waltz, op. 314 ''The blue danube''.wav", SFM_READ, &inpi);
 
     if(inpi.channels != 1) {
         fprintf(stderr, "%d channels ! ! !", inpi.channels);
@@ -74,10 +74,12 @@ int main(int argc, char *argv[])
         double* shifted;
         int shiftedH;
 
-        shiftandmulLinear(originalFourierTransform, originalFourierTransformH, originalFourierTransformW, &shifted, &shiftedH);
+//        shiftandmulLinear(originalFourierTransform, originalFourierTransformH, originalFourierTransformW, &shifted, &shiftedH);
         int hms;
-        //    std::vector<std::vector<continuousHarmonic> >  contharms = prepareHarmonics(maxesLinear(transform, h, w, inpi.samplerate), &hms);
-        struct continuousHarmonic** contharmsStbArray  = prepareHarmonicsStbArray(maxesLinearStbArray(shifted, shiftedH, originalFourierTransformW, inpi.samplerate), &hms);
+          struct continuousHarmonic** contharmsStbArray = prepareHarmonicsStbArray(maxesLinearStbArray(originalFourierTransform,
+                                                    originalFourierTransformH, originalFourierTransformW, inpi.samplerate), &hms);
+//        struct continuousHarmonic** contharmsStbArray  = prepareHarmonicsStbArray(maxesLinearStbArray(shifted, shiftedH,
+//                    originalFourierTransformW, inpi.samplerate), &hms);
 //        resynthesizeMaxima(maxesLinear(shifted, shiftedH, w, inpi.samplerate), stepSize, inpi, windowSize);
 //        resynthesizeMaxima(contharms, hms);
 //        exit(0);
@@ -101,15 +103,20 @@ int main(int argc, char *argv[])
         gridStart.x = 5;
         gridStart.y = 5;
 
-//        guiSetSize(rootWindow, 992, 402);
+        guiSetSize(rootWindow, 992, 402);
         GC gc2 = XCreateGC(xdisplay, rootWindow, 0, NULL);
         Painter pa = {rootWindow, gc2};
         while(true) {
             guiNextEvent();
-            XClearWindow(xdisplay, rootWindow);
+            if(xEvent.type == Expose)
+                XClearWindow(xdisplay, rootWindow);
             setupUi(&pa);
             XFlush(xdisplay);
             if(xEvent.type == DestroyNotify) {
+
+                XDestroyWindow(xdisplay,
+                               rootWindow);
+                XCloseDisplay(xdisplay);
                 return 0;
             };
         }

@@ -71,7 +71,7 @@ int writeFrames(const void *buffer, int frames)
     int rc = snd_pcm_writei(handle, buffer, frames);
     if (rc == -EPIPE) {
         /* EPIPE means underrun */
-        fprintf(stderr, "underrun occurred\n");
+//        fprintf(stderr, "underrun occurred\n");
         snd_pcm_prepare(handle);
     } else if (rc < 0) {
         fprintf(stderr,

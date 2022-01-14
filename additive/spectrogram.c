@@ -56,8 +56,11 @@ GdkRGBA black() {
 }
 
 void drawAxes(struct Spectrogram* sg, Painter* image, int w, int h) {
-//    XSetForeground(xdisplay, image.gc, GuiDarkMagenta);
+    guiSetForeground(image, 0xff880088);
 //    double sortabase = log(freqMax/freqMin)/(height()-20);
+
+//    guiDrawLine(image, 10, w-10, 10, h-10-y);
+
     for(int y = 0; y < h-20; y += 100) {
         double freq;
 //        if(mode == spectrogram_mode::logarithmic) {
@@ -66,11 +69,10 @@ void drawAxes(struct Spectrogram* sg, Painter* image, int w, int h) {
 //             freq = double(y) / (height()-20) * cutoff;
 //        }
         freq = sg->frequencyAtProportion(sg, (double)(y) / (h-20));
-//        XDrawLine(xdisplay, image.i, image.gc,
-//                  10, h-10-y,
-//                   w-10, h-10-y);
-        guiDrawLine(image, 10, w-10, 10, h-10-y);
         char text[20];
+        guiDrawLine(image,
+                      10, h-10-y,
+                       w-10, h-10-y);
         int len = sprintf(text, "%2.lf", freq);
         guiDrawTextWithLen(image, 10, h-10-y, text, len);
     }
