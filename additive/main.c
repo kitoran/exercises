@@ -4,16 +4,19 @@
 #include "stft.h"
 #include "globals.h"
 #include "synthesis.h"
-#include "mainwindow.h"
+#include "ui_mainwindow.h"
 #include <sndfile.h>
 #include <openssl/md5.h>
 #include <storearray.h>
 #include "mathext.h"
+#include "gridlayout.h"
 
 
 #include "gui.h"
+XEvent xEvent;
 int main(int argc, char *argv[])
 {
+    argc--; argv--;
     initializeMathExt();
     startAlsathread();
 
@@ -33,7 +36,7 @@ int main(int argc, char *argv[])
     sf_read_short(inp, sampls, end);
     fprintf(stderr, "%ld", end);
 
-    startDrawing();
+    guiStartDrawing();
 
     //    stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
     //    stfft(sampls, end, windowSize, stepSize, &transform, &w);
@@ -66,7 +69,7 @@ int main(int argc, char *argv[])
                 sizeof(*originalFourierTransform),
                 (originalFourierTransformW)*(originalFourierTransformH)*sizeof(*originalFourierTransform));
 
-        double originalMax = max;
+//        double originalMax = max;
 
         double* shifted;
         int shiftedH;
@@ -74,7 +77,7 @@ int main(int argc, char *argv[])
         shiftandmulLinear(originalFourierTransform, originalFourierTransformH, originalFourierTransformW, &shifted, &shiftedH);
         int hms;
         //    std::vector<std::vector<continuousHarmonic> >  contharms = prepareHarmonics(maxesLinear(transform, h, w, inpi.samplerate), &hms);
-        struct continuousHarmonic** contharmsStbArray  = prepareHarmonicsStbArray((const harmonic*const* )maxesLinearStbArray(shifted, shiftedH, originalFourierTransformW, inpi.samplerate), &hms);
+        struct continuousHarmonic** contharmsStbArray  = prepareHarmonicsStbArray(maxesLinearStbArray(shifted, shiftedH, originalFourierTransformW, inpi.samplerate), &hms);
 //        resynthesizeMaxima(maxesLinear(shifted, shiftedH, w, inpi.samplerate), stepSize, inpi, windowSize);
 //        resynthesizeMaxima(contharms, hms);
 //        exit(0);
@@ -91,6 +94,25 @@ int main(int argc, char *argv[])
                         contharmsStbArray,
                     hms};
         spectrogram = &mspectrogram.ff;
+    initializeGraph(&widget);
+
+        getPos = gridGetPos;
+        feedbackSize = gridFeedbackSize;
+        gridStart.x = 5;
+        gridStart.y = 5;
+
+        guiSetSize(rootWindow, 992, 402);
+        GC gc2 = XCreateGC(xdisplay, rootWindow, 0, NULL);
+        Painter pa = {rootWindow, gc2};
+        while(true) {
+            guiNextEvent();
+            XClearWindow(xdisplay, rootWindow);
+            setupUi(&pa);
+            XFlush(xdisplay);
+            if(xEvent.type == DestroyNotify) {
+                return 0;
+            };
+        }
 //        save(&max, sizeof(max),
 //                                              hassh,  STR(FUNCTION) "_max", 1 );
 //        save(&h, sizeof(h),

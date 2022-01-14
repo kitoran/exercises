@@ -22,20 +22,19 @@ TEMPLATE = app
 DEFINES += QT_DEPRECATED_WARNINGS
 LIBS += -lGL -lGLU -lasound
 
-unix:!macx: LIBS += -L$$PWD/../../library/build-guiS-Desktop-Debug/gui/ -lgui
+#unix:!macx: LIBS += -L$$PWD/../../library/build-guiS-Desktop-Debug/gui/ -lgui
 
-INCLUDEPATH += $$PWD/../gui
-DEPENDPATH += $$PWD/../gui
+#INCLUDEPATH += $$PWD/../gui
+#DEPENDPATH += $$PWD/../gui
 
-unix:!macx: PRE_TARGETDEPS += $$PWD/../../library/build-guiS-Desktop-Debug/gui/libgui.a
+#unix:!macx: PRE_TARGETDEPS += $$PWD/../../library/build-guiS-Desktop-Debug/gui/libgui.a
 
 
-QMAKE_CXXFLAGS += -Wno-unused-variable  -Werror=implicit-function-declaration
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
-QMAKE_CXXFLAGS += -Wno-sign-compare
+QMAKE_CFLAGS += -Werror=implicit-function-declaration -Wno-unused-variable -Wno-parentheses
 INCLUDEPATH += ../sound ../../library/ambiguousArray ../../library/dynamicArray \
                ../../library/newFile ../../library/guiS/gui
 LIBS += -lsndfile -lssl -lcrypto -lexplain -lX11
@@ -55,7 +54,8 @@ SOURCES += \
     mainwindow.c \
     complex_fft.c \
     ../../library/newFile/newfile.c \
-    intpool.c
+    intpool.c \
+    ui_mainwindow.c
 
 HEADERS += \
         mainwindow.h \
@@ -71,12 +71,14 @@ HEADERS += \
     soundext.h \
     stb_ds.h \
     ui_mainwindow.h \
-    intpool.h
+    intpool.h \
+    fft.h \
+    fftrec.h
 
 FORMS += \
         mainwindow.ui
 
-OTHER_FILES += \
+SOURCES += \
     fftrec.c \
     fft.c
 
@@ -84,3 +86,21 @@ RESOURCES +=
 
 DISTFILES += \
     mainwindowg.glade
+
+
+SOURCES += \
+    $$PWD/../../library/guiS/gui/gui.c \
+    $$PWD/../../library/guiS/gui/gridlayout.c
+
+HEADERS += \
+    $$PWD/../../library/guiS/gui/gui.h \
+    $$PWD/../../library/guiS/gui/gridlayout.h
+#include(../../library/guiS/gui/gui.pro)
+#PRE_TARGETDEPS += ../../library/build-guiS-Desktop-Debug/gui/libgui.a
+#QMAKE_EXTRA_TARGETS += versionTarget
+#versionTarget.target = ../../library/build-guiS-Desktop-Debug/gui/libgui.a
+#versionTarget.depends = FORCE
+##win32: versionTarget.commands = cd $$PWD; python.exe ./version_getter.py -p $$TARGET
+##versionTarget.commands = cd $$PWD/../../library/guiS; qmake guiS.pro; cd ../build-guiS-Desktop-Debug/; make build
+#versionTarget.commands = cd ../build-guiS-Desktop-Debug/; make build
+

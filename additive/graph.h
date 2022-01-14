@@ -1,37 +1,33 @@
-#ifndef GRAPH_H
+﻿#ifndef GRAPH_H
 #define GRAPH_H
 
 #include <spectrogram.h>
-#include <gtk/gtk.h>
-
+#include "gui.h"
 //#include <synthesis.h>
 
-struct graphClass {
-
-};
-struct _cairo_surface;
-struct graph
+typedef struct graph
 {
-    GtkWidget p;
-
+    int width, height;
     _Bool selecting;
     int selectStart;
     int selectEnd;
-    struct _cairo_surface *spectrogramDrawing;
+    Pixmap spectrogramDrawing;
+    Window window;
 //    int spectrogramWidth;
 //    int spectrogramHeight;
 //    QWidget
+} graph;
 
-
-};
+void graphProcessEvent(graph* g, int x, int y, int w, int h);
 void initializeGraph(struct graph *g);
-int rangeEndInArray(struct graph*g);
-int rangeStartInArray(struct graph*);
-void paintEvent(struct graph*,GdkEventVisibility*event);
-void resizeEvent(struct graph*,GdkEventConfigure  *event);
+//int rangeEndInArray(struct graph*g);
+//int rangeStartInArray(struct graph*);
 void selectRange(struct graph*);
-void mouseMoveEvent(struct graph*,GdkEventMotion *event);
-void mousePressEvent(struct graph*,GdkEventButton *event);
-void mouseReleaseEvent(struct graph*,GdkEventButton *event);
+
+//void drawGraph(struct graph*, int x, int y);
+//void resizeEvent(struct graph*);
+//void mouseMoveEvent(struct graph*);
+//void mousePressEvent(struct graph*);
+//void mouseReleaseEvent(struct graph*);
 
 #endif // GRAPH_H

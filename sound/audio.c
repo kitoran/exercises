@@ -1,4 +1,4 @@
-#include "audio.h"
+﻿#include "audio.h"
 #include <alsa/asoundlib.h>
 #include <stdio.h>
 
@@ -9,7 +9,6 @@ snd_pcm_uframes_t framesPerBuffer = 512;
 void initAudio(int channels, snd_pcm_format_t format)
 {
     snd_pcm_hw_params_t *params;
-    unsigned int val;
     int dir;
     int rc;
     /* Open PCM device for playback. */
@@ -91,8 +90,8 @@ void drainAudio()
     snd_pcm_close(handle);
 }
 
-void alsaPlayBlock(const int16_t* buffer, int size) {
-    int index = 0;
+void alsaPlayBlock(const int16_t* buffer, uint size) {
+    uint index = 0;
     while(index + framesPerBuffer <size) {
 //        for(int i = 0; i < framesPerBuffer; i++) {
 //            assert(fabs(buffer[index + framesPerBuffer+i]) <= 1/denominator);

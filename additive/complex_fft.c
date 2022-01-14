@@ -1,4 +1,7 @@
 ﻿#include <complex.h>
+#include "mathext.h"
+#include "fftrec.h"
+#include <math.h>
 extern double max;
 void complex_fftInt16(short *data, int size, complex double *res)
 {

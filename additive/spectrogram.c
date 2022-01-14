@@ -55,7 +55,7 @@ GdkRGBA black() {
     return r;
 }
 
-void drawAxes(struct Spectrogram* sg, GuiImage* image, int w, int h) {
+void drawAxes(struct Spectrogram* sg, Painter* image, int w, int h) {
 //    XSetForeground(xdisplay, image.gc, GuiDarkMagenta);
 //    double sortabase = log(freqMax/freqMin)/(height()-20);
     for(int y = 0; y < h-20; y += 100) {
@@ -69,15 +69,10 @@ void drawAxes(struct Spectrogram* sg, GuiImage* image, int w, int h) {
 //        XDrawLine(xdisplay, image.i, image.gc,
 //                  10, h-10-y,
 //                   w-10, h-10-y);
-        drawHorizontalLine(image, 10, w-10, h-10-y, 0);
+        guiDrawLine(image, 10, w-10, 10, h-10-y);
         char text[20];
         int len = sprintf(text, "%2.lf", freq);
-        XTextItem ti = {
-            text,
-            len,
-                    0,
-                    None};
-        XDrawText(xdisplay, image.i, image.gc,  10., h-10.-y, &ti, 1);
+        guiDrawTextWithLen(image, 10, h-10-y, text, len);
     }
 }
 
@@ -146,11 +141,11 @@ void drawAxes(struct Spectrogram* sg, GuiImage* image, int w, int h) {
 
 //}
 
-void MaximaSpectrogramdraw(struct MaximaSpectrogram* self, GuiImageRef r, int w, int h)
+void MaximaSpectrogramdraw(struct MaximaSpectrogram* self, Painter *r, int w, int h)
 {
-    XSetForeground(xdisplay, r.gc, 0x0000000);
+    guiSetForeground(r, 0x0000000);
 //    cairo_set_source_rgb(p, 0, 0, 0);
-    XDrawRectangle(xdisplay, r.i, r.gc, 10, 10, w-20, h-20);
+    guiDrawRectangle(r, 10, 10, w-20, h-20);
     int spectrWidth = arrlen(self->maxima);
     for(int i = 0; i < spectrWidth; i++) {
         for(int j = 0; j < arrlen(self->maxima[i]); j++) {
@@ -164,12 +159,12 @@ void MaximaSpectrogramdraw(struct MaximaSpectrogram* self, GuiImageRef r, int w,
 //            if(g > 100) {
 //                qDebug() << g;
 //            }
-            XSetForeground(xdisplay, r.gc, rgb(g,g,g));
+            guiSetForeground(r, rgb(g,g,g));
             if(g < 0 || g > 255) {
                 fprintf(stderr, "i %d j %d amplitude %lf max %lf color %d",
                         i, j, value, max, g);
             }
-            XDrawRectangle(xdisplay, r.i, r.gc, left+10, h-10-top, right-left, top-bottom);
+            guiDrawRectangle(r, left+10, h-10-top, right-left, top-bottom);
         }
     }
     drawAxes(&self->ff, r, w, h);
@@ -183,7 +178,7 @@ void MaximaSpectrogramfillBuffer(struct MaximaSpectrogram* self, int16_t *buffer
     for(int j = 0; j < bufferSize; j++) {
         double v = 0;
         for(int i = 0; i < size; i++) {
-            struct harmonic deb32 = hs[i];
+//            struct harmonic deb32 = hs[i];
 //            int64_t deb = ((hs[i].freq
 //                        *phase+i)*LOOKUP_TABLE_SIZE);
 //            int64_t deb15 = (int64_t)((hs[i].freq
@@ -214,11 +209,11 @@ double ContMaximaSpectrogramfrequencyAtProportion(struct ContMaximaSpectrogram* 
     return proportion*cutoff;
 }
 
-void LinearSpectrogramdraw(struct LinearSpectrogram* self, GuiImageRef r, int w, int h)
+void LinearSpectrogramdraw(struct LinearSpectrogram* self, Painter* r, int w, int h)
 {
 
-    XSetForeground(xdisplay, r.gc, 0x0000000);
-    XDrawRectangle(xdisplay, r.i, r.gc, 10, 10, w-20, h-20);
+    guiSetForeground(r, 0x0000000);
+    guiDrawRectangle(r, 10, 10, w-20, h-20);
     int cutoffIndex = cutoff/self->freqStep;
 //    qDebug() << "final freq is" << indToFftFreq(h,
     for(int i = 0; i < self->width_; i++) {
@@ -230,11 +225,11 @@ void LinearSpectrogramdraw(struct LinearSpectrogram* self, GuiImageRef r, int w,
             double top = (h-20)/(double)(cutoffIndex)*(j+1);
             if(j >= self->height) {
 
-                XSetForeground(xdisplay, r.gc, rgbf(0,0,0.5));
+                guiSetForeground(r, rgbf(0,0,0.5));
             } else {
                 double value = self->data[i*self->height+j];
                 double norm = value/max;
-                XSetForeground(xdisplay, r.gc, rgbf(norm,norm,norm));
+                guiSetForeground(r, rgbf(norm,norm,norm));
 //                gdk_set_background(gc, color);
                 if(norm < 0 || norm > 1) {
                     fprintf(stderr, "i %d j %d amplitude %lf max %lf color %lf",
@@ -245,12 +240,14 @@ void LinearSpectrogramdraw(struct LinearSpectrogram* self, GuiImageRef r, int w,
 //                qDebug() << g;
 //            }
 
-            XDrawRectangle(xdisplay, r.i, r.gc, left+10, h-10-top, right-left, top-bottom);
+            guiDrawRectangle(r, left+10, h-10-top, right-left, top-bottom);
         }
     }
-    drawAxes(self,r,w,h);
+    drawAxes(&self->ff,r,w,h);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void LinearSpectrogramfillBuffer(struct LinearSpectrogram* self,int16_t *z, int bufferSize, int pos, unsigned int phase)
 {
     abort();
@@ -261,13 +258,13 @@ double LinearSpectrogramfrequencyAtProportion(struct LinearSpectrogram* self, do
     return proportion*cutoff;
 }
 
-void ContMaximaSpectrogramdraw(struct ContMaximaSpectrogram* self, GuiImageRef r, int w, int h)
+void ContMaximaSpectrogramdraw(struct ContMaximaSpectrogram* self, Painter *r, int w, int h)
 {
 //    cdCanvasSetForeground(canvas, CD_TRANSPARENT);
     //set_foreground
 
-    XSetForeground(xdisplay, r.gc, 0x0000000);
-    XDrawRectangle(xdisplay, r.i, r.gc, 10, w-20, 10, h-20);
+    guiSetForeground(r, 0x0000000);
+    guiDrawRectangle(r, 10, w-20, 10, h-20);
     int spectrWidth = arrlen(self->maxima);
     for(int i = 1; i < spectrWidth; i++) {
         for(int j = 0; j < arrlen(self->maxima[i]); j++) {
@@ -276,14 +273,21 @@ void ContMaximaSpectrogramdraw(struct ContMaximaSpectrogram* self, GuiImageRef r
             double rightY = (h-20)/(double)(cutoff)*har.h.freq;
             double leftX = (w-20)/(double)(spectrWidth)*(i);
             double leftY = har.prev == -1? rightY: (h-20)/(double)(cutoff)*self->maxima[i-1][har.prev].h.freq;
-            double value = self->maxima[i][j].h.amp;
-            int g = value/max*255;
+//            double value = self->maxima[i][j].h.amp;
+//            int g = value/max*255;
 //            if(g > 100) {
 //                qDebug() << g;
 //            }
-
-
-            assert(false);//gdk_set_foreground(gc, QColor(Qt::GlobalColor(self->maxima[i][j].continuity % Qt::transparent)));
+            uint colors[] = {
+                rgb(0,0,255),
+                rgb(0,255,0),
+                rgb(0,255,255),
+                rgb(255,0,0),
+                rgb(255,0,255),
+                rgb(255,255,0)
+            };
+#define countof(a) ((sizeof((a)))/(sizeof(*(a))))
+            guiSetForeground(r, colors[self->maxima[i][j].continuity % countof(colors)]);
 
 
 //            if(g < 0 || g > 255) {
@@ -291,7 +295,7 @@ void ContMaximaSpectrogramdraw(struct ContMaximaSpectrogram* self, GuiImageRef r
 //                         << "max" << max <<
 //                            "color" << g;
 //            }
-            XDrawLine(xdisplay, r.i, r.gc, leftX+10, h-10-leftY, rightX+10, h-10-rightY);
+            guiDrawLine(r, leftX+10, h-10-leftY, rightX+10, h-10-rightY);
         }
     }
     drawAxes(&self->ff, r,w,h);
@@ -313,7 +317,7 @@ void ContMaximaSpectrogramfillBuffer(struct ContMaximaSpectrogram* self, int16_t
 //            int64_t deb2 = sinLookupTableInt[int64_t((hs[i].freq
 //                                   *phase+i)*LOOKUP_TABLE_SIZE)
 //                   %LOOKUP_TABLE_SIZE];
-            double deb3 = hs[i].h.amp;
+//            double deb3 = hs[i].h.amp;
             v += hs[i].h.amp*sinLookupTable[(int64_t)((hs[i].h.freq
                                     *phase/alsaSampleRate+i)*LOOKUP_TABLE_SIZE)
                     %LOOKUP_TABLE_SIZE]/max/*3*/;
@@ -335,9 +339,12 @@ int LinearSpectrogramwidth(struct LinearSpectrogram*self) {
     return self->width_;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
 const struct Spectrogram contMaximaSpectrogramVtable = {
     ContMaximaSpectrogramwidth,
     ContMaximaSpectrogramdraw,
     ContMaximaSpectrogramfillBuffer,
     ContMaximaSpectrogramfrequencyAtProportion
 };
+#pragma GCC diagnostic pop

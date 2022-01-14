@@ -7,30 +7,7 @@
 #include "globals.h"
 #include <sndfile.h>
 #include "newfile.h"
-
-//MainWindow::MainWindow(/*QWidget *parent,*/
-/*                       double *data_,
-                       int size_,
-                       double max_*///) :
-//    QMainWindow(parent),
-//    ui(new Ui::MainWindow)
-
-void createMainWindow(GtkGrid* grid){
-    setupUi(grid);
-//    g=widget;
-
-    gtk_signal_connect(GTK_OBJECT (toolButton), "clicked",
-                     GTK_SIGNAL_FUNC(MainWindowon_toolButton_clicked), 0);
-    gtk_signal_connect(GTK_OBJECT (denominatorEntry), "changed",
-                     GTK_SIGNAL_FUNC(MainWindowon_denominator_textChanged), 0);
-    gtk_signal_connect(GTK_OBJECT (toolButton_2), "clicked",
-                     GTK_SIGNAL_FUNC(MainWindowon_toolButton_2_clicked), 0);
-    gtk_signal_connect(GTK_OBJECT (pushButton), "clicked",
-                     GTK_SIGNAL_FUNC(MainWindowon_toolButton_2_clicked), 0);
-    gtk_signal_connect(GTK_OBJECT (numberOfHarmonicsLineEdit), "changed",
-                     GTK_SIGNAL_FUNC(MainWindowon_numberOfHarmonicsLineEdit_textChanged), 0);
-//    g->setData(data_, size_, max_);
-}
+#include "graph.h"
 
 void MainWindowon_toolButton_clicked()
 {
@@ -44,25 +21,18 @@ void MainWindowon_toolButton_clicked()
     shiftandmulLinear(originalFourierTransform, originalFourierTransformH,
                       originalFourierTransformW, &shifted, &shiftedH);
     int hms;
-    continuousHarmonic**  contharms = prepareHarmonicsStbArray(maxesLinear(shifted, shiftedH, originalFourierTransformW, inpi.samplerate), &hms);
+    continuousHarmonic**  contharms = prepareHarmonicsStbArray(maxesLinearStbArray(shifted, shiftedH, originalFourierTransformW, inpi.samplerate), &hms);
     spectrogram = malloc(sizeof(ContMaximaSpectrogram));
     *spectrogram=contMaximaSpectrogramVtable;
     ((ContMaximaSpectrogram*)spectrogram)->maxima = contharms;//= new ContMaximaSpectrogram(max,
     ((ContMaximaSpectrogram*)spectrogram)->harmonics = hms;
-    gtk_widget_queue_draw(widget);
+    guiRedraw();
     alsaPlayBlock(audioOutputStb, arrlen(audioOutputStb));
  }
 
-void MainWindowon_denominator_textChanged(const char* text)
-{
-    double r;
-    sscanf(text, "%lf", &r);
-    denominator = r;
-}
-
 void MainWindowon_toolButton_2_clicked()
 {
-    selectRange(widget);
+    selectRange(&widget);
 }
 
 void MainWindowon_pushButton_clicked()
@@ -82,10 +52,4 @@ void MainWindowon_pushButton_clicked()
     strcat(command, e);
     fprintf(stderr, "command IS %s", command);
     system(command);
-}
-
-void MainWindowon_numberOfHarmonicsLineEdit_textChanged(const char *text)
-{
-//    numberOfHarmonics = arg1.toInt();
-    sscanf(text, "%d", &numberOfHarmonics );
 }

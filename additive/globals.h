@@ -19,4 +19,6 @@ extern int originalFourierTransformH, originalFourierTransformW;
 
 extern double max;
 extern struct SF_INFO inpi;
+struct graph;
+extern struct graph widget;
 #endif // GLOBALS_H1

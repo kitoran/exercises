@@ -1,6 +1,8 @@
 ﻿#include "intpool.h"
 #include <stdio.h>
+#include <assert.h>
 #define false 0
+#include <stdlib.h>
 void initIntPool(struct IntPool* self, int size_)
 {
     self->pool = ((_Bool*)malloc(sizeof(_Bool)*size_));

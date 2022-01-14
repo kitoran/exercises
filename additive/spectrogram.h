@@ -3,19 +3,19 @@
 #include <inttypes.h>
 #include <stft.h>
 #include <gdk/gdk.h>
-
+#include "gui.h"
 
 //enum class spectrogram_mode {linear, logarithmic};
 struct Spectrogram
 {
     int (*width)(void*);
-    void (*draw)(void*, struct _cairo *, int, int);
+    void (*draw)(void*, Painter *, int, int);
     void (*fillBuffer)(void*, int16_t*, int bufferSize, int pos, uint64_t phase);
     double (*frequencyAtProportion)(void*, double p);
 };
 //struct _cdCanvas;
-struct GuiImage;
-void drawAxes(struct Spectrogram *sg, struct GuiImage *image, int w, int h);
+//struct GuiImage;
+void drawAxes(struct Spectrogram *sg, Painter* image, int w, int h);
 
 struct MaximaSpectrogram
 {

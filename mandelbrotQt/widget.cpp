@@ -103,7 +103,7 @@ inline std::complex<float> func(std::complex<float> p, std::complex<float> c) {
 //                    )) + c;
 //    return c*p*(1.f-p);
 //    return std::conj(std::exp((std::log(p))*(-2.f))) + c;
-    return std::conj(std::exp((std::log(p))*(2.f))) + c;
+    return std::conj(std::exp((std::log(p))*(-2.f))) + c;
 }
 
 void Widget::doPic() {
