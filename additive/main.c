@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     startAlsathread();
 
     inpi.format = 0;
-    SNDFILE* inp = sf_open("/home/n/exercises/additive/02 Waltz, op. 314 ''The blue danube''.wav", SFM_READ, &inpi);
+    SNDFILE* inp = sf_open("/home/n/exercises/additive/02-201019_1328part.wav", SFM_READ, &inpi);
 
     if(inpi.channels != 1) {
         fprintf(stderr, "%d channels ! ! !", inpi.channels);
@@ -74,15 +74,14 @@ int main(int argc, char *argv[])
         double* shifted;
         int shiftedH;
 
-//        shiftandmulLinear(originalFourierTransform, originalFourierTransformH, originalFourierTransformW, &shifted, &shiftedH);
+        shiftandmulLinear(originalFourierTransform, originalFourierTransformH, originalFourierTransformW, &shifted, &shiftedH);
         int hms;
-          struct continuousHarmonic** contharmsStbArray = prepareHarmonicsStbArray(maxesLinearStbArray(originalFourierTransform,
-                                                    originalFourierTransformH, originalFourierTransformW, inpi.samplerate), &hms);
-//        struct continuousHarmonic** contharmsStbArray  = prepareHarmonicsStbArray(maxesLinearStbArray(shifted, shiftedH,
-//                    originalFourierTransformW, inpi.samplerate), &hms);
+//          struct continuousHarmonic** contharmsStbArray = prepareHarmonicsStbArray(maxesLinearStbArray(originalFourierTransform,
+//                                                    originalFourierTransformH, originalFourierTransformW, inpi.samplerate), &hms);
+        struct continuousHarmonic** contharmsStbArray  = prepareHarmonicsStbArray(maxesLinearStbArray(shifted, shiftedH,
+                    originalFourierTransformW, inpi.samplerate), &hms);
 //        resynthesizeMaxima(maxesLinear(shifted, shiftedH, w, inpi.samplerate), stepSize, inpi, windowSize);
 //        resynthesizeMaxima(contharms, hms);
-//        exit(0);
 //        auto mspectrogram = new LinearSpectrogram(originalMax, transform, w, h, inpi.samplerate/windowSize);
 //        auto mspectrogram = new LinearSpectrogram(max, shifted, w, shiftedH, inpi.samplerate/windowSize);
 //                auto mspectrogram = new MaximaSpectrogram(max, maxesLinear(transform, h, w, inpi.samplerate));
@@ -95,6 +94,9 @@ int main(int argc, char *argv[])
 
                         contharmsStbArray,
                     hms};
+//        resynthesizeMaxima(&mspectrogram,0,originalFourierTransformW-1);
+//        exit(0);
+
         spectrogram = &mspectrogram.ff;
     initializeGraph(&widget);
 

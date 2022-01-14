@@ -37,11 +37,12 @@ void setupUi(Painter *p)
     guiDoubleEdit(p, 6, &denominator);
 
     setCurrentGridPos(2,2);
-    int dummy;
+    int dummy = 0;
     guiNumberEdit(p, 6, &dummy);
 
+    int maxx = max;
     setCurrentGridPos(2, 0);
-    guiNumberEdit(p, 6, &dummy);
+    guiNumberEdit(p, 6, &maxx);
 
     setCurrentGridPos(0,2);
     guiLabelZT(p, "treshold");
@@ -62,10 +63,12 @@ void setupUi(Painter *p)
     }
 
     setCurrentGridPos(2, 12);
-    guiNumberEdit(p,  5, &dummy);
+    int step = stepSize;
+    guiNumberEdit(p,  5, &step);
 
     setCurrentGridPos(2, 8);
-    guiNumberEdit(p,  5, &dummy);
+    int ws = windowSize;
+    guiNumberEdit(p,  5, &ws);
 
     setCurrentGridPos(0,0);
     guiLabelZT(p, "max");

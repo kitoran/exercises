@@ -141,7 +141,7 @@ struct harmonic** maxesLinearStbArray(double *data, int h, int w, int samplerate
     for(int i = 0; i < w; i++) {
         struct harmonic* eStbArray = NULL;
         for(int j = 1; j < h-1; j++) {
-            double freq = (double)(samplerate)/h*j;
+            double freq = (double)(samplerate)/originalFourierTransformH*j;
             if(data[i*h+j] > data[i*h+j-1]
                  && data[i*h+j] > data[i*h+j+1]
                  && freq < 20000
@@ -207,8 +207,10 @@ void shiftandmulLinear(double *src, int h, int w, double **dest, int *resH)
         for(int j = 0; j < *resH; j++) {
             double v = 1;
             for(int k = 0; k < numberOfHarmonics; k++) {
-                if(j*(k+1) < w/2) {
+                if(j*(k+1) < h) {
                     v *= src[i*h + j*(k+1)]/500000;
+                } else {
+                    abort();
                 }
             }
             double treshold = 455.500326/10000;

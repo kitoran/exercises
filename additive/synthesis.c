@@ -109,11 +109,11 @@ void resynthesizeMaxima(struct ContMaximaSpectrogram* s, int start, int end)
 //    fprintf(stderr, "Data %p w %d stepSize %d specs %d", data, w, stepSize, specrtSize);
 //    double* look = ;
 
-//    SF_INFO outi = inpi;
-//    SNDFILE* out = play?0:sf_open(
-//                newFile("/home/n/exercises/additive/resynthesizeMaxima", "wav").c_str(),
-//                SFM_WRITE,
-//                &outi);
+    SF_INFO outi = inpi;
+    SNDFILE* out = /*play?0:*/sf_open(
+                newFile("/home/n/exercises/additive/resynthesizeMaxima", "wav"),
+                SFM_WRITE,
+                &outi);
     struct continuousHarmonic** preparedStbArray = s->maxima;
     int hms = s->harmonics;
     if(start == -1) start = 0;
@@ -158,7 +158,8 @@ void resynthesizeMaxima(struct ContMaximaSpectrogram* s, int start, int end)
             outb[s] = v*800;
         }
 
-//        s->fillBuffer(outb, stepSize, i, (int64_t)i*stepSize);
+        s->ff.fillBuffer(s, outb, stepSize, i, (int64_t)i*stepSize);
+        sf_write_short(out, outb, stepSize);
 
         memcpy(audioOutputStb+(i-start)*stepSize, outb, stepSize
                *sizeof(outb[0]));
@@ -168,7 +169,7 @@ void resynthesizeMaxima(struct ContMaximaSpectrogram* s, int start, int end)
 
     }
 //    if(!play) {
-//        sf_close(out);
+        sf_close(out);
 //    }
 }
 
