@@ -1,4 +1,4 @@
-#include "stft.h"
+﻿#include "stft.h"
 #include <math.h>
 #include "mathext.h"
 #include "globals.h"
@@ -151,9 +151,9 @@ struct harmonic** maxesLinearStbArray(double *data, int h, int w, int samplerate
                 arrput(eStbArray, hc);
             }
         }
-        int ampMore(const void * a, const void * b) {
-            return ((struct harmonic*)a)->amp > ((struct harmonic*)b)->amp;
-        }
+//        int ampMore(const void * a, const void * b) {
+//            return ((struct harmonic*)a)->amp > ((struct harmonic*)b)->amp;
+//        }
 //        qsort(e, arrlen(e), sizeof(*e), ampMore);
         int freqLess(const void * a, const void * b) {
             return ((struct harmonic*)a)->freq < ((struct harmonic*)b)->freq;

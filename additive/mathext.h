@@ -1,4 +1,4 @@
-#ifndef MATHEXT_H
+﻿#ifndef MATHEXT_H
 #define MATHEXT_H
 
 
@@ -14,7 +14,7 @@ extern double* sinLookupTable;
 extern int* sinLookupTableInt;
 extern const double tau;
 int intLog2(int l);
-inline unsigned int hash(unsigned int x) {
+static inline unsigned int hash(unsigned int x) {
     x = ((x >> 16) ^ x) * 0x45d9f3b;
     x = ((x >> 16) ^ x) * 0x45d9f3b;
     x = (x >> 16) ^ x;

@@ -1,13 +1,15 @@
-#include "graph.h"
+﻿#include "graph.h"
 #include "globals.h"
 #include "spectrogram.h"
 #include "synthesis.h"
 #include "audio.h"
 #include "math.h"
+#include "gui.h"
 #include "mathext.h"
 #include "alsathread.h"
+#include <X11/cursorfont.h>
 #include <stdbool.h>
-#include <gdk/gdk.h>
+//#include <gdk/gdk.h>
 void graph_onDraw(struct graph* g, cairo_t* cr,
                   gpointer user_data
                 );
@@ -15,8 +17,19 @@ void initializeGraph(struct graph *g) {
     g->selectEnd = -1;
     g->selecting = false;
     g->selectStart = -1;
-    g->spectrogramDrawing = NULL;
-    g_signal_connect(G_OBJECT(g), "draw", G_CALLBACK( graph_onDraw), NULL);
+    g->spectrogramDrawing = 0;
+    g->width = g->height = 0;
+    g->window = XCreateSimpleWindow(xdisplay,
+                                    rootWindow,
+                                    0,
+                                    0,
+                                    100,
+                                    100,
+                                    0,
+                                    0,
+                                    0x00000000
+                                );
+    XMapWindow(xdisplay, g->window);
 //    g->spectrogramData = NULL;
   //  g->spectrogramWidth = 0;
    // g->spectrogramHeight = 0;
@@ -24,11 +37,11 @@ void initializeGraph(struct graph *g) {
 
 int rangeStartInArray(struct graph* g)
 {
-    return (double)(g->selectStart-10) / (gtk_widget_get_allocated_width(&g->p)-20) * spectrogram->width(spectrogram);
+    return (double)(g->selectStart-10) / (g->width-20) * spectrogram->width(spectrogram);
 }
 int rangeEndInArray(struct graph* g)
 {
-    return (double)(g->selectEnd-10) / (gtk_widget_get_allocated_width(&g->p)-20) * spectrogram->width(spectrogram);
+    return (double)(g->selectEnd-10) / (g->width-20) * spectrogram->width(spectrogram);
 }
 
 //void graph::setData(Spectrogram* data_) {
@@ -61,30 +74,36 @@ int rangeEndInArray(struct graph* g)
 //    windowSize = windowSize_;
 //}
 
-void graph_onDraw(struct graph* g, cairo_t* cr,
-                  gpointer user_data
-                ) {
-(void)user_data;
+void drawGraph(graph *g,/* Painter *p,*/ int x, int y) {
 //    cairo_surface_t *image = cairo_image_surface_create_for_data(g->spectrogramDrawing,
 //                                                                 CAIRO_FORMAT_ARGB32,
 //                                                                 g->spectrogramWidth,
 //                                                                 g->spectrogramHeight, 0);
-    cairo_set_source_surface(cr, g->spectrogramDrawing, 0, 0);
-
-    cairo_paint(cr);
-//    cairo_surface_destroy(image);
 //    gdk_draw_pixbuf(g, gc, , 0, 0, 0, 0, -1, -1, 0, 0, 0);
-    if(g->selectStart >= 0) {
-        cairo_set_source_rgba(cr,1, 1,1,0.3);
-        cairo_rectangle(cr, g->selectStart, 0, g->selectEnd-g->selectStart, gtk_widget_get_allocated_width(&g->p));
+    fprintf(stderr, "move window to %d %d\n", x, y);
+    XMoveWindow(xdisplay, g->window, x, y);
 
+    GC gc = XCreateGC(xdisplay, g->window, 0, NULL);
+    if(g->spectrogramDrawing) {
+        XCopyArea(xdisplay, g->spectrogramDrawing, g->window,
+                  gc, 0,0, g->width,
+                  g->height, 0, 0);
     }
 
+    Painter p = {
+        g->window,
+        gc
+    };
+    if(g->selectStart >= 0) {
+        guiSetForeground(&p, 0x55ffffff);
+        guiFillRectangle(&p, g->selectStart, 0, g->selectEnd-g->selectStart, g->width);
+    }
+    XFreeGC(xdisplay, gc);
     //    QPainter p(this);
 //    spectrogram->draw(&p, width(), height());
 }
 
-void resizeEvent(struct graph* g, GdkEventConfigure  *event)
+void resizeEvent(struct graph* g)
 {
 //    fprintf(stderr, "real %d %d need %d", width()-20, height()-20, spectrogram->width());
 //    g->spectrogramData = realloc(g->spectrogramData, event->width * event->height);
@@ -96,39 +115,37 @@ void resizeEvent(struct graph* g, GdkEventConfigure  *event)
 //                                                                 g->spectrogramWidth,
 //                                                                 g->spectrogramHeight, 0);
     if(g->spectrogramDrawing) {
-        cairo_surface_destroy(g->spectrogramDrawing);
+        XFreePixmap(xdisplay, g->spectrogramDrawing);
     }
+    fprintf(stderr, "%d x %d \n", g->width, g->height);
+    g->spectrogramDrawing = XCreatePixmap(xdisplay, rootWindow, g->width, g->height, xDepth);
 
-    g->spectrogramDrawing = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, event->width, event->height);
-    cairo_t* cr = cairo_create(g->spectrogramDrawing);
-    spectrogram->draw(spectrogram, cr, event->width, event->height);
+    Painter p = {
+        g->spectrogramDrawing,
+        XCreateGC(xdisplay, g->spectrogramDrawing, 0, NULL)
+    };
+    spectrogram->draw(spectrogram, &p, g->width, g->height);
+    XFreeGC(xdisplay, p.gc);
 
-    cairo_destroy(cr);
+
+    fprintf(stderr, "resize window to %d %d\n", g->width, g->height);
+    XResizeWindow(xdisplay, g->window, g->width, g->height);
 //    gdk_gc_destroy(gc);
 }
 
 void selectRange(struct graph* g)
 {
     g->selecting = true;
-
-    GdkCursor* cursor;
-    cursor = gdk_cursor_new_for_display(gdk_display_get_default(),
-                            GDK_CROSS);
-    gdk_window_set_cursor(gtk_widget_get_window(&g->p), cursor);
-    g_object_unref(cursor);
-
-
-
-//    QCursor c();
-//    setCursor(Qt::CrossCursor);
+    Cursor c = XCreateFontCursor(xdisplay, XC_cross);
+    XDefineCursor(xdisplay, g->window, c);
 }
 
-void mouseMoveEvent(struct graph* g, GdkEventMotion *event) {
+void mouseMoveEvent(struct graph* g, int x) {
 //    double sortabase = log(20000.0/30)/(width()-20);
 //    double freq = 30 * exp(sortabase*x);
 
 //    int indh = double(height()-event->y()-10) / (height()-20) * heights;
-    int indw = (double)(event->x-10) / (gtk_widget_get_allocated_width(&g->p)-20) * spectrogram->width(spectrogram);
+    int indw = (double)(x-10) / (g->width-20) * spectrogram->width(spectrogram);
 //    double freq = 0;// = freqMin * log(freqMax/freqMin)/log(double(height()-event->y()-10) / (height()-20));//pow(frequencyMultiplent, indh);
 //    if(mode == spectrogram_mode::linear) {
 //        double(y) / (height()-20) * 1000;
@@ -141,7 +158,7 @@ void mouseMoveEvent(struct graph* g, GdkEventMotion *event) {
 //    } else {
 //        val = data[ind];
 //    }
-    if(indw < 0 || indw >= gtk_widget_get_allocated_width(&g->p)) {
+    if(indw < 0 || indw >= g->width) {
         return;
     }
     struct message m;
@@ -150,16 +167,16 @@ void mouseMoveEvent(struct graph* g, GdkEventMotion *event) {
     blockAndPut(&channel, &m, sizeof(m));
 
     if(g->selecting) {
-        g->selectEnd = event->x;
-        gtk_widget_queue_draw(&g->p);
+        g->selectEnd = x;
+        guiRedraw();
     }
     //    fprintf(stderr, "indh %d indw %d freq %lf val %lf", indh, indw, freq, val);
 //    fprintf(stderr, "freq %lf", freq);
 }
 
-void mousePressEvent(struct graph* g, GdkEventButton *event)
+void mousePressEvent(struct graph* g, int x)
 {
-    int indw = (double)(event->x-10) / (gtk_widget_get_allocated_width(&g->p)-20) * spectrogram->width(spectrogram);
+    int indw = (double)(x-10) / (g->width-20) * spectrogram->width(spectrogram);
     struct message m = {indw};
 //    if(complex) {
 //        m = message{data.slicec(indw*heights, heights), mode, true};
@@ -169,11 +186,11 @@ void mousePressEvent(struct graph* g, GdkEventButton *event)
 //    qDebug() << "putting message:" << m.data.data << m.data.sized ;
     blockAndPut(&channel, &m, sizeof(m));
     if(g->selecting) {
-        if(event->button == 3) {
+        if(xEvent.xbutton.button == Button3) {
             g->selectStart = g->selectEnd = -1;
             g->selecting = false;
         }
-        g->selectStart = g->selectEnd = event->x;
+        g->selectStart = g->selectEnd = x;
     }
 //    fprintf(stderr, "heights %d\n", heights);
 //    for(int i = 0; i < heights; i++) {
@@ -185,20 +202,16 @@ void mousePressEvent(struct graph* g, GdkEventButton *event)
 //    }
 }
 
-void mouseReleaseEvent(struct graph* g, GdkEventButton *event)
+void mouseReleaseEvent(struct graph* g)
 {
-    (void)(event);
     struct message m = {-1};
 //    qDebug() << "putting message:" << m.data.data << m.data.sized;
     blockAndPut(&channel, &m, sizeof(m));
     if(g->selecting) {
         g->selecting = false;
 
-        GdkCursor* cursor;
-        cursor = gdk_cursor_new_for_display(gdk_display_get_default(),
-                                            GDK_CROSS);
-        gdk_window_set_cursor(gtk_widget_get_window(&g->p), cursor);
-        g_object_unref(cursor);
+        Cursor c = XCreateFontCursor(xdisplay, XC_cross);
+        XDefineCursor(xdisplay, g->window, c);
 
         if(g->selectEnd < g->selectStart) {
             typeof(g->selectStart) temp = g->selectStart;
@@ -212,3 +225,19 @@ void mouseReleaseEvent(struct graph* g, GdkEventButton *event)
     }
 }
 
+
+void graphProcessEvent(graph *g, /*Painter *p, */int x, int y, int w, int h) {
+    g->width = w;
+    g->height = h;
+    if(xEvent.type == Expose) {
+        drawGraph(g, /*p,*/ x, y);
+    } else if(xEvent.type == ResizeRequest) {
+        resizeEvent(g);
+    } else if(xEvent.type == MotionNotify) {
+        mouseMoveEvent(g, xEvent.xmotion.x - x);
+    } else if(xEvent.type == ButtonPress) {
+        mousePressEvent(g, xEvent.xbutton.x - x);
+    } else if(xEvent.type == ButtonRelease) {
+        mouseReleaseEvent(g);
+    }
+}

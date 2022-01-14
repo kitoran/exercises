@@ -1,3 +1,4 @@
+﻿#include "fftrec.h"
 void fftRecInt16(int16_t *data, int logsize, int logstep, complex double *res) {
     if(logsize == 0) {
         *res = *data*ftcoef;

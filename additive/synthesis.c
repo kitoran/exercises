@@ -114,7 +114,7 @@ void resynthesizeMaxima(struct ContMaximaSpectrogram* s, int start, int end)
 //                newFile("/home/n/exercises/additive/resynthesizeMaxima", "wav").c_str(),
 //                SFM_WRITE,
 //                &outi);
-    const struct continuousHarmonic** preparedStbArray = s->maxima;
+    struct continuousHarmonic** preparedStbArray = s->maxima;
     int hms = s->harmonics;
     if(start == -1) start = 0;
     if(end == -1) end = arrlen(preparedStbArray);
@@ -145,9 +145,9 @@ void resynthesizeMaxima(struct ContMaximaSpectrogram* s, int start, int end)
 //                    abort();
 //                }
                 freq = preparedStbArray[i][j].h.freq;
-                int deb = preparedStbArray[i][j].continuity;
+//                int deb = preparedStbArray[i][j].continuity;
                 v += sin(phases[preparedStbArray[i][j].continuity])*amp;
-                double integralDummy;
+//                double integralDummy;
                 phases[preparedStbArray[i][j].continuity] +=freq/inpi.samplerate*tau;
 //                phases[prepared[i][j].continuity] = modf(prepared[i][j].continuity/tau, &integralDummy)*tau;
 //                v += amp*sinLookupTable[int64_t((freq
@@ -179,7 +179,7 @@ double intervalInSemitones(double frq1, double freq2) {
     return fabs(log(frq1/freq2)/log12RootOf2);
 }
 
-continuousHarmonic** prepareHarmonicsStbArray(const harmonic*const* dataStbArray, int *continuities) {
+continuousHarmonic** prepareHarmonicsStbArray(/*const */harmonic*/*const*/* dataStbArray, int *continuities) {
     *continuities = 0;
 
     for(int i = 0; i < arrlen(dataStbArray); i++) {
