@@ -8,6 +8,18 @@
 
 void setupUi(Painter *p)
 {
+//    int deb1, deb2;
+//    if(xEvent.type == ResizeRequest) {
+//        deb1 = xEvent.xresizerequest.width;
+//        deb2 = xEvent.xresizerequest.height;
+//        guiSetSize(rootWindow, deb1, deb2);
+//    }
+//    Size size = guiGetSize();
+//    fprintf(stderr, "got size %d x %d", size.width, size.height);
+//    int gh = getGridBottom() + 5;
+//    graphProcessEvent(&widget/*, p*/, 0, gh, size.width, size.height-gh);
+//    //    gtk_grid_attach(layout, widget, 4, 0, 1, 17);
+
     setCurrentGridPos(0, 8);
     char label_2[] = "window (sampls)";
     guiLabel(p, label_2, sizeof(label_2)-1);
@@ -46,22 +58,12 @@ void setupUi(Painter *p)
     setCurrentGridPos(2,5);
     int dummy2 = 44100;
     guiNumberEdit(p, 7, &dummy2);
-    int deb1, deb2;
-    if(xEvent.type == ResizeRequest) {
-        deb1 = xEvent.xresizerequest.width;
-        deb2 = xEvent.xresizerequest.height;
-
-    }
-    Size size = guiGetSize();
-    int gh = getGridBottom() + 5;
-    graphProcessEvent(&widget/*, p*/, 0, gh, size.width, size.height-gh);
-    //    gtk_grid_attach(layout, widget, 4, 0, 1, 17);
 
     setCurrentGridPos(0,16);
     guiLabelZT(p, "denominstor");
 
     setCurrentGridPos(2,10);
-    if(guiButtonZT(p, "◌⃪")) {
+    if(guiButtonZT(p, "<|>")) {
         MainWindowon_toolButton_2_clicked();
     }
 
