@@ -19,6 +19,7 @@ void initializeGraph(struct graph *g) {
     g->selectStart = -1;
     g->spectrogramDrawing = 0;
     g->width = g->height = 0;
+
     g->window = XCreateSimpleWindow(xdisplay,
                                     rootWindow,
                                     0,
@@ -29,8 +30,15 @@ void initializeGraph(struct graph *g) {
                                     0,
                                     0x00000000
                                 );
-    fprintf(stderr, "created window %d",
+    fprintf(stderr, "created window %lud",
             g->window);
+//    XRenderPictFormat * format =
+//        XRenderFindStandardFormat (xdisplay,
+//                       PictStandardRGB24);
+//    g->spectrogramDrawing = XRenderCreatePicture (xdisplay, rootWindow,
+//                              format,
+//                              0,
+//                              NULL);
     XSelectInput(xdisplay, g->window , 0);
 
     XMapWindow(xdisplay, g->window);
@@ -101,8 +109,16 @@ void drawGraph(graph *g,/* Painter *p,*/ int x, int y) {
         gc
     };
     if(g->selectStart >= 0) {
-        guiSetForeground(&p, 0x55ffffff);
-        guiFillRectangle(&p, g->selectStart, 0, g->selectEnd-g->selectStart, g->width);
+        XRenderColor c = {
+            10000,
+            10000,
+            10000,
+            10000
+        };
+//        guiSetForeground65535(&p, 30000, 65535, 65535, 65535);
+        XRenderFillRectangle(xdisplay, PictOpAtop,
+                g->spectrogramDrawingPicture, &c,
+                g->selectStart, 0, g->selectEnd-g->selectStart, g->height);
     }
     XFreeGC(xdisplay, gc);
     //    QPainter p(this);
@@ -122,6 +138,7 @@ void resizeEvent(struct graph* g)
 //                                                                 g->spectrogramHeight, 0);
     if(g->spectrogramDrawing) {
         XFreePixmap(xdisplay, g->spectrogramDrawing);
+        XRenderFreePicture(xdisplay, g->spectrogramDrawingPicture);
     }
     fprintf(stderr, "createpixmap %d x %d \n", g->width, g->height);
     g->spectrogramDrawing = XCreatePixmap(xdisplay, rootWindow, g->width, g->height, xDepth);
@@ -137,6 +154,14 @@ void resizeEvent(struct graph* g)
 
     fprintf(stderr, "resize window to %d %d\n", g->width, g->height);
     XResizeWindow(xdisplay, g->window, g->width, g->height);
+
+    XRenderPictFormat * format =
+        XRenderFindStandardFormat (xdisplay,
+                       PictStandardRGB24);
+    g->spectrogramDrawingPicture = XRenderCreatePicture (xdisplay, g->window,
+                              format,
+                              0,
+                              NULL);
 //    gdk_gc_destroy(gc);
 }
 
@@ -145,6 +170,7 @@ void selectRange(struct graph* g)
     g->selecting = true;
     Cursor c = XCreateFontCursor(xdisplay, XC_cross);
     XDefineCursor(xdisplay, g->window, c);
+    XFreeCursor(xdisplay, c);
 }
 
 void mouseMoveEvent(struct graph* g, int x) {
@@ -199,6 +225,12 @@ void mousePressEvent(struct graph* g, int x)
             g->selecting = false;
         }
         g->selectStart = g->selectEnd = x;
+
+        Cursor c = XCreateFontCursor(xdisplay, XC_arrow);
+        XDefineCursor(xdisplay, g->window, c);
+        XFreeCursor(xdisplay, c);
+
+        guiRedraw();
     }
 //    fprintf(stderr, "heights %d\n", heights);
 //    for(int i = 0; i < heights; i++) {
@@ -218,9 +250,9 @@ void mouseReleaseEvent(struct graph* g)
     if(g->selecting) {
         g->selecting = false;
 
-        Cursor c = XCreateFontCursor(xdisplay, XC_cross);
+        Cursor c = XCreateFontCursor(xdisplay, XC_arrow);
         XDefineCursor(xdisplay, g->window, c);
-
+        XFreeCursor(xdisplay, c);
         if(g->selectEnd < g->selectStart) {
             typeof(g->selectStart) temp = g->selectStart;
             g->selectStart = g->selectEnd;
@@ -238,9 +270,11 @@ void graphProcessEvent(graph *g, /*Painter *p, */int x, int y, int w, int h) {
 //    if(xEvent.type == Expose) {
         drawGraph(g, /*p,*/ x, y);
    /* } else*/
-    if(w != g->width || h != g->height) {
-        g->width = MAX(2, w);
-        g->height = MAX(2, h);
+    int nw = MAX(25, w);
+    int nh = MAX(25, h);
+    if(nw != g->width || nh != g->height) {
+        g->width = nw;
+        g->height = nh;
         resizeEvent(g);
     }
     if((xEvent.type == MotionNotify ||

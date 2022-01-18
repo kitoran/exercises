@@ -4,7 +4,7 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += main.cpp \
-    audio.cpp \
+    audio.c \
     midi.cpp
 
 LIBS += -lasound

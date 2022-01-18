@@ -16,7 +16,7 @@ struct Spectrogram *spectrogram = 0;
 int16_t* audioOutputStb = 0;
 int numberOfHarmonics = 4;
 int originalFourierTransformH = -1, originalFourierTransformW = -1;
-/*extern */const int cutoff = 20000;
+/*extern *//*const*/ int cutoff = 20000;
 double* originalFourierTransform = 0;
 int16_t* audioOutputStbArray = 0;
 double denominator = 170;

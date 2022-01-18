@@ -23,7 +23,7 @@ void setupUi(Painter *p)
     char label_3[] = "windowFrequency (sampls)";
     guiLabel(p, label_3, sizeof(label_3)-1);
 
-    setCurrentGridPos(2,11);
+    setCurrentGridPos(2, 11);
     char toolButton[] = ">";
     if(guiButton(p, toolButton, sizeof(toolButton)-1)) {
         MainWindowon_toolButton_clicked();
@@ -36,7 +36,7 @@ void setupUi(Painter *p)
     setCurrentGridPos(2,16);
     guiDoubleEdit(p, 6, &denominator);
 
-    setCurrentGridPos(2,2);
+    setCurrentGridPos(2, 2);
     int dummy = 0;
     guiNumberEdit(p, 6, &dummy);
 
@@ -44,24 +44,36 @@ void setupUi(Painter *p)
     setCurrentGridPos(2, 0);
     guiNumberEdit(p, 6, &maxx);
 
-    setCurrentGridPos(0,2);
+    setCurrentGridPos(0, 2);
     guiLabelZT(p, "treshold");
 
-    setCurrentGridPos(0,1);
+    setCurrentGridPos(0, 1);
     guiLabelZT(p, "method");
 
-    setCurrentGridPos(2,5);
-    int dummy2 = 44100;
-    guiNumberEdit(p, 7, &dummy2);
+    setCurrentGridPos(2, 5);
+//    int dummy2 = 44100;
+    guiNumberEdit(p, 7, &cutoff);
 
-    setCurrentGridPos(0,16);
+    setCurrentGridPos(0, 16);
     guiLabelZT(p, "denominstor");
 
-    setCurrentGridPos(2,10);
+    setCurrentGridPos(2, 10);
     if(guiButtonZT(p, "<|>")) {
         MainWindowon_toolButton_2_clicked();
     }
+    setCurrentGridPos(0,10);
+    if(guiButtonZT(p, "redraw")) {
+        Painter p = {
+            widget.spectrogramDrawing,
+            XCreateGC(xdisplay, widget.spectrogramDrawing, 0, NULL)
+        };
+        guiFillRectangle(&p, 0, 0, widget.width, widget.height);
+        spectrogram->draw(spectrogram, &p, widget.width, widget.height);
+        XFreeGC(xdisplay, p.gc);
 
+//        spectrogram->draw(spectrogram, &p, widget.width, widget.height);
+        guiRedraw();
+    }
     setCurrentGridPos(2, 12);
     int step = stepSize;
     guiNumberEdit(p,  5, &step);
@@ -70,7 +82,7 @@ void setupUi(Painter *p)
     int ws = windowSize;
     guiNumberEdit(p,  5, &ws);
 
-    setCurrentGridPos(0,0);
+    setCurrentGridPos(0, 0);
     guiLabelZT(p, "max");
 
     setCurrentGridPos(0, 5);

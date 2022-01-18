@@ -213,11 +213,16 @@ double ContMaximaSpectrogramfrequencyAtProportion(struct ContMaximaSpectrogram* 
 
 void LinearSpectrogramdraw(struct LinearSpectrogram* self, Painter* r, int w, int h)
 {
-
+    RawPicture raw = {
+        malloc(4*w*h),
+        w,h
+    };
     guiSetForeground(r, 0x0000000);
     guiDrawRectangle(r, 10, 10, w-20, h-20);
     int cutoffIndex = cutoff/self->freqStep;
 //    qDebug() << "final freq is" << indToFftFreq(h,
+//    XPoint* rects = malloc(sizeof(XPoint) *
+//                    self->width_ * cutoffIndex);
     for(int i = 0; i < self->width_; i++) {
         for(int j = 0; j < cutoffIndex; j++) {
 
@@ -225,26 +230,41 @@ void LinearSpectrogramdraw(struct LinearSpectrogram* self, Painter* r, int w, in
             double right = (w-20)/(double)(self->width_)*(i+1);
             double bottom = (h-20)/(double)(cutoffIndex)*j;
             double top = (h-20)/(double)(cutoffIndex)*(j+1);
+            int r,g,b;
             if(j >= self->height) {
-
-                guiSetForeground(r, rgbf(0,0,0.5));
+                r=0;g=0;b=127;
+//                guiSetForeground(r, rgbf(0,0,0.5));
             } else {
                 double value = self->data[i*self->height+j];
-                double norm = value/max;
-                guiSetForeground(r, rgbf(norm,norm,norm));
+                int norm = value/max*255;
+//                guiSetForeground(r, rgbf(norm,norm,norm));
 //                gdk_set_background(gc, color);
-                if(norm < 0 || norm > 1) {
-                    fprintf(stderr, "i %d j %d amplitude %lf max %lf color %lf",
+                if(norm < 0 || norm > 255) {
+                    fprintf(stderr, "i %d j %d amplitude %lf max %lf color %d",
                             i, j, value, max, norm);
                 }
+                r=g=b=norm;
             }
 //            if(g > 100) {
 //                qDebug() << g;
 //            }
-
-            guiDrawRectangle(r, left+10, h-10-top, right-left, top-bottom);
+//            XPoint rect = {
+//                left+10, h-10-top
+//            };
+//            rects[i*cutoffIndex+j] = rect;
+            guiFillRawRectangle(&raw, left+10, h-10-top, right-left, (int)(top-bottom),
+                                r,g,b);
         }
+        //        XDrawRectangles(xdisplay, r->drawable, r->gc,
+        //                        rects+cutoffIndex*i, cutoffIndex);
+//        XDrawPoints(xdisplay, r->drawable, r->gc,
+//                        rects+cutoffIndex*i, cutoffIndex, CoordModeOrigin);
+        fprintf(stderr, "column %d of %d\n", i, self->width_);
     }
+    XImage* i = XCreateImage(xdisplay, DefaultVisual(xdisplay, DefaultScreen(xdisplay)),
+                 24, ZPixmap, 0, raw.data, w, h, 32, w*4);
+    XPutImage(xdisplay, r->drawable, r->gc, i,
+              0,0,0,0,w,h);
     drawAxes(&self->ff,r,w,h);
 }
 
@@ -343,10 +363,16 @@ int LinearSpectrogramwidth(struct LinearSpectrogram*self) {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
-const struct Spectrogram contMaximaSpectrogramVtable = {
+const struct Spectrogram ContMaximaSpectrogramVtable = {
     ContMaximaSpectrogramwidth,
     ContMaximaSpectrogramdraw,
     ContMaximaSpectrogramfillBuffer,
     ContMaximaSpectrogramfrequencyAtProportion
+};
+const struct Spectrogram LinearSpectrogramVtable = {
+    LinearSpectrogramwidth,
+    LinearSpectrogramdraw,
+    LinearSpectrogramfillBuffer,
+    LinearSpectrogramfrequencyAtProportion
 };
 #pragma GCC diagnostic pop

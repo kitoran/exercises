@@ -30,15 +30,16 @@ typedef struct ContMaximaSpectrogram
     int harmonics;
 } ContMaximaSpectrogram;
 
-extern const struct Spectrogram contMaximaSpectrogramVtable;
+extern const struct Spectrogram ContMaximaSpectrogramVtable;
 
-struct LinearSpectrogram
+typedef struct LinearSpectrogram
 {
     struct Spectrogram ff;
     double* data;
     int width_;
     int height;
     double freqStep;
-};
+} LinearSpectrogram;
+extern const struct Spectrogram LinearSpectrogramVtable;
 
 #endif // SPECTRUM_H

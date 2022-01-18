@@ -2,6 +2,7 @@
 #define GRAPH_H
 
 #include <spectrogram.h>
+#include <X11/extensions/Xrender.h>
 #include "gui.h"
 //#include <synthesis.h>
 
@@ -12,6 +13,7 @@ typedef struct graph
     int selectStart;
     int selectEnd;
     Pixmap spectrogramDrawing;
+    Picture spectrogramDrawingPicture;
     Window window;
 //    int spectrogramWidth;
 //    int spectrogramHeight;
@@ -23,7 +25,7 @@ void initializeGraph(struct graph *g);
 //int rangeEndInArray(struct graph*g);
 //int rangeStartInArray(struct graph*);
 void selectRange(struct graph*);
-
+//void drawSpectrogram(struct graph*);
 //void drawGraph(struct graph*, int x, int y);
 //void resizeEvent(struct graph*);
 //void mouseMoveEvent(struct graph*);

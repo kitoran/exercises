@@ -23,7 +23,7 @@ void MainWindowon_toolButton_clicked()
     int hms;
     continuousHarmonic**  contharms = prepareHarmonicsStbArray(maxesLinearStbArray(shifted, shiftedH, originalFourierTransformW, inpi.samplerate), &hms);
     spectrogram = malloc(sizeof(ContMaximaSpectrogram));
-    *spectrogram=contMaximaSpectrogramVtable;
+    *spectrogram=ContMaximaSpectrogramVtable;
     ((ContMaximaSpectrogram*)spectrogram)->maxima = contharms;//= new ContMaximaSpectrogram(max,
     ((ContMaximaSpectrogram*)spectrogram)->harmonics = hms;
     guiRedraw();

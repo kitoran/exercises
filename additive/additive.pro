@@ -37,7 +37,7 @@ LIBS += -lGL -lGLU -lasound
 QMAKE_CFLAGS += -Werror=implicit-function-declaration -Wno-unused-variable -Wno-parentheses
 INCLUDEPATH += ../sound ../../library/ambiguousArray ../../library/dynamicArray \
                ../../library/newFile ../../library/guiS/gui
-LIBS += -lsndfile -lssl -lcrypto -lexplain -lX11
+LIBS += -lsndfile -lssl -lcrypto -lexplain -lX11 -lXrender
 SOURCES += \
     ../sound/audio.c \
     alsathread.c \
