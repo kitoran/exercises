@@ -8,8 +8,8 @@ QT       -= core
 QMAKE_CXXFLAGS += -std=gnu++2a
 QMAKE_CFLAGS += -std=gnu11 -Wstrict-overflow=5
 #CONFIG+=c++17
-CONFIG+=link_pkgconfig
-PKGCONFIG += gtk+-3.0 gdk-3.0
+#CONFIG+=link_pkgconfig
+#PKGCONFIG += gtk+-3.0 gdk-3.0
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = additive
@@ -87,13 +87,16 @@ RESOURCES +=
 DISTFILES += \
     mainwindowg.glade
 
-
+INCLUDEPATH += $$PWD/../../library/settingsS/settings
 SOURCES += \
     $$PWD/../../library/guiS/gui/gui.c \
-    $$PWD/../../library/guiS/gui/gridlayout.c
+    $$PWD/../../library/guiS/gui/gridlayout.c \
+    $$PWD/../../library/guiS/gui/persistent.c
+
 
 HEADERS += \
     $$PWD/../../library/guiS/gui/gui.h \
+    $$PWD/../../library/guiS/gui/persistent.h \
     $$PWD/../../library/guiS/gui/gridlayout.h
 #include(../../library/guiS/gui/gui.pro)
 #PRE_TARGETDEPS += ../../library/build-guiS-Desktop-Debug/gui/libgui.a
@@ -104,3 +107,11 @@ HEADERS += \
 ##versionTarget.commands = cd $$PWD/../../library/guiS; qmake guiS.pro; cd ../build-guiS-Desktop-Debug/; make build
 #versionTarget.commands = cd ../build-guiS-Desktop-Debug/; make build
 
+INCLUDEPATH +=     ../../stb
+SOURCES += \
+    $$PWD/../../library/settingsS/settings/settings.c\
+#   ../../stb/stb_ds.c
+
+HEADERS += \
+    $$PWD/../../library/settingsS/settings/settings.h\
+#    $$PWD/../../stb/stb_ds.h

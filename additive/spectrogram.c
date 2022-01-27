@@ -32,29 +32,6 @@
 //}
 //}
 
-GdkRGBA transparent() {
-    static GdkRGBA r;
-    static bool ined = false;
-    if(!ined) {
-        bool rt
-            = gdk_rgba_parse(&r, "transparent");
-           assert(rt);
-           ined=true;
-    }
-    return r;
-}
-GdkRGBA black() {
-    static GdkRGBA r;
-    static bool ined = false;
-    if(!ined) {
-        bool rt
-            = gdk_rgba_parse( &r, "black");
-           assert(rt);
-           ined=true;
-    }
-    return r;
-}
-
 void drawAxes(struct Spectrogram* sg, Painter* image, int w, int h) {
     guiSetForeground(image, 0xff880088);
 //    double sortabase = log(freqMax/freqMin)/(height()-20);

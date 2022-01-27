@@ -14,6 +14,9 @@
 
 
 #include "gui.h"
+
+char* appName = "additive";
+
 XEvent xEvent;
 int main(int argc, char *argv[])
 {

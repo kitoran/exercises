@@ -5,6 +5,7 @@
 #include "gridlayout.h"
 #include "globals.h"
 #include "mainwindow.h"
+#include "persistent.h"
 
 void setupUi(Painter *p)
 {
@@ -38,11 +39,11 @@ void setupUi(Painter *p)
 
     setCurrentGridPos(2, 2);
     int dummy = 0;
-    guiNumberEdit(p, 6, &dummy);
+    persistentNumberEdit(p, 6, &dummy);
 
     int maxx = max;
     setCurrentGridPos(2, 0);
-    guiNumberEdit(p, 6, &maxx);
+    persistentNumberEdit(p, 6, &maxx);
 
     setCurrentGridPos(0, 2);
     guiLabelZT(p, "treshold");
@@ -52,7 +53,7 @@ void setupUi(Painter *p)
 
     setCurrentGridPos(2, 5);
 //    int dummy2 = 44100;
-    guiNumberEdit(p, 7, &cutoff);
+    persistentNumberEdit(p, 7, &cutoff);
 
     setCurrentGridPos(0, 16);
     guiLabelZT(p, "denominstor");
@@ -76,11 +77,11 @@ void setupUi(Painter *p)
     }
     setCurrentGridPos(2, 12);
     int step = stepSize;
-    guiNumberEdit(p,  5, &step);
+    persistentNumberEdit(p,  5, &step);
 
     setCurrentGridPos(2, 8);
     int ws = windowSize;
-    guiNumberEdit(p,  5, &ws);
+    persistentNumberEdit(p,  5, &ws);
 
     setCurrentGridPos(0, 0);
     guiLabelZT(p, "max");
@@ -97,5 +98,5 @@ void setupUi(Painter *p)
     guiLabelZT(p,  "number of harmonics");
 
     setCurrentGridPos(2, 6);
-    guiNumberEdit(p, 6, &numberOfHarmonics);
+    persistentNumberEdit(p, 6, &numberOfHarmonics);
 }

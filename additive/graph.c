@@ -9,10 +9,13 @@
 #include "alsathread.h"
 #include <X11/cursorfont.h>
 #include <stdbool.h>
+#define MAX(a,b) ((a)>(b)?(a):(b))
+#define MIN(a,b) ((a)<(b)?(a):(b))
+
 //#include <gdk/gdk.h>
-void graph_onDraw(struct graph* g, cairo_t* cr,
-                  gpointer user_data
-                );
+//void graph_onDraw(struct graph* g, cairo_t* cr,
+//                  gpointer user_data
+//                );
 void initializeGraph(struct graph *g) {
     g->selectEnd = -1;
     g->selecting = false;

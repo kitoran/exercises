@@ -2,7 +2,7 @@
 #define SPECTRUM_H
 #include <inttypes.h>
 #include <stft.h>
-#include <gdk/gdk.h>
+//#include <gdk/gdk.h>
 #include "gui.h"
 
 //enum class spectrogram_mode {linear, logarithmic};
