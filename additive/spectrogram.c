@@ -346,6 +346,12 @@ const struct Spectrogram ContMaximaSpectrogramVtable = {
     ContMaximaSpectrogramfillBuffer,
     ContMaximaSpectrogramfrequencyAtProportion
 };
+const struct Spectrogram MaximaSpectrogramVtable = {
+    MaximaSpectrogramWidth,
+    MaximaSpectrogramdraw,
+    MaximaSpectrogramfillBuffer,
+    MaximaSpectrogramfrequencyAtProportion
+};
 const struct Spectrogram LinearSpectrogramVtable = {
     LinearSpectrogramwidth,
     LinearSpectrogramdraw,

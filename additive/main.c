@@ -72,6 +72,8 @@ int main(int argc, char *argv[])
                         originalFourierTransformH,
                 sizeof(*originalFourierTransform),
                 (originalFourierTransformW)*(originalFourierTransformH)*sizeof(*originalFourierTransform));
+        harmonic** msstb = maxesLinearStbArray(originalFourierTransform, originalFourierTransformH,
+                                               originalFourierTransformW, alsaSampleRate);
 
 //        double originalMax = max;
 
@@ -93,17 +95,21 @@ int main(int argc, char *argv[])
         //        auto mspectrogram = new ContMaximaSpectrogram(max,
         //                prepareHarmonics(maxesLinear(shifted, shiftedH, w, inpi.samplerate), &hms));
 //                auto mspectrogram = new MaximaSpectrogram(max, maxesLinear(transform, h, w, inpi.samplerate));
-//        struct ContMaximaSpectrogram mspectrogram = {
-//            contMaximaSpectrogramVtable,
+        //        struct ContMaximaSpectrogram mspectrogram = {
+        //            contMaximaSpectrogramVtable,
 
-//                        contharmsStbArray,
-//                    hms};
-        struct LinearSpectrogram mspectrogram = {
-            LinearSpectrogramVtable,
-            originalFourierTransform,
-            originalFourierTransformW,
-            originalFourierTransformH,
-            (double)(alsaSampleRate)/windowSize};
+        //                        contharmsStbArray,
+        //                    hms};
+        struct MaximaSpectrogram mspectrogram = {
+            MaximaSpectrogramVtable,
+            msstb,
+            max};
+//        struct LinearSpectrogram mspectrogram = {
+//            LinearSpectrogramVtable,
+//            originalFourierTransform,
+//            originalFourierTransformW,
+//            originalFourierTransformH,
+//            (double)(alsaSampleRate)/windowSize};
 //        resynthesizeMaxima(&mspectrogram,0,originalFourierTransformW-1);
 //        exit(0);
 

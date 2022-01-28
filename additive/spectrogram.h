@@ -23,6 +23,9 @@ struct MaximaSpectrogram
     struct harmonic**  maxima;
     double max;
 };
+extern const struct Spectrogram MaximaSpectrogramVtable;
+
+
 typedef struct ContMaximaSpectrogram
 {
     struct Spectrogram ff;
