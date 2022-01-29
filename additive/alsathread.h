@@ -1,4 +1,4 @@
-#ifndef ALSATHREAD_H
+﻿#ifndef ALSATHREAD_H
 #define ALSATHREAD_H
 //#include <synthesis.h>
 #include <spectrogram.h>
@@ -13,5 +13,8 @@ struct message {
 //inline message m = {0, 0, spectrogram_mode::logarithmic, 0, false};
 void startAlsathread();
 extern struct Channel channel;
+
+extern bool recordingInAThread;
+void startrRecordingInAThread(int16_t** data);
 
 #endif // ALSATHREAD_H

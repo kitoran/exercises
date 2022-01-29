@@ -1,6 +1,7 @@
 ﻿#include "ui_mainwindow.h"
 
 #include "graph.h"
+#include "audio.h"
 #include "gui.h"
 #include "gridlayout.h"
 #include "globals.h"
@@ -81,8 +82,15 @@ void setupUi(Painter *p)
     }
 
 //    static XImage* recIcon = loadLocalImageZT("rec.png");
+    bool threadRecording = false;
     setCurrentGridPos(0, 7);
-    resourseToolButton(p, "rec.png");
+    if(threadRecording && resourseToolButton(p, "stop.png")) {
+//        stopRecordingInAThrread();
+//        calculateSpectrogram();
+    }
+    if(!threadRecording && resourseToolButton(p, "rec.png")) {
+//        recordInAThread(&sampls);
+    }
 
     setCurrentGridPos(0, 9);
     char label_3[] = "windowFrequency (sampls)";

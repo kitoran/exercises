@@ -3,10 +3,11 @@
 #include <stdio.h>
 
 snd_pcm_t *handle;
+snd_pcm_t *capture_handle;
 uint alsaSampleRate = 44100;
 snd_pcm_uframes_t framesPerPeriod = 512;
 snd_pcm_uframes_t framesPerBuffer = 512;
-void initAudio(int channels, snd_pcm_format_t format)
+void initAudioPlayback(int channels, snd_pcm_format_t format)
 {
     snd_pcm_hw_params_t *params;
     int dir;
@@ -102,4 +103,62 @@ void alsaPlayBlock(const int16_t* buffer, uint size) {
     if(index < size) {
         writeFrames(buffer+index, size-index);
     }
+}
+
+void initAudioCaptureS16LE()
+{
+    typedef int16_t frameType;
+    frameType *buffer;
+
+    if (snd_pcm_open(&capture_handle, "default",
+                     SND_PCM_STREAM_CAPTURE,
+                     0) < 0) {
+      abort();
+    }
+///    if (capture_handle, "default",
+//                     SND_PCM_STREAM_CAPTURE,
+//                     0) < 0) {
+//      abort();
+//    }
+    snd_pcm_hw_params_t *hw_params;
+    fprintf(stdout, "audio interface opened\n");
+    if (snd_pcm_hw_params_malloc (&hw_params) < 0) {
+        abort();
+    }
+    fprintf(stdout, "hw_params allocated\n");
+    if(snd_pcm_hw_params_any (capture_handle, hw_params)<0) {
+        abort();
+    }
+    if(snd_pcm_hw_params_set_access (
+                capture_handle, hw_params,
+                SND_PCM_ACCESS_RW_INTERLEAVED) <0) {
+        abort();
+    }
+    if(snd_pcm_hw_params_set_format
+            (capture_handle, hw_params, SND_PCM_FORMAT_S16_LE) < 0) {
+        abort();
+    }
+    if(snd_pcm_hw_params_set_rate_near
+            (capture_handle, hw_params, &alsaSampleRate, 0) < 0) {
+        abort();
+    }
+    if(snd_pcm_hw_params_set_channels
+            (capture_handle, hw_params, 1) < 0) {
+        abort();
+    }
+    if(snd_pcm_hw_params (capture_handle, hw_params) < 0) {
+        abort();
+    }
+    snd_pcm_hw_params_free (hw_params);
+    if(snd_pcm_prepare (capture_handle) < 0) {
+        abort();
+    }
+    buffer = (frameType *) malloc(sizeof(frameType)*framesPerPeriod);
+
+
+}
+
+void alsaRecordBlock(int16_t *buffer, uint size)
+{
+    snd_pcm_readi (capture_handle, buffer, size);
 }

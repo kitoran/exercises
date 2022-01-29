@@ -1,4 +1,4 @@
-
+﻿
 
 /*
 
@@ -82,8 +82,26 @@ int main() {
     //  int size;
     int16_t *buffer;
 
-    initAudio(1, SND_PCM_FORMAT_S16_LE);
-    buffer = (int16_t *) malloc(sizeof(int16_t)*framesPerPeriod);
+    initAudioPlayback(1, SND_PCM_FORMAT_S16_LE);
+    initAudioCaptureS16LE();
+    int neededSize = alsaSampleRate*5;
+    int actualSize = ((neededSize + framesPerBuffer - 1) /
+                      framesPerBuffer) * framesPerBuffer;
+    buffer = (int16_t *) malloc(sizeof(int16_t)*actualSize);
+    int index = 0;
+    while(index < actualSize) {
+        alsaRecordBlock(buffer+index, framesPerBuffer);
+        index += framesPerBuffer;
+    }
+    index = 0;
+
+    while(index < actualSize) {
+        alsaPlayBlock(buffer+index, framesPerBuffer);
+        index += framesPerBuffer;
+    }
+    exit(0);
+
+
     const double freq = 440;
     const double framesPerOsc = alsaSampleRate/freq;
     fprintf(stderr, "%lf frames int one osc\n", framesPerOsc);
@@ -139,7 +157,7 @@ int main() {
     int framesPerOscNormal = framesPerOsc;
     uint32_t value = 3;
     int simulation[100];
-    int index = 0;
+    index = 0;
 
     while(true) {
 //        time();
