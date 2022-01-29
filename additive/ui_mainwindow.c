@@ -6,6 +6,7 @@
 #include "globals.h"
 #include "mainwindow.h"
 #include "persistent.h"
+#include "loadImage.h"
 
 void setupUi(Painter *p)
 {
@@ -79,16 +80,9 @@ void setupUi(Painter *p)
         MainWindowon_toolButton_clicked();
     }
 
-    setCurrentGridPos(0, 8);
-    guiLabelZT(p, "□");
-//    if(guiButtonZT(p, "■")) {
-//        MainWindowon_toolButton_clicked();
-//    }
-    setCurrentGridPos(1, 8);
-    guiLabelZT(p, "●");
-//    if(guiButtonZT(p, "●")) {
-//        record();
-//    }
+//    static XImage* recIcon = loadLocalImageZT("rec.png");
+    setCurrentGridPos(0, 7);
+    resourseToolButton(p, "rec.png");
 
     setCurrentGridPos(0, 9);
     char label_3[] = "windowFrequency (sampls)";

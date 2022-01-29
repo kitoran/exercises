@@ -93,6 +93,10 @@ SOURCES += \
     $$PWD/../../library/guiS/gui/gridlayout.c \
     $$PWD/../../library/guiS/gui/persistent.c
 
+include(../../library/loadImage/loadImage.pri)
+include(../../library/stb/stb_image.pri)
+
+DEFINES += MY_PATH=$$PWD
 
 HEADERS += \
     $$PWD/../../library/guiS/gui/gui.h \
