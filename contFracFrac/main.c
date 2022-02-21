@@ -36,6 +36,7 @@ void numToPic (double x, double y,int * restrict rx, int * restrict ry) {
     *rx = (x+xm)/c*size;
     *ry = -(y +ym - c)/c*size;
 }
+enum { itersMode, selectMode} mode;
 void loop(Painter* pa) {
 
     setCurrentGridPos(0,0);
@@ -50,6 +51,14 @@ void loop(Painter* pa) {
     if(resourseToolButton(pa, "plus.png")) {
         itNum++;
         recalc = true;
+    }
+    setCurrentGridPos(0,3);
+    if(resourseToolButton(pa, "select.png")) {
+        mode = selectMode;
+    }
+    setCurrentGridPos(0,4);
+    if(resourseToolButton(pa, "iters.png")) {
+        mode = itersMode;
     }
 
     if(recalc) {
@@ -140,21 +149,46 @@ int main()
         if(xEvent.type == DestroyNotify) {
             goto exit;
         };
-        if(xEvent.type == ButtonPress || xEvent.type == MotionNotify) {
-            double x, y;
-            double xn, yn;
-            picToNum(xEvent.xbutton.x, xEvent.xbutton.y, &x, &y);
-            for(int i = 0; i < 10; i++) {
-                xn = x; yn = y;
-                iter(&x, &y);
+        if(mode == itersMode) {
+            if(xEvent.type == ButtonPress || xEvent.type == MotionNotify) {
+                double x, y;
+                double xn, yn;
+                picToNum(xEvent.xbutton.x, xEvent.xbutton.y, &x, &y);
+                for(int i = 0; i < 10; i++) {
+                    xn = x; yn = y;
+                    iter(&x, &y);
 
-                int xl, yl, xc, yc;
-                numToPic(x, y, &xc, &yc);
-                numToPic(xn, yn, &xl, &yl);
+                    int xl, yl, xc, yc;
+                    numToPic(x, y, &xc, &yc);
+                    numToPic(xn, yn, &xl, &yl);
 
-                guiDrawLine(&pa,xl,yl,xc,yc);
+                    guiDrawLine(&pa,xl,yl,xc,yc);
+                }
+            };
+        } else if(mode == selectMode) {
+            static int startx, starty;
+            static bool sel = false;
+            if(xEvent.type == ButtonPress) {
+                startx = xEvent.xbutton.x;
+                starty = xEvent.xbutton.y;
+                sel = true;
+            } else if(xEvent.type == ButtonRelease) {
+                double sx, sy;
+                picToNum(startx, starty,
+                         &sx, &sy);
+                double ex, ey;
+                picToNum(xEvent.xbutton.x, xEvent.xbutton.y,
+                         &ex, &ey);
+#define MAX(x,y) ((x)>(y)?(x):(y))
+#define MIN(x,y) ((x)<(y)?(x):(y))
+                c = MAX(fabs(ex-sx), fabs(ey-sy));
+                xm = -MIN(sx,ex);
+                ym = -MIN(sy,ey);
+                sel = false;
+                recalculatePicture();
             }
-        };
+
+        }
     }
 exit:
     XDestroyWindow(xdisplay,
