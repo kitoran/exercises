@@ -17,12 +17,12 @@ struct Spectrogram
 //struct GuiImage;
 void drawAxes(struct Spectrogram *sg, Painter* image, int w, int h);
 
-struct MaximaSpectrogram
+typedef struct MaximaSpectrogram
 {
     struct Spectrogram ff;
     struct harmonic**  maxima;
     double max;
-};
+} MaximaSpectrogram;
 extern const struct Spectrogram MaximaSpectrogramVtable;
 
 
@@ -44,5 +44,7 @@ typedef struct LinearSpectrogram
     double freqStep;
 } LinearSpectrogram;
 extern const struct Spectrogram LinearSpectrogramVtable;
+
+
 
 #endif // SPECTRUM_H

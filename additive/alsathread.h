@@ -12,9 +12,10 @@ struct message {
 };
 //inline message m = {0, 0, spectrogram_mode::logarithmic, 0, false};
 void startAlsathread();
-extern struct Channel channel;
+extern struct Channel channelForPlayback;
 
 extern bool recordingInAThread;
-void startrRecordingInAThread(int16_t** data);
+void startRecordingInAThread();
+void stopRecordingInAThread();
 
 #endif // ALSATHREAD_H

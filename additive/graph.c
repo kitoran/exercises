@@ -9,6 +9,7 @@
 #include "alsathread.h"
 #include <X11/cursorfont.h>
 #include <stdbool.h>
+#include <time.h>
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
@@ -121,14 +122,15 @@ void drawGraph(graph *g,/* Painter *p,*/ int x, int y) {
 //        guiSetForeground65535(&p, 30000, 65535, 65535, 65535);
         XRenderFillRectangle(xdisplay, PictOpAtop,
                 g->spectrogramDrawingPicture, &c,
-                g->selectStart, 0, g->selectEnd-g->selectStart, g->height);
+                g->selectStart, 0,
+                g->selectEnd-g->selectStart, g->height);
     }
     XFreeGC(xdisplay, gc);
     //    QPainter p(this);
 //    spectrogram->draw(&p, width(), height());
 }
 
-void resizeEvent(struct graph* g)
+void redrawSpectrogram(struct graph* g)
 {
 //    fprintf(stderr, "real %d %d need %d", width()-20, height()-20, spectrogram->width());
 //    g->spectrogramData = realloc(g->spectrogramData, event->width * event->height);
@@ -151,7 +153,16 @@ void resizeEvent(struct graph* g)
         XCreateGC(xdisplay, g->spectrogramDrawing, 0, NULL)
     };
     guiFillRectangle(&p, 0, 0, g->width, g->height);
-    spectrogram->draw(spectrogram, &p, g->width, g->height);
+
+
+    clock_t start, end;
+    double cpu_time_used;
+    start = clock();
+    MaximaSpectrogramVtable.draw(spectrogram, &p, g->width, g->height);
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    fprintf(stderr, "drawing took %lf seconds\n", cpu_time_used);
+
     XFreeGC(xdisplay, p.gc);
 
 
@@ -201,7 +212,7 @@ void mouseMoveEvent(struct graph* g, int x) {
     struct message m;
     m.pos = indw;
 //    qDebug() << "putting message:" << m.data.data << m.data.sized ;
-    blockAndPut(&channel, &m, sizeof(m));
+    blockAndPut(&channelForPlayback, &m, sizeof(m));
 
     if(g->selecting) {
         g->selectEnd = x;
@@ -221,7 +232,7 @@ void mousePressEvent(struct graph* g, int x)
 //        m = {data.sliced(indw*heights, heights), mode, true};
 //    }
 //    qDebug() << "putting message:" << m.data.data << m.data.sized ;
-    blockAndPut(&channel, &m, sizeof(m));
+    blockAndPut(&channelForPlayback, &m, sizeof(m));
     if(g->selecting) {
         if(xEvent.xbutton.button == Button3) {
             g->selectStart = g->selectEnd = -1;
@@ -249,7 +260,7 @@ void mouseReleaseEvent(struct graph* g)
 {
     struct message m = {-1};
 //    qDebug() << "putting message:" << m.data.data << m.data.sized;
-    blockAndPut(&channel, &m, sizeof(m));
+    blockAndPut(&channelForPlayback, &m, sizeof(m));
     if(g->selecting) {
         g->selecting = false;
 
@@ -278,7 +289,7 @@ void graphProcessEvent(graph *g, /*Painter *p, */int x, int y, int w, int h) {
     if(nw != g->width || nh != g->height) {
         g->width = nw;
         g->height = nh;
-        resizeEvent(g);
+        redrawSpectrogram(g);
     }
     if((xEvent.type == MotionNotify ||
               xEvent.type == ButtonPress ||
@@ -294,3 +305,16 @@ void graphProcessEvent(graph *g, /*Painter *p, */int x, int y, int w, int h) {
         }
     }
 }
+
+//void graphRedrawSpectrogram(graph *g)
+//{
+//    Painter p = {
+//        g->spectrogramDrawing,
+//        XCreateGC(xdisplay, g->spectrogramDrawing, 0, NULL)
+//    };
+//    guiFillRectangle(&p, 0, 0, g->width, g->height);
+//    spectrogram->draw(spectrogram, &p, g->width, g->height);
+//    XFreeGC(xdisplay, p.gc);
+
+//    guiRedraw();
+//}

@@ -5,12 +5,13 @@
 #include "stft.h"
 #include "globals.h"
 #include "synthesis.h"
-#include "ui_mainwindow.h"
+#include "ui.h"
 #include <sndfile.h>
 #include <openssl/md5.h>
 #include <storearray.h>
 #include "mathext.h"
 #include "gridlayout.h"
+#include "actions.h"
 
 
 #include "gui.h"
@@ -18,6 +19,10 @@
 char* appName = "additive";
 
 XEvent xEvent;
+int handler(Display *d, XErrorEvent *e) {
+    abort();
+}
+
 int main(int argc, char *argv[])
 {
     argc--; argv--;
@@ -35,18 +40,20 @@ int main(int argc, char *argv[])
     sf_count_t end = sf_seek(inp, 0, SEEK_END);
     fprintf(stderr, "%ld", end);
     sf_seek(inp, 0, SEEK_SET);
-    int sizeOfSamplsInBytes = end*sizeof(int16_t);
-    sampls = (int16_t*)malloc(sizeOfSamplsInBytes);
-    sf_read_short(inp, sampls, end);
+    arrsetlen(samplsStbArray, end);
+    sf_read_short(inp, samplsStbArray, end);
     fprintf(stderr, "%ld", end);
 
     guiStartDrawing();
-
+    XSynchronize(xdisplay, true);
+    XSetErrorHandler(handler);
+    calculateSpectrogram();
     //    stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
     //    stfft(sampls, end, windowSize, stepSize, &transform, &w);
 //    std::complex< double>* transform;
-    unsigned char hassh[MD5_DIGEST_LENGTH];
-    MD5((unsigned char*)(sampls), sizeOfSamplsInBytes, hassh);
+//    int sizeOfSamplsInBytes = end*sizeof(int16_t);
+//    unsigned char hassh[MD5_DIGEST_LENGTH];
+//    MD5((unsigned char*)(sampls), sizeOfSamplsInBytes, hassh);
 
 //    complex_stfft(sampls, end, windowSize, stepSize, &transform, &w);
 
@@ -61,19 +68,11 @@ int main(int argc, char *argv[])
 #define STR2(a) #a
 #define STR(a) STR2(a)
 
-#define FUNCTION stfft
+//#define FUNCTION stfft
 //    int size;
 //    if(/*true || */!load(hassh, STR(FUNCTION), 1, (void**)(&transform), &size)) {
-        FUNCTION(sampls, end, windowSize, stepSize, /*inpi.samplerate, */&originalFourierTransform, /*&h, */&originalFourierTransformW);
-        originalFourierTransformH = windowSize;
 //        save((transform), (w)*(h)*sizeof(*transform),
 //             hassh, STR(FUNCTION), 1 );
-        fprintf(stderr, "%d, %d, %lu, %lu", originalFourierTransformW,
-                        originalFourierTransformH,
-                sizeof(*originalFourierTransform),
-                (originalFourierTransformW)*(originalFourierTransformH)*sizeof(*originalFourierTransform));
-        harmonic** msstb = maxesLinearStbArray(originalFourierTransform, originalFourierTransformH,
-                                               originalFourierTransformW, alsaSampleRate);
 
 //        double originalMax = max;
 
@@ -81,7 +80,6 @@ int main(int argc, char *argv[])
 //        int shiftedH;
 
 //        shiftandmulLinear(originalFourierTransform, originalFourierTransformH, originalFourierTransformW, &shifted, &shiftedH);
-        int hms;
 //          struct continuousHarmonic** contharmsStbArray = prepareHarmonicsStbArray(maxesLinearStbArray(originalFourierTransform,
 //                                                    originalFourierTransformH, originalFourierTransformW, inpi.samplerate), &hms);
 //        struct continuousHarmonic** contharmsStbArray  = prepareHarmonicsStbArray(maxesLinearStbArray(shifted, shiftedH,
@@ -100,10 +98,6 @@ int main(int argc, char *argv[])
 
         //                        contharmsStbArray,
         //                    hms};
-        struct MaximaSpectrogram mspectrogram = {
-            MaximaSpectrogramVtable,
-            msstb,
-            max};
 //        struct LinearSpectrogram mspectrogram = {
 //            LinearSpectrogramVtable,
 //            originalFourierTransform,
@@ -113,7 +107,6 @@ int main(int argc, char *argv[])
 //        resynthesizeMaxima(&mspectrogram,0,originalFourierTransformW-1);
 //        exit(0);
 
-        spectrogram = &mspectrogram.ff;
     initializeGraph(&widget);
 
         getPos = gridGetPos;
@@ -128,7 +121,7 @@ int main(int argc, char *argv[])
             guiNextEvent();
             if(xEvent.type == Expose)
                 XClearWindow(xdisplay, rootWindow);
-            setupUi(&pa);
+            ui(&pa);
             XFlush(xdisplay);
             if(xEvent.type == DestroyNotify) {
 

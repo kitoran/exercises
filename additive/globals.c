@@ -9,7 +9,8 @@
 /*extern */const int windowSize = 1<<12;//12;
 /*extern */const int stepSize = 256;
 
-int16_t *sampls = 0;
+int16_t *samplsStbArray = 0;
+
 struct Spectrogram *spectrogram = 0;
 
 

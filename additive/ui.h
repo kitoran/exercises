@@ -2,6 +2,6 @@
 #define UI_MAINWINDOW_H
 
 struct Painter;
-void setupUi(struct Painter* p);
+void ui(struct Painter* p);
 
 #endif // UI_MAINWINDOW_H

@@ -77,10 +77,19 @@ void fftDouble(double *data, int size, double *res);
 
 void stfft(int16_t *data, int size, int windowSize, int step, double **res, int *resW)
 {
+
     max = 0;
     makeHammingWindow(windowSize);
+    if(size == 0) {
+        *resW = 0;
+        *res = NULL;
+        return;
+    }
     *resW = ((size) - windowSize)/step;
     *res = (double*)malloc((*resW)*(windowSize)*sizeof(double));
+
+//    return;
+
     double* datumStbArray = NULL; arrsetlen(datumStbArray, windowSize);
     for(int i = 0; i < *resW; i++) {
         for(int n = 0; n < windowSize; n++) {
@@ -91,6 +100,7 @@ void stfft(int16_t *data, int size, int windowSize, int step, double **res, int 
             fprintf(stderr, "%lf, %d of %d", max, i, *resW);
         }
     }
+    arrfree(datumStbArray);
     fprintf(stderr, "max %lf ", max);
 }
 

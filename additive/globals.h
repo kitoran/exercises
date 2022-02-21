@@ -8,7 +8,7 @@ extern const double frequencyMultiplent;//sqrt(sqrt(freqMax/freqMin));
 extern const int windowSize;
 extern const int stepSize;
 
-extern int16_t *sampls;
+extern int16_t *samplsStbArray;
 extern struct Spectrogram *spectrogram;
 extern int cutoff;
 extern int16_t* audioOutputStb;

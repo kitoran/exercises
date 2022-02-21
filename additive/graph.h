@@ -22,6 +22,7 @@ typedef struct graph
 
 void graphProcessEvent(graph* g, int x, int y, int w, int h);
 void initializeGraph(struct graph *g);
+void redrawSpectrogram(struct graph *g);
 //int rangeEndInArray(struct graph*g);
 //int rangeStartInArray(struct graph*);
 void selectRange(struct graph*);

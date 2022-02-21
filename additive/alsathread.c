@@ -16,11 +16,15 @@
 
 extern uint alsaSampleRate;
 extern uint framesPerPeriod;
-struct Channel channel;
-
-bool recordingInAThread = false;
-
-_Thread_local char thread_name[30];
+const char alsaThreadName[] = "alsathread";
+struct Channel channelForPlayback = {
+    {0},
+    false,
+    PTHREAD_COND_INITIALIZER,
+    PTHREAD_MUTEX_INITIALIZER,
+    -1,
+    alsaThreadName,
+};
 
 typedef int16_t frameType;
 void* alsathread(void* d) {
@@ -32,21 +36,21 @@ void* alsathread(void* d) {
     struct message pos = {-1};
     uint64_t phase = 0;
     int output = 0;
-    wait(&channel);
+    wait(&channelForPlayback);
 
     while(true) {
         //            qDebug() << "hey";
 //        int unfftIndex = 0;
         output++;
-        if(channel.full) {
+        if(channelForPlayback.full) {
             //                phase = 0;
             //                fprintf(stderr, "Got medssage! %d", m.h);
-            takeC(&channel, &pos, sizeof(pos));
+            takeC(&channelForPlayback, &pos, sizeof(pos));
 
             //                spectrumSize = spectr.complex?spectr.data.sizec():spectr.data.sized;
             if(pos.pos < 0 || pos.pos >= spectrogram->width(spectrogram)) {
                 fprintf(stderr, "waitinf...");
-                wait(&channel);
+                wait(&channelForPlayback);
                 fprintf(stderr, "waited!");
                 continue;
             }
@@ -78,102 +82,68 @@ void startAlsathread()
 
     pthread_create(&newthread, 0, &alsathread, 0);
 
-    pthread_setname_np(newthread, "alsathread");
+    pthread_setname_np(newthread, alsaThreadName);
 }
-
+const char recordingThreadName[] = "recordingthread";
+struct Channel channelForRecording = {
+    {0},
+    false,
+    PTHREAD_COND_INITIALIZER,
+    PTHREAD_MUTEX_INITIALIZER,
+    -1,
+    recordingThreadName
+};
+bool recordingInAThread = false;
+_Thread_local char recording_thread_name[30];
+//typedef struct MessageRec {
+    typedef enum Action {
+        record,
+//        pause,
+        stop
+    } Action;
+//} MessageRec ;
 void* recordingThread(void* d) {
     (void)d;
-    typedef int16_t frameType;
-    frameType *buffer;
+    initAudioCaptureS16LE();
 
-    snd_pcm_t *capture_handle;
-    if (snd_pcm_open(&capture_handle, "default",
-                     SND_PCM_STREAM_CAPTURE,
-                     0) < 0) {
-      abort();
-    }
-    snd_pcm_hw_params_t *hw_params;
-    fprintf(stdout, "audio interface opened\n");
-    if (snd_pcm_hw_params_malloc (&hw_params) < 0) {
-        abort();
-    }
-    fprintf(stdout, "hw_params allocated\n");
-    if(snd_pcm_hw_params_any (capture_handle, hw_params)<0) {
-        abort();
-    }
-    if(snd_pcm_hw_params_set_access (
-                capture_handle, hw_params,
-                SND_PCM_ACCESS_RW_INTERLEAVED) <0) {
-        abort();
-    }
-    if(snd_pcm_hw_params_set_format
-            (capture_handle, hw_params, SND_PCM_FORMAT_S16_LE) < 0) {
-        abort();
-    }
-    if(snd_pcm_hw_params_set_rate_near
-            (capture_handle, hw_params, &rate, alsaSampleRate) < 0) {
-        abort();
-    }
-    if(snd_pcm_hw_params_set_channels
-            (capture_handle, hw_params, 1) < 0) {
-        abort();
-    }
-    if(snd_pcm_hw_params (capture_handle, hw_params) < 0) {
-        abort();
-    }
-    snd_pcm_hw_params_free (hw_params);
-    if(snd_pcm_prepare (capture_handle) < 0) {
-        abort();
-    }
-    buffer = (frameType *) malloc(sizeof(frameType)*framesPerPeriod);
-
-
-    struct message pos = {-1};
-    uint64_t phase = 0;
-    int output = 0;
-
-    wait(&channel);
-
-    while(true) {
-        output++;
-        if(channel.full) {
-            //                phase = 0;
-            //                fprintf(stderr, "Got medssage! %d", m.h);
-            takeC(&channel, &pos, sizeof(pos));
-
-            //                spectrumSize = spectr.complex?spectr.data.sizec():spectr.data.sized;
-            if(pos.pos < 0 || pos.pos >= spectrogram->width(spectrogram)) {
-                fprintf(stderr, "waitinf...");
-                wait(&channel);
-                fprintf(stderr, "waited!");
-                continue;
+//    struct MessageRec message;
+    Action action;
+    wait(&channelForRecording);
+    int pos = 0;
+    while(true) { external:
+        if(channelForRecording.full) {
+            takeC(&channelForRecording, &action, sizeof(action));
+            if(action == stop) {
+                pos = 0;
+                wait(&channelForRecording);
+                goto external;
             }
         }
-        spectrogram->fillBuffer(spectrogram, buffer, framesPerPeriod, pos.pos, phase);
-        phase+=framesPerPeriod;
-        //            clock_t afterLoop = clock();
-        //            if(phase > alsaSampleRate * 7) {
-        //                phase = 0;
-        //            }
-        //            if(output%32 == 0) {
-        ////               fprintf(stderr,
-        ////                       "freq %lf freq1 %lf data %p height %d phase %d val %s",
-        ////                      double(alsaSampleRate)/spectr.h*9,
-        ////                      double(changes)*alsaSampleRate/phase,
-        ////                       spectr.data, spectr.h, phase, buffer[2]);
-        //            }
-        writeFrames(buffer, framesPerPeriod);
-        //            clock_t afterWrite = clock();
-        //            qDebug() << float(afterWrite-afterLoop)/CLOCKS_PER_SEC << float(afterLoop - start)/CLOCKS_PER_SEC;
+        if(pos + framesPerPeriod > arrlen(samplsStbArray)) {
+            arrsetlen(samplsStbArray,
+                      arrlen(samplsStbArray)+framesPerPeriod);
+        }
+        alsaRecordBlock(samplsStbArray+ pos, framesPerPeriod);
+        pos += framesPerPeriod;
     }
     return NULL;
 }
 
-void startrRecordingInAThread(int16_t **data)
+void startRecordingInAThread()
 {
-    static pthread_t recordingThread = 0;
-    if(!recordingThread) {
-        pthread_create(&newthread, 0, &recordingThread, 0);
+    recordingInAThread = true;
+    static pthread_t newThread = 0;
+    if(!newThread) {
+        pthread_create(&newThread, 0, &recordingThread, 0);
+        pthread_setname_np(newThread, "recordingthread");
     }
-    pthread_setname_np(newthread, "alsathread");
+    Action action = record;
+    blockAndPut(&channelForRecording, &action, sizeof(action));
+}
+
+void stopRecordingInAThread()
+{
+    recordingInAThread = false;
+    Action action = stop;
+    blockAndPut(&channelForRecording, &action, sizeof(action));
 }

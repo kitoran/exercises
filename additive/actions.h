@@ -12,6 +12,7 @@ void MainWindowon_denominator_textChanged(const char* text);//struct MainWindow,
 void MainWindowon_toolButton_2_clicked();//struct MainWindow);
 void MainWindowon_pushButton_clicked();//struct MainWindow);
 void MainWindowon_numberOfHarmonicsLineEdit_textChanged(const char*text);//struct MainWindow, const char* arg1);
+void calculateSpectrogram();
 
 
 

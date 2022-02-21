@@ -1,15 +1,16 @@
-﻿#include "ui_mainwindow.h"
+﻿#include "ui.h"
 
 #include "graph.h"
 #include "audio.h"
 #include "gui.h"
 #include "gridlayout.h"
 #include "globals.h"
-#include "mainwindow.h"
+#include "actions.h"
 #include "persistent.h"
-#include "loadImage.h"
+#include "loadImage.h""
+#include "alsathread.h"
 
-void setupUi(Painter *p)
+void ui(Painter *p)
 {
     Size size = guiGetSize();
 //    fprintf(stderr, "got size %d x %d", size.width, size.height);
@@ -82,14 +83,17 @@ void setupUi(Painter *p)
     }
 
 //    static XImage* recIcon = loadLocalImageZT("rec.png");
-    bool threadRecording = false;
-    setCurrentGridPos(0, 7);
-    if(threadRecording && resourseToolButton(p, "stop.png")) {
-//        stopRecordingInAThrread();
-//        calculateSpectrogram();
-    }
-    if(!threadRecording && resourseToolButton(p, "rec.png")) {
-//        recordInAThread(&sampls);
+    setCurrentGridPos(1, 7);
+    if(recordingInAThread) {
+        if(resourseToolButton(p, "stop.png")) {
+            stopRecordingInAThread();
+            calculateSpectrogram();
+            redrawSpectrogram(&widget);
+        }
+    } else {
+        if(resourseToolButton(p, "rec.png")) {
+            startRecordingInAThread();
+        }
     }
 
     setCurrentGridPos(0, 9);
@@ -104,6 +108,12 @@ void setupUi(Painter *p)
     guiLabelZT(p, "denominstor");
     setCurrentGridPos(1,10);
     guiDoubleEdit(p, 6, &denominator);
+
+    setCurrentGridPos(0, 11);
+    guiLabelZT(p, "num of samples");
+    int s = arrlen(samplsStbArray);
+    setCurrentGridPos(1, 11);
+    guiNumberEdit(p, 6, &s);
 
 
 

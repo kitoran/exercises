@@ -1,5 +1,5 @@
-﻿#include "mainwindow.h"
-#include "ui_mainwindow.h"
+﻿#include "actions.h"
+#include "ui.h"
 #include "math.h"
 #include "audio.h"
 #include "spectrogram.h"
@@ -52,4 +52,32 @@ void MainWindowon_pushButton_clicked()
     strcat(command, e);
     fprintf(stderr, "command IS %s", command);
     system(command);
+}
+
+void calculateSpectrogram()
+{
+    if(originalFourierTransform) {
+        free(originalFourierTransform);
+    }
+    stfft(samplsStbArray, arrlen(samplsStbArray),
+          windowSize, stepSize, /*inpi.samplerate, */
+          &originalFourierTransform, /*&h, */
+          &originalFourierTransformW);
+    originalFourierTransformH = windowSize;
+    fprintf(stderr, "%d, %d, %lu, %lu", originalFourierTransformW,
+                    originalFourierTransformH,
+            sizeof(*originalFourierTransform),
+            (originalFourierTransformW)*(originalFourierTransformH)*sizeof(*originalFourierTransform));
+    harmonic** msstb = maxesLinearStbArray(originalFourierTransform, originalFourierTransformH,
+                                           originalFourierTransformW, alsaSampleRate);
+
+    free(spectrogram);
+    struct MaximaSpectrogram mspectrogram = {
+        MaximaSpectrogramVtable,
+        msstb,
+        max};
+
+
+    spectrogram = malloc(sizeof(MaximaSpectrogram));
+    *((MaximaSpectrogram *)spectrogram) = mspectrogram;
 }

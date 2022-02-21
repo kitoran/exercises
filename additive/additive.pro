@@ -51,14 +51,13 @@ SOURCES += \
     storearray.c \
     synthesis.c \
     stb_ds.c \
-    mainwindow.c \
     complex_fft.c \
     ../../library/newFile/newfile.c \
     intpool.c \
-    ui_mainwindow.c
+    actions.c \
+    ui.c
 
 HEADERS += \
-        mainwindow.h \
     graph.h \
     stft.h \
     ../sound/audio.h \
@@ -70,13 +69,13 @@ HEADERS += \
     spectrogram.h \
     soundext.h \
     stb_ds.h \
-    ui_mainwindow.h \
     intpool.h \
     fft.h \
-    fftrec.h
+    fftrec.h \
+    actions.h \
+    ui.h
 
-FORMS += \
-        mainwindow.ui
+FORMS +=
 
 SOURCES += \
     fftrec.c \
