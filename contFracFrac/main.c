@@ -140,6 +140,21 @@ int main()
         if(xEvent.type == DestroyNotify) {
             goto exit;
         };
+        if(xEvent.type == ButtonPress || xEvent.type == MotionNotify) {
+            double x, y;
+            double xn, yn;
+            picToNum(xEvent.xbutton.x, xEvent.xbutton.y, &x, &y);
+            for(int i = 0; i < 10; i++) {
+                xn = x; yn = y;
+                iter(&x, &y);
+
+                int xl, yl, xc, yc;
+                numToPic(x, y, &xc, &yc);
+                numToPic(xn, yn, &xl, &yl);
+
+                guiDrawLine(&pa,xl,yl,xc,yc);
+            }
+        };
     }
 exit:
     XDestroyWindow(xdisplay,
