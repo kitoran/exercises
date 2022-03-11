@@ -3,6 +3,8 @@
 #include "gui.h"
 #include "gridlayout.h"
 #include "persistent.h"
+#include "color.h"
+#include "complex.h"
 XEvent xEvent;
 char appName[] = "contfracfrac";
 //int getColor(int blue, int red) {
@@ -13,21 +15,27 @@ char appName[] = "contfracfrac";
 //    // 255 = rb*
 //}
 void iter( double* restrict x, double* restrict  y) {
-    *x = *x - floor(*x);
-    *y = *y - floor(*y);
+//    *x = *x - floor(*x);
+//    *y = *y - floor(*y);
     double denom = *x**x+*y**y;
     *x = *x/denom;
     *y = -*y/denom;
     *x = *x - floor(*x);
-    *y = *y - floor(*y);
-
+    *y = *y - floor(*y);////
+//    _Complex double r = *x + I * *y;
+//    r = 1/r;
+//    double abs = cabs(r);
+//    double frac = abs - floor(abs);
+//    r = r / abs * frac;
+//    *x = creal(r); *y = cimag(r);
 }
+
 int size = 600;
 unsigned char data[600*600*4];
 int itNum = 0;
-double c = 1;
-double xm = 0;
-double ym = 0;
+double c = 8;
+double xm = 4;
+double ym = 4;
 void picToNum (int x, int y, double* restrict rx, double* restrict ry) {
     *rx = x*c/size - xm;
     *ry = c - y*c/size - ym;
@@ -36,35 +44,52 @@ void numToPic (double x, double y,int * restrict rx, int * restrict ry) {
     *rx = (x+xm)/c*size;
     *ry = -(y +ym - c)/c*size;
 }
-enum { itersMode, selectMode} mode;
-void loop(Painter* pa) {
+enum { itersMode, selectMode, zoominMode} mode;
+void loop(Painter* pa, bool* consume) {
 
     setCurrentGridPos(0,0);
-    bool recalc = guiNumberEdit(pa, 5, &itNum);
+//    bool res = false;
+    bool recalc = guiNumberEdit(pa, 5, &itNum, consume);
 
     setCurrentGridPos(0,1);
-    if(resourseToolButton(pa, "minus.png")) {
+    if(resourseToolButton(pa, "minus.png", consume)) {
         itNum--;
-        recalc = true;
+        recalc = /*res = */true;
     }
     setCurrentGridPos(0,2);
-    if(resourseToolButton(pa, "plus.png")) {
+    if(resourseToolButton(pa, "plus.png", consume)) {
         itNum++;
-        recalc = true;
+        recalc = /*res = */true;
     }
     setCurrentGridPos(0,3);
-    if(resourseToolButton(pa, "select.png")) {
+    if(resourseToolButton(pa, "select.png", consume)) {
         mode = selectMode;
+//        res = true;
     }
     setCurrentGridPos(0,4);
-    if(resourseToolButton(pa, "iters.png")) {
+    if(resourseToolButton(pa, "iters.png", consume)) {
         mode = itersMode;
+//        res = true;
+    }
+    setCurrentGridPos(0,5);
+    if(resourseToolButton(pa, "zoomin.png", consume)) {
+        mode = zoominMode;
+//        res = true;
+    }
+    setCurrentGridPos(0,7);
+    if(resourseToolButton(pa, "100percent.png", consume)) {
+        c = 1;
+        xm = 0;
+        ym = 0;
+        recalc/* = res */= true;
     }
 
     if(recalc) {
         recalculatePicture();
     }
+//    return res;
 }
+
 void recalculatePicture() {
     for(int i = 0; i < 600; i++) {
         for(int j = 0; j < 600; j++) {
@@ -92,11 +117,15 @@ void recalculatePicture() {
 
             }
 #define CAP(x) ((x)>255?0:(x)<0?0:(x))
+            ((int*)data)[j*600+i] = CAP((int)xn*255/size) << 16 | CAP((int)yn*255/size) << 8;
+
             if(in) {
-                data[(j*600+i)*4] = (itNum-cn)*1.0/itNum*255;
-                data[(j*600+i)*4+1] = 0;//CAP((xn+xm)/c*255);//0;
-                data[(j*600+i)*4+2] = 0;//CAP((yn+ym)/c*255);//0;
-                data[(j*600+i)*4+3] = cn*1.0/itNum*255;
+                    ((int*)data)[j*600+i] = hsvd2bgr((itNum-cn)*1.0/itNum*360, 1, (itNum-cn)*1.0/itNum);
+//            ((int*)data)[j*600+i] = hsvd2bgr(((double)(j))/size*360, 1, 0.5);
+//                data[()*4] = (itNum-cn)*1.0/itNum*255;//b
+//                data[(j*600+i)*4+1] = 0;//CAP((xn+xm)/c*255);//0;//g
+//                data[(j*600+i)*4+2] = 0;//CAP((yn+ym)/c*255);//0;//r
+//                data[(j*600+i)*4+3] = 0;..nothing
             } else {
                 data[(j*600+i)*4] = 0;
                 data[(j*600+i)*4+1] = 0;//
@@ -105,24 +134,27 @@ void recalculatePicture() {
             }
         }
     }
+//    numToPic(1.618033988, 0, &xp, &yp);
+//    fprintf(stderr, "%d\n", xp);
+//    *((int*)(data+ (599*600+xp)*4)) = 0x000000ff;
+//    *((int*)(data+ (599*600+xp-1)*4)) = 0x000000ff;
+//    *((int*)(data+ (599*600+xp+1)*4)) = 0x000000ff;
+//    *((int*)(data+ (598*600+xp+1)*4)) = 0x000000ff;
+//    *((int*)(data+ (598*600+xp-1)*4)) = 0x000000ff;
+//    *((int*)(data+ (598*600+xp)*4)) = 0x000000ff;
     int xp, yp;
-    numToPic(1.618033988, 0, &xp, &yp);
-    fprintf(stderr, "%d\n", xp);
-    *((int*)(data+ (599*600+xp)*4)) = 0x000000ff;
-    *((int*)(data+ (599*600+xp-1)*4)) = 0x000000ff;
-    *((int*)(data+ (599*600+xp+1)*4)) = 0x000000ff;
-    *((int*)(data+ (598*600+xp+1)*4)) = 0x000000ff;
-    *((int*)(data+ (598*600+xp-1)*4)) = 0x000000ff;
-    *((int*)(data+ (598*600+xp)*4)) = 0x000000ff;
     numToPic(0.618033988, 0, &xp, &yp);
-    fprintf(stderr, "%d\n", xp);
-    *((int*)(data+ (599*600+xp)*4)) = 0x000000ff;
-    *((int*)(data+ (599*600+xp-1)*4)) = 0x000000ff;
-    *((int*)(data+ (599*600+xp+1)*4)) = 0x000000ff;
-    *((int*)(data+ (598*600+xp+1)*4)) = 0x000000ff;
-    *((int*)(data+ (598*600+xp-1)*4)) = 0x000000ff;
-    *((int*)(data+ (598*600+xp)*4)) = 0x000000ff;
+    if(xp+1 < size && xp - 1 >= 0 &&
+            yp < size && yp - 1 >= 0 ) {
 
+        fprintf(stderr, "%d\n", xp);
+        *((int*)(data+ (yp*600+xp)*4)) = 0xffffffff;
+        *((int*)(data+ (yp*600+xp-1)*4)) = 0xffffffff;
+        *((int*)(data+ (yp*600+xp+1)*4)) = 0xffffffff;
+        *((int*)(data+ (yp*600+xp+1)*4)) = 0xffffffff;
+        *((int*)(data+ (yp*600+xp-1)*4)) = 0xffffffff;
+        *((int*)(data+ (yp*600+xp)*4)) = 0xffffffff;
+    }
 }
 
 int main()
@@ -145,11 +177,17 @@ int main()
     while(true) {
         guiNextEvent();
         XPutImage(xdisplay, rootWindow, gc, res, 0, 0, 0,0, 600, 600);
-        loop(&pa);
+        volatile int t;
+        if(xEvent.type == ButtonPress) {
+           fprintf(stderr, "hi%d", t);
+        }
+        bool consume = false;
+        loop(&pa, &consume);
+        printf("%d", consume);
         if(xEvent.type == DestroyNotify) {
             goto exit;
         };
-        if(mode == itersMode) {
+        if(!consume && mode == itersMode) {
             if(xEvent.type == ButtonPress || xEvent.type == MotionNotify) {
                 double x, y;
                 double xn, yn;
@@ -165,7 +203,7 @@ int main()
                     guiDrawLine(&pa,xl,yl,xc,yc);
                 }
             };
-        } else if(mode == selectMode) {
+        } else if(!consume && mode == selectMode) {
             static int startx, starty;
             static bool sel = false;
             if(xEvent.type == ButtonPress) {
@@ -188,6 +226,43 @@ int main()
                 recalculatePicture();
             }
 
+        } else if(!consume && mode == zoominMode) {
+            if(xEvent.type == ButtonRelease) {
+                double mouseX = xEvent.xbutton.x;
+                double mouseY = xEvent.xbutton.y;
+                /*
+                 * mouseX * c / 2 - xmnew = mouseX * c - xmold
+                 * mouseY * c / 2 - ymnew = mouseY * c - ymold
+                 *
+                 * xmnew = xmold - mouseX * c *1.5
+                 *
+                 * size/2*c/2/size - xmnew = mouseX * c/size - xmold
+                 * c/2 - size/2*c/2/size - ymnew = c - mouseY * c/size - ymold
+                 * ymnew - c/2 + c/4 = ymold - c + mouseY*c/size
+                 * ymnew = ymold - c + mouseY*c/size + c/2 - c/4
+                 *
+                 * xmnew = xmold - mouseX*c + c/2
+                 */
+                double cxcx = mouseX * c/size - xm;
+                double newxm, newym;
+                double cxcxoldx, d; picToNum((int)mouseX, (int)mouseY, &cxcxoldx, &d);
+//                picToNum(mouseX - size/4,
+//                         mouseY - size/4,
+//                         &newxm,
+//                         &newym);
+//                picToNum(
+                fprintf(stderr, "xm bef %lf \n", xm);
+                xm = xm-mouseX*c/size + c/4;
+                fprintf(stderr, "xm aft %lf \n", xm);
+                double cxcxnew = size/2*c/size - xm;
+                ym = ym - c + mouseY*c/size + c/2 - c/4;//ym-mouseY*c/size + c/4;
+                c/=2;
+
+                double cxcxnewx; picToNum(size/2, size/2,&cxcxnewx, &d);
+                fprintf(stderr, "cxcx %lf, cxcxoldx %lf, cxcxnew %lf, "
+                        "cxcxnewx %lf\n", cxcx, cxcxoldx, cxcxnew, cxcxnewx);
+                recalculatePicture();
+            }
         }
     }
 exit:
