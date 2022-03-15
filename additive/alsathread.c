@@ -117,11 +117,15 @@ void* recordingThread(void* d) {
                 pos = 0;
                 wait(&channelForRecording);
                 goto external;
+            } else {
+                pos = 0;
+                arrsetlen(samplsStbArray, 0);
             }
         }
         if(pos + framesPerPeriod > arrlen(samplsStbArray)) {
             arrsetlen(samplsStbArray,
                       arrlen(samplsStbArray)+framesPerPeriod);
+            memset(samplsStbArray+ pos, 0, arrlen(samplsStbArray)-pos-1);
         }
         alsaRecordBlock(samplsStbArray+ pos, framesPerPeriod);
         pos += framesPerPeriod;

@@ -5,6 +5,7 @@
 #include "persistent.h"
 #include "color.h"
 #include "complex.h"
+#define tau 6.283185307179586
 XEvent xEvent;
 char appName[] = "contfracfrac";
 //int getColor(int blue, int red) {
@@ -22,6 +23,13 @@ void iter( double* restrict x, double* restrict  y) {
     *y = -*y/denom;
     *x = *x - floor(*x);
     *y = *y - floor(*y);////
+    if(*x**x+*y**y > 1) {
+        if((*x-1)*(*x-1) +*y**y >1) {
+            *y -= 1;
+        } else {
+            *x -= 1;
+        }
+    }
 //    _Complex double r = *x + I * *y;
 //    r = 1/r;
 //    double abs = cabs(r);
@@ -29,7 +37,6 @@ void iter( double* restrict x, double* restrict  y) {
 //    r = r / abs * frac;
 //    *x = creal(r); *y = cimag(r);
 }
-
 int size = 600;
 unsigned char data[600*600*4];
 int itNum = 0;
@@ -76,6 +83,11 @@ void loop(Painter* pa, bool* consume) {
         mode = zoominMode;
 //        res = true;
     }
+//    setCurrentGridPos(0,6);
+//    if(resourseToolButton(pa, "zoomout.png", consume)) {
+//        mode = zoominMode;
+////        res = true;
+//    }
     setCurrentGridPos(0,7);
     if(resourseToolButton(pa, "100percent.png", consume)) {
         c = 1;
@@ -103,12 +115,12 @@ void recalculatePicture() {
 
 //                iter(&xw, &yw);
                 iter(&xn, &yn);
-                bool lowC = (xn-0.5)*(xn-0.5)+yn*yn>1.0/4 ;
-                if(xn > 0.5 && lowC && (xn-0.5)*(xn-0.5)+(yn-1)*(yn-1)>1.0/4) {
-                    in = true;
+//                bool lowC = (xn-0.5)*(xn-0.5)+yn*yn>1.0/4 ;
+//                if(xn > 0.5 && lowC && (xn-0.5)*(xn-0.5)+(yn-1)*(yn-1)>1.0/4) {
+//                    in = true;
 //                    fprintf(stderr, "%d\n", cn);
-                    break;
-                }
+//                    break;
+//                }
 //                if(xw > 0 && xw < 1
 //                        && yw > 0 && yw < 1) {
 //                    in = true;
@@ -117,21 +129,21 @@ void recalculatePicture() {
 
             }
 #define CAP(x) ((x)>255?0:(x)<0?0:(x))
-            ((int*)data)[j*600+i] = CAP((int)xn*255/size) << 16 | CAP((int)yn*255/size) << 8;
-
-            if(in) {
-                    ((int*)data)[j*600+i] = hsvd2bgr((itNum-cn)*1.0/itNum*360, 1, (itNum-cn)*1.0/itNum);
+//            ((int*)data)[j*600+i] = CAP((int)xn*255/size) << 16 | CAP((int)yn*255/size) << 8;
+            ((int*)data)[j*600+i] = hsvd2bgr((carg(xn + I*yn)+tau/2)*360/tau, 1, cabs(xn + I*yn));
+//            if(in) {
+//                    ((int*)data)[j*600+i] = hsvd2bgr((itNum-cn)*1.0/itNum*360, 1, (itNum-cn)*1.0/itNum);
 //            ((int*)data)[j*600+i] = hsvd2bgr(((double)(j))/size*360, 1, 0.5);
 //                data[()*4] = (itNum-cn)*1.0/itNum*255;//b
 //                data[(j*600+i)*4+1] = 0;//CAP((xn+xm)/c*255);//0;//g
 //                data[(j*600+i)*4+2] = 0;//CAP((yn+ym)/c*255);//0;//r
 //                data[(j*600+i)*4+3] = 0;..nothing
-            } else {
-                data[(j*600+i)*4] = 0;
-                data[(j*600+i)*4+1] = 0;//
-                data[(j*600+i)*4+2] = 0;//CAP((yn+ym)/c*255);
-                data[(j*600+i)*4+3] = 0;//CAP((xn+xm)/c*255);;
-            }
+//            } else {
+//                data[(j*600+i)*4] = 0;
+//                data[(j*600+i)*4+1] = 0;//
+//                data[(j*600+i)*4+2] = 0;//CAP((yn+ym)/c*255);
+//                data[(j*600+i)*4+3] = 0;//CAP((xn+xm)/c*255);;
+//            }
         }
     }
 //    numToPic(1.618033988, 0, &xp, &yp);

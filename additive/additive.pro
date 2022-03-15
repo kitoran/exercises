@@ -38,7 +38,7 @@ QMAKE_CFLAGS += -Werror=implicit-function-declaration -Wno-unused-variable -Wno-
 INCLUDEPATH += ../sound ../../library/ambiguousArray ../../library/dynamicArray \
                ../../library/newFile ../../library/guiS/gui
 LIBS += -lsndfile -lssl -lcrypto -lexplain -lX11 -lXrender
-SOURCES += \
+SOURCES *= \
     ../sound/audio.c \
     alsathread.c \
     globals.c \
@@ -50,7 +50,6 @@ SOURCES += \
     stft.c \
     storearray.c \
     synthesis.c \
-    stb_ds.c \
     complex_fft.c \
     ../../library/newFile/newfile.c \
     intpool.c \
@@ -75,32 +74,27 @@ HEADERS += \
     actions.h \
     ui.h
 
-FORMS +=
-
 SOURCES += \
     fftrec.c \
     fft.c
 
-RESOURCES +=
+#INCLUDEPATH += $$PWD/../../library/settingsS/settings
+#SOURCES += \
+#    $$PWD/../../library/guiS/gui/gui.c \
+#    $$PWD/../../library/guiS/gui/gridlayout.c \
+#    $$PWD/../../library/guiS/gui/persistent.c
 
-DISTFILES += \
-    mainwindowg.glade
-
-INCLUDEPATH += $$PWD/../../library/settingsS/settings
-SOURCES += \
-    $$PWD/../../library/guiS/gui/gui.c \
-    $$PWD/../../library/guiS/gui/gridlayout.c \
-    $$PWD/../../library/guiS/gui/persistent.c
-
-include(../../library/loadImage/loadImage.pri)
-include(../../library/stb/stb_image.pri)
+#include(../../library/loadImage/loadImage.pri)
+include(../../library/guiS/gui.pri)
+include(../../library/settingsS/settings/settings.pri)
+#include(../../library/stb/stb_image.pri)
 
 DEFINES += MY_PATH=$$PWD
 
-HEADERS += \
-    $$PWD/../../library/guiS/gui/gui.h \
-    $$PWD/../../library/guiS/gui/persistent.h \
-    $$PWD/../../library/guiS/gui/gridlayout.h
+#HEADERS += \
+#    $$PWD/../../library/guiS/gui/gui.h \
+#    $$PWD/../../library/guiS/gui/persistent.h \
+#    $$PWD/../../library/guiS/gui/gridlayout.h
 #include(../../library/guiS/gui/gui.pro)
 #PRE_TARGETDEPS += ../../library/build-guiS-Desktop-Debug/gui/libgui.a
 #QMAKE_EXTRA_TARGETS += versionTarget
@@ -110,11 +104,11 @@ HEADERS += \
 ##versionTarget.commands = cd $$PWD/../../library/guiS; qmake guiS.pro; cd ../build-guiS-Desktop-Debug/; make build
 #versionTarget.commands = cd ../build-guiS-Desktop-Debug/; make build
 
-INCLUDEPATH +=     ../../stb
-SOURCES += \
-    $$PWD/../../library/settingsS/settings/settings.c\
+#INCLUDEPATH +=     ../../stb
+#SOURCES += \
+#    $$PWD/../../library/settingsS/settings/settings.c\
 #   ../../stb/stb_ds.c
 
-HEADERS += \
-    $$PWD/../../library/settingsS/settings/settings.h\
+#HEADERS += \
+#    $$PWD/../../library/settingsS/settings/settings.h\
 #    $$PWD/../../stb/stb_ds.h

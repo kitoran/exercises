@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     fprintf(stderr, "%ld", end);
 
     guiStartDrawing();
-    XSynchronize(xdisplay, true);
+//    XSynchronize(xdisplay, true);
     XSetErrorHandler(handler);
     calculateSpectrogram();
     //    stft(sampls, end, windowSize, stepSize, inpi.samplerate, &transform, &h, &w);
