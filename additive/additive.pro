@@ -89,7 +89,7 @@ include(../../library/guiS/gui.pri)
 include(../../library/settingsS/settings/settings.pri)
 #include(../../library/stb/stb_image.pri)
 
-DEFINES += MY_PATH=$$PWD
+DEFINES += MY_PATH=\\\"$$PWD\\\"
 
 #HEADERS += \
 #    $$PWD/../../library/guiS/gui/gui.h \

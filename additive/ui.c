@@ -7,7 +7,7 @@
 #include "globals.h"
 #include "actions.h"
 #include "persistent.h"
-#include "loadImage.h""
+#include "loadImage.h"
 #include "alsathread.h"
 
 void ui(Painter *p)
@@ -116,6 +116,9 @@ void ui(Painter *p)
     guiNumberEdit(p, 6, &s, NULL);
 
 
+    setCurrentGridPos(0, 12);
+    char* reeee[] = {"hi", "bestie", NULL};
+    guiComboBoxZT(p, reeee, 1);
 
 
 
