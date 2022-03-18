@@ -93,6 +93,7 @@ void ui(Painter *p)
     } else {
         if(resourseToolButton(p, "rec.png", 0)) {
             startRecordingInAThread();
+            guiRedraw();
         }
     }
 

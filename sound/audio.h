@@ -13,6 +13,7 @@ void drainAudio();
 int writeFrames(const void *buffer, int frames);
 void alsaPlayBlock(const int16_t* buffer, uint size);
 void alsaRecordBlock(int16_t* buffer, uint size);
+void alsaDropCapture();
 #ifdef __cplusplus
 }
 #endif

@@ -7,6 +7,7 @@ guiPers = true;
 include(../../library/guiS/gui.pri)
 QMAKE_CFLAGS += -Wno-pointer-sign
 QMAKE_CFLAGS +=  -Ofast
+QMAKE_CFLAGS += -Werror=implicit-function-declaration
 DEFINES += MY_PATH=\\\"$$PWD\\\"
 
 SOURCES += main.c

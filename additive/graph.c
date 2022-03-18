@@ -176,6 +176,7 @@ void redrawSpectrogram(struct graph* g)
                               format,
                               0,
                               NULL);
+    guiRedraw();
 //    gdk_gc_destroy(gc);
 }
 

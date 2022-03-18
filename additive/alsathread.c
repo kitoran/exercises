@@ -110,19 +110,28 @@ void* recordingThread(void* d) {
     Action action;
     wait(&channelForRecording);
     int pos = 0;
+    fprintf(stderr, "recordingThread before while pos=%d size=%d\n", pos, arrlen(samplsStbArray));
     while(true) { external:
+        fprintf(stderr, "recordingThread start of loop pos=%d size=%d\n", pos, arrlen(samplsStbArray));
         if(channelForRecording.full) {
+            fprintf(stderr, "recordingThread inside if pos=%d size=%d\n", pos, arrlen(samplsStbArray));
             takeC(&channelForRecording, &action, sizeof(action));
             if(action == stop) {
+                alsaDropCapture();
+                fprintf(stderr, "recordingThread inside stop if pos=%d size=%d\n", pos, arrlen(samplsStbArray));
                 pos = 0;
                 wait(&channelForRecording);
                 goto external;
-            } else {
+            }
+            else {
+                initAudioCaptureS16LE();
+                fprintf(stderr, "recordingThread inside stop else pos=%d size=%d\n", pos, arrlen(samplsStbArray));
                 pos = 0;
-                arrsetlen(samplsStbArray, 0);
+//                arrsetlen(samplsStbArray, 0);
             }
         }
         if(pos + framesPerPeriod > arrlen(samplsStbArray)) {
+            fprintf(stderr, "recordingThread inside enlarging if pos=%d size=%d\n", pos, arrlen(samplsStbArray));
             arrsetlen(samplsStbArray,
                       arrlen(samplsStbArray)+framesPerPeriod);
             memset(samplsStbArray+ pos, 0, arrlen(samplsStbArray)-pos-1);
@@ -135,6 +144,9 @@ void* recordingThread(void* d) {
 
 void startRecordingInAThread()
 {
+
+//    pos = 0;
+    arrsetlen(samplsStbArray, 0);
     recordingInAThread = true;
     static pthread_t newThread = 0;
     if(!newThread) {

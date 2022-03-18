@@ -162,3 +162,8 @@ void alsaRecordBlock(int16_t *buffer, uint size)
 {
     snd_pcm_readi (capture_handle, buffer, size);
 }
+
+void alsaDropCapture()
+{
+    snd_pcm_close(capture_handle);
+}
