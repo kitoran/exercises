@@ -34,7 +34,8 @@ LIBS += -lGL -lGLU -lasound
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
-QMAKE_CFLAGS += -Werror=implicit-function-declaration -Wno-unused-variable -Wno-parentheses
+QMAKE_CFLAGS += -Werror=implicit-function-declaration -Wno-unused-variable -Wno-parentheses \
+    -Wno-discarded-qualifiers
 INCLUDEPATH += ../sound ../../library/ambiguousArray ../../library/dynamicArray \
                ../../library/newFile ../../library/guiS/gui
 LIBS += -lsndfile -lssl -lcrypto -lexplain -lX11 -lXrender

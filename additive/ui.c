@@ -9,7 +9,13 @@
 #include "persistent.h"
 #include "loadImage.h"
 #include "alsathread.h"
+#include "shittyintrospection.h"
 
+INTROSPECT_ENUM_PERSISTENT_COMBOBOX(method,
+                         onm,
+                         tre,
+                          dfg)
+//persistentEnumComboBox(method, ertt, sdfg);
 void ui(Painter *p)
 {
     Size size = guiGetSize();
@@ -28,8 +34,9 @@ void ui(Painter *p)
     setCurrentGridPos(0, 1);
     guiLabelZT(p, "method");
     setCurrentGridPos(1, 1);
-    char* strs[] = {"original", "multiply", "divide", NULL};
-    guiComboBoxZT(p, strs, 2);
+//    char* strs[] = {"original", "multiply", "divide", NULL};
+    static int method = 2;
+    persistentEnumComboBox(method, p, &method);
 
 
     setCurrentGridPos(0, 2);
@@ -117,9 +124,9 @@ void ui(Painter *p)
     guiNumberEdit(p, 6, &s, NULL);
 
 
-    setCurrentGridPos(0, 12);
-    char* reeee[] = {"hi", "bestie", NULL};
-    guiComboBoxZT(p, reeee, 1);
+//    setCurrentGridPos(0, 12);
+//    char* reeee[] = {"hi", "bestie", NULL};
+//    guiComboBoxZT(p, reeee, 1);
 
 
 
