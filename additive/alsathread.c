@@ -14,6 +14,10 @@
 
 
 
+#include "graph.h"
+
+
+
 extern uint alsaSampleRate;
 extern uint framesPerPeriod;
 const char alsaThreadName[] = "alsathread";
@@ -55,22 +59,53 @@ void* alsathread(void* d) {
                 continue;
             }
         }
-        spectrogram->fillBuffer(spectrogram, buffer, framesPerPeriod, pos.pos, phase);
-        phase+=framesPerPeriod;
-        //            clock_t afterLoop = clock();
-        //            if(phase > alsaSampleRate * 7) {
-        //                phase = 0;
-        //            }
-        //            if(output%32 == 0) {
-        ////               fprintf(stderr,
-        ////                       "freq %lf freq1 %lf data %p height %d phase %d val %s",
-        ////                      double(alsaSampleRate)/spectr.h*9,
-        ////                      double(changes)*alsaSampleRate/phase,
-        ////                       spectr.data, spectr.h, phase, buffer[2]);
-        //            }
-        writeFrames(buffer, framesPerPeriod);
-        //            clock_t afterWrite = clock();
-        //            qDebug() << float(afterWrite-afterLoop)/CLOCKS_PER_SEC << float(afterLoop - start)/CLOCKS_PER_SEC;
+        if(action == actionPlay) {
+            spectrogram->fillBuffer(spectrogram, buffer, framesPerPeriod, pos.pos, phase);
+            phase+=framesPerPeriod;
+            //            clock_t afterLoop = clock();
+            //            if(phase > alsaSampleRate * 7) {
+            //                phase = 0;
+            //            }
+            //            if(output%32 == 0) {
+            ////               fprintf(stderr,
+            ////                       "freq %lf freq1 %lf data %p height %d phase %d val %s",
+            ////                      double(alsaSampleRate)/spectr.h*9,
+            ////                      double(changes)*alsaSampleRate/phase,
+            ////                       spectr.data, spectr.h, phase, buffer[2]);
+            //            }
+            writeFrames(buffer, framesPerPeriod);
+            //            clock_t afterWrite = clock();
+            //            qDebug() << float(afterWrite-afterLoop)/CLOCKS_PER_SEC << float(afterLoop - start)/CLOCKS_PER_SEC;
+        } else {
+            MaximaSpectrogram* sgfdgsfd = spectrogram;
+            struct harmonic** s = sgfdgsfd->maxima;
+//            static int harmonic_number = 0;
+            static int periodCount;
+//            if(harmonic_number > arrlen(s[pos.pos])) {
+//                harmonic_number = 0;
+//            }
+            double howLongOneHarmonic = 0.3;
+            double howLongPeriod = (double)(framesPerPeriod)/alsaSampleRate;
+            int whichHarmonic = periodCount*howLongPeriod/howLongOneHarmonic;
+
+            whichHarmonic  = whichHarmonic % (arrlen(s[pos.pos]));
+
+            for(int j = 0; j < framesPerPeriod; j++) {
+                double v = 0;
+
+                v += s[pos.pos][whichHarmonic].amp*sinLookupTable
+                        [(int64_t)((s[pos.pos][whichHarmonic].freq
+                                            *phase/alsaSampleRate)*LOOKUP_TABLE_SIZE)
+                            %LOOKUP_TABLE_SIZE]/max/*3*/;
+
+                phase++;
+                buffer[j] = v*800/*/*400   /INT16_MAX*/;
+            }
+
+
+            writeFrames(buffer, framesPerPeriod);
+            periodCount++;
+        }
     }
     return NULL;
 }

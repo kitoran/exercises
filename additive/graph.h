@@ -4,8 +4,12 @@
 #include <spectrogram.h>
 #include <X11/extensions/Xrender.h>
 #include "gui.h"
+#include "shittyintrospection.h"
 //#include <synthesis.h>
-
+INTROSPECT_ENUM(MouseAction,
+                         actionPlay,
+                         actionDemo)
+extern MouseAction action;
 typedef struct graph
 {
     int width, height;

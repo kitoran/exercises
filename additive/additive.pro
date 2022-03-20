@@ -6,7 +6,7 @@
 
 QT       -= core
 QMAKE_CXXFLAGS += -std=gnu++2a
-QMAKE_CFLAGS += -std=gnu11 -Wstrict-overflow=5
+QMAKE_CFLAGS += -std=gnu11  -Wstrict-overflow=5
 #CONFIG+=c++17
 #CONFIG+=link_pkgconfig
 #PKGCONFIG += gtk+-3.0 gdk-3.0

@@ -13,6 +13,7 @@
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
+MouseAction action = actionPlay;
 //#include <gdk/gdk.h>
 //void graph_onDraw(struct graph* g, cairo_t* cr,
 //                  gpointer user_data
@@ -233,7 +234,11 @@ void mousePressEvent(struct graph* g, int x)
 //        m = {data.sliced(indw*heights, heights), mode, true};
 //    }
 //    qDebug() << "putting message:" << m.data.data << m.data.sized ;
-    blockAndPut(&channelForPlayback, &m, sizeof(m));
+    if(action == actionPlay) {
+        blockAndPut(&channelForPlayback, &m, sizeof(m));
+    } else if(action == actionDemo) {
+        blockAndPut(&channelForPlayback, &m, sizeof(m));
+    }
     if(g->selecting) {
         if(xEvent.xbutton.button == Button3) {
             g->selectStart = g->selectEnd = -1;
@@ -261,7 +266,9 @@ void mouseReleaseEvent(struct graph* g)
 {
     struct message m = {-1};
 //    qDebug() << "putting message:" << m.data.data << m.data.sized;
-    blockAndPut(&channelForPlayback, &m, sizeof(m));
+    if(action == actionPlay) {
+        blockAndPut(&channelForPlayback, &m, sizeof(m));
+    }
     if(g->selecting) {
         g->selecting = false;
 

@@ -1,5 +1,6 @@
 ﻿#ifndef GLOBALS_H
 #define GLOBALS_H
+
 #include <inttypes.h>
 extern const double freqMax;
 extern const double freqMin;
@@ -21,4 +22,5 @@ extern double max;
 extern struct SF_INFO inpi;
 struct graph;
 extern struct graph widget;
+
 #endif // GLOBALS_H1
