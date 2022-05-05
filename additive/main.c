@@ -28,22 +28,7 @@ int main(int argc, char *argv[])
     argc--; argv--;
     initializeMathExt();
     startAlsathread();
-
-    inpi.format = 0;
-    SNDFILE* inp = sf_open("/home/n/exercises/additive/354672__mtg__flute-d4.wav", SFM_READ, &inpi);
-
-    if(inpi.channels != 1) {
-        fprintf(stderr, "%d channels ! ! !", inpi.channels);
-        exit(543);
-    }
-
-    sf_count_t end = sf_seek(inp, 0, SEEK_END);
-    fprintf(stderr, "%ld", end);
-    sf_seek(inp, 0, SEEK_SET);
-    arrsetlen(samplsStbArray, end);
-    sf_read_short(inp, samplsStbArray, end);
-    fprintf(stderr, "%ld", end);
-
+    openFile("/home/n/exercises/additive/354672__mtg__flute-d4.wav");
     guiStartDrawing();
 //    XSynchronize(xdisplay, true);
     XSetErrorHandler(handler);

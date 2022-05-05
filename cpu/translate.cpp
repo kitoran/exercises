@@ -1,4 +1,4 @@
-#include <stdio.h>
+﻿#include <stdio.h>
 #include "translate.h"
 #include "parse.h"
 #include "assembler.h"
@@ -45,6 +45,8 @@ void translateApp(Assembler* a, Application *exp) {
     if(actuallyApplication) {
         a->pop(rax);
         a->call(rax);
+        a->add(rsp, int8_t(0x8));
+//        a->pop(rdx);
         a->push(rax);
     }
 }
@@ -94,7 +96,7 @@ void translate(Assembler *a, AddExp *exp)
     a->call(rbx);
 
 
-    a->mov(rax, 5255);
+    a->mov(rax, 1);
     a->ret();
 
     while (!queue.empty()) {

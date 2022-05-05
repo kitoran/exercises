@@ -6,7 +6,7 @@
 /*extern */const double freqMin=30;
 /*extern */const double frequencyMultiplent = 1.04;//sqrt(sqrt(freqMax/freqMin));
 
-/*extern */const int windowSize = 1<<12;//12;
+/*extern */const int windowSize = 1<<12;
 /*extern */const int stepSize = 256;
 
 int16_t *samplsStbArray = 0;

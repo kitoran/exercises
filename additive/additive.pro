@@ -6,7 +6,7 @@
 
 QT       -= core
 QMAKE_CXXFLAGS += -std=gnu++2a
-QMAKE_CFLAGS += -std=gnu11  -Wstrict-overflow=5
+QMAKE_CFLAGS += -std=gnu11  -Wstrict-overflow=5 -Wno-comment
 #CONFIG+=c++17
 #CONFIG+=link_pkgconfig
 #PKGCONFIG += gtk+-3.0 gdk-3.0
@@ -29,15 +29,10 @@ LIBS += -lGL -lGLU -lasound
 
 #unix:!macx: PRE_TARGETDEPS += $$PWD/../../library/build-guiS-Desktop-Debug/gui/libgui.a
 
-
-# You can also make your code fail to compile if you use deprecated APIs.
-# In order to do so, uncomment the following line.
-# You can also select to disable deprecated APIs only up to a certain version of Qt.
-#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 QMAKE_CFLAGS += -Werror=implicit-function-declaration -Wno-unused-variable -Wno-parentheses \
     -Wno-discarded-qualifiers
-INCLUDEPATH += ../sound ../../library/ambiguousArray ../../library/dynamicArray \
-               ../../library/newFile ../../library/guiS/gui
+INCLUDEPATH += ../sound
+include(../../library/misc/misc.pri)
 LIBS += -lsndfile -lssl -lcrypto -lexplain -lX11 -lXrender
 SOURCES *= \
     ../sound/audio.c \
@@ -52,10 +47,10 @@ SOURCES *= \
     storearray.c \
     synthesis.c \
     complex_fft.c \
-    ../../library/newFile/newfile.c \
     intpool.c \
     actions.c \
-    ui.c
+    ui.c \
+    demo.c
 
 HEADERS += \
     graph.h \

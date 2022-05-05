@@ -34,8 +34,8 @@ typedef int16_t frameType;
 void* alsathread(void* d) {
     (void)d;
 
-    frameType *buffer;
     initAudioPlayback(1, SND_PCM_FORMAT_S16_LE);//SND_PCM_FORMAT_FLOAT64_LE
+    frameType *buffer;
     buffer = (frameType *) malloc(sizeof(frameType)*framesPerPeriod);
     struct message pos = {-1};
     uint64_t phase = 0;
@@ -77,26 +77,45 @@ void* alsathread(void* d) {
             //            clock_t afterWrite = clock();
             //            qDebug() << float(afterWrite-afterLoop)/CLOCKS_PER_SEC << float(afterLoop - start)/CLOCKS_PER_SEC;
         } else {
+            void demo(/*Picture * picture, */int position/*, int w, int h*/) ;
+
+            demo(pos.pos);
             MaximaSpectrogram* sgfdgsfd = spectrogram;
-            struct harmonic** s = sgfdgsfd->maxima;
+            struct harmonic* hs = sgfdgsfd->maxima[pos.pos];
 //            static int harmonic_number = 0;
             static int periodCount;
 //            if(harmonic_number > arrlen(s[pos.pos])) {
 //                harmonic_number = 0;
 //            }
-            double howLongOneHarmonic = 0.3;
+            double howLongOneHarmonic = 0.1;
             double howLongPeriod = (double)(framesPerPeriod)/alsaSampleRate;
             int whichHarmonic = periodCount*howLongPeriod/howLongOneHarmonic;
 
-            whichHarmonic  = whichHarmonic % (arrlen(s[pos.pos]));
+            whichHarmonic  = whichHarmonic % (arrlen(hs));
 
             for(int j = 0; j < framesPerPeriod; j++) {
                 double v = 0;
 
-                v += s[pos.pos][whichHarmonic].amp*sinLookupTable
-                        [(int64_t)((s[pos.pos][whichHarmonic].freq
-                                            *phase/alsaSampleRate)*LOOKUP_TABLE_SIZE)
+
+                for(int i = 0; i < whichHarmonic; i++) {
+        //            struct harmonic deb32 = hs[i];
+        //            int64_t deb = ((hs[i].freq
+        //                        *phase+i)*LOOKUP_TABLE_SIZE);
+        //            int64_t deb15 = (int64_t)((hs[i].freq
+        //                        *phase+i)*LOOKUP_TABLE_SIZE)%LOOKUP_TABLE_SIZE;
+        //            int64_t deb2 = sinLookupTableInt[(int64_t)((hs[i].freq
+        //                                   *phase+i)*LOOKUP_TABLE_SIZE)
+        //                   %LOOKUP_TABLE_SIZE];
+        //            double deb3 = hs[i].amp;
+                    v += hs[i].amp*sinLookupTable[(int64_t)((hs[i].freq
+                                            *phase/alsaSampleRate+i)*LOOKUP_TABLE_SIZE)
                             %LOOKUP_TABLE_SIZE]/max/*3*/;
+                }
+
+//                v += s[pos.pos][whichHarmonic].amp*sinLookupTable
+//                        [(int64_t)((s[pos.pos][whichHarmonic].freq
+//                                            *phase/alsaSampleRate)*LOOKUP_TABLE_SIZE)
+//                            %LOOKUP_TABLE_SIZE]/max/*3*/;
 
                 phase++;
                 buffer[j] = v*800/*/*400   /INT16_MAX*/;

@@ -5,8 +5,11 @@ CONFIG -= qt
 
 guiPers = true;
 include(../../library/guiS/gui.pri)
-QMAKE_CFLAGS += -Wno-pointer-sign
-QMAKE_CFLAGS +=  -Ofast
+include(../../library/misc/misc.pri)
+include(../../library/loadImage/loadImage.pri)
+QMAKE_CFLAGS += -Wno-pointer-sign -fno-PIC
+#QMAKE_CFLAGS +=  -Ofast
+QMAKE_CFLAGS +=  -O0
 QMAKE_CFLAGS += -Werror=implicit-function-declaration
 DEFINES += MY_PATH=\\\"$$PWD\\\"
 

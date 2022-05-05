@@ -22,5 +22,5 @@ HEADERS += \
 
 DISTFILES += \
 
-LIBS += -lrt
+LIBS += -lrt -lexplain
 QMAKE_CXXFLAGS += -std=gnu++17

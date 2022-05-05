@@ -1,5 +1,6 @@
 ﻿#include "stft.h"
 #include <math.h>
+#include <assert.h>
 #include "mathext.h"
 #include "globals.h"
 #include <stdio.h>
@@ -157,7 +158,33 @@ struct harmonic** maxesLinearStbArray(double *data, int h, int w, int samplerate
                  && freq < 20000
                  && data[i*h+j] > max/200
                     ) {
-                struct harmonic hc = {freq, data[i*h+j]};
+        // здесь не надо будеит находить все коэффициенты
+        // a0 =  freq1 freq2 * amp0/2   - freq0 freq2 * amp1   + freq0 freq1 * amp2/2
+        // a1 = -(freq1+freq2) * amp0/2 + (freq0+freq2) * amp1 - (freq0 + freq1) * amp2/2
+        // a2 = amp0/2                  - amp1                 + amp2/2
+                double amp0 = data[i*h+(j-1)], amp1 = data[i*h+(j)], amp2 = data[i*h+(j+1)];
+                double freq0 = (j-1), freq1 = j, freq2 = (j+1);
+                double a0 =  freq1 * freq2 * amp0/2   - freq0 * freq2 * amp1   + freq0 * freq1 * amp2/2;
+                double a1 = -(freq1+freq2) * amp0/2 + (freq0+freq2) * amp1 - (freq0 + freq1) * amp2/2;
+                double a2 = amp0/2                  - amp1                 + amp2/2;
+        fprintf(stderr, "\n %lf %lf %lf \n",
+                fabs(a0 + a1*freq0 + a2*freq0*freq0 - amp0),
+                fabs(a0 + a1*freq1 + a2*freq1*freq1 - amp1),
+                fabs(a0 + a1*freq2 + a2*freq2*freq2 - amp2));
+        assert(fabs(a0 + a1*freq0 + a2*freq0*freq0 - amp0) < 0.01);
+        assert(fabs(a0 + a1*freq1 + a2*freq1*freq1 - amp1) < 0.01);
+        assert(fabs(a0 + a1*freq2 + a2*freq2*freq2 - amp2) < 0.01);
+
+// amp = ampmax - thinness * (freq - max)^2 = am? - th? fr^2 + th? fr max? - th? max?^2 = amp
+// amp1 - amp2 = th fr2^2 - th fr1^2 + th fr1 max - th fr2 max
+// th = (amp1-amp2)/(fr2^2 - fr1^2)
+//
+                double freqmax = (double)(samplerate)/originalFourierTransformH *
+                                    (-a1/2/a2);
+                double ampmax = a0 - (a1*a1/a2/4);
+
+//                struct harmonic hc = {freq, data[i*h+j]};
+                struct harmonic hc = {freqmax, ampmax};
                 arrput(eStbArray, hc);
             }
         }

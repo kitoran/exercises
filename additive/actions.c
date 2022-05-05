@@ -6,7 +6,7 @@
 #include "synthesis.h"
 #include "globals.h"
 #include <sndfile.h>
-#include "newfile.h"
+#include "newFile.h"
 #include "graph.h"
 
 void MainWindowon_toolButton_clicked()
@@ -80,4 +80,33 @@ void calculateSpectrogram()
 
     spectrogram = malloc(sizeof(MaximaSpectrogram));
     *((MaximaSpectrogram *)spectrogram) = mspectrogram;
+}
+
+void openFile(char *path)
+{
+
+    inpi.format = 0;
+    SNDFILE* inp = sf_open(path, SFM_READ, &inpi);
+
+
+    if(inpi.channels  > 2) {
+        fprintf(stderr, "%d channels ! ! !", inpi.channels);
+        exit(543);
+    }
+
+    sf_count_t end = sf_seek(inp, 0, SEEK_END);
+    arrsetlen(samplsStbArray, end);
+//    sf_seek(inp, 0, SEEK_SET);
+//    for(int i = 0; i < end; i++) {
+//        int16_t sam[2];
+//        sf_read_short(&inpi, sam, 1);
+//        samplsStbArray[i] = sam[0];
+//    }
+
+//    fprintf(stderr, "%ld", end);
+    sf_seek(inp, 0, SEEK_SET);
+//    int16_t
+    sf_read_short(inp, samplsStbArray, end);
+    fprintf(stderr, "end of openFile %ld\n", end);
+
 }

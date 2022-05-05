@@ -13,7 +13,7 @@
 
 #include "globals.h"
 #include "intpool.h"
-#include "newfile.h"
+#include "newFile.h"
 
 
 

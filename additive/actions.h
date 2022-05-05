@@ -14,6 +14,7 @@ void MainWindowon_pushButton_clicked();//struct MainWindow);
 void MainWindowon_numberOfHarmonicsLineEdit_textChanged(const char*text);//struct MainWindow, const char* arg1);
 void calculateSpectrogram();
 
+void openFile(char* path);
 
 
 #endif // MAINWINDOW_H

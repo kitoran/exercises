@@ -33,11 +33,11 @@ typedef struct continuousHarmonic {
 
 struct harmonic* maxesStbArray(double *data, int h, int w);
 struct harmonic** maxesLinearStbArray(double *data, int h, int w, int samplerate);
+void isolateMaxima(int w, double *transform, int h, double *data);
 
 void shiftandmul(double *src, int h, int w, double** dest, int *resH);
 void shiftandmulLinear(double *src, int h, int w, double** dest, int *resH);
 void multiplyFundamentalLinear(double *src, int h, int w, double** dest, int *resH, int harmonics, double treshold);
 void divideFundamentalLinear(double *src, int h, int w, double** dest, int *resH, int harmonics, double treshold);
-void isolateMaxima(int w, double *transform, int h, double *data);
 
 #endif // STFT_H

@@ -3,6 +3,8 @@
 #include <string.h>
 #include <X11/Xlib.h>
 #include "gui.h"
+#include "time.h"
+#include "loadImage.h"
 #include "gridlayout.h"
 #include "persistent.h"
 #include "color.h"
@@ -25,26 +27,52 @@ void numToPic (double x, double y,int * restrict rx, int * restrict ry) {
     *ry = -(y +ym - c)/c*size;
 }
 
-
-double maxDenom = 6;
+bool eisen= false;
+double maxDenom = 30;//1;//12;
 double sqrt2 = 1.414213563;
 void recalculatePicture() {
+
+
+    /* here, do your time-consuming job */
+    volatile bool condition = true;
     memset(data, 0, size*size*4);
+    double _Complex w = -1.0/2 + I*sqrt(3)/2;
+    double _Complex w2 = -1.0/2 - I*sqrt(3)/2;
+    clock_t begin = clock();
     for(double reNum = ceil(-maxDenom*sqrt2); reNum < floor(maxDenom*sqrt2); reNum++)
     for(double imNum = ceil(-maxDenom*sqrt2); imNum < floor(maxDenom*sqrt2); imNum++)
+//    for(double rimNum = ceil(-maxDenom*sqrt2); rimNum < floor(maxDenom*sqrt2); rimNum++)
     for(double reDen = ceil(-maxDenom); reDen < floor(maxDenom); reDen++)
     for(double imDen = ceil(-maxDenom); imDen < floor(maxDenom); imDen++)
+//    for(double rimDen = ceil(-maxDenom); rimDen < floor(maxDenom); rimDen++)
     {
-        if(reDen*reDen+imDen*imDen>maxDenom*maxDenom) {
+//        double imDen = 0;
+//        if(reDen*reDen+imDen*imDen>maxDenom*maxDenom) {
+//        if(reDen*imDen>maxDenom*maxDenom) {
+//            if(fabs(reDen) > maxDenom || fabs(imDen)>maxDenom|| fabs(rimDen)>maxDenom) {
+        //        if(reDen*reDen+imDen*imDen - reDen*imDen > maxDenom*maxDenom) {
+        if(reDen > maxDenom || imDen > maxDenom) {
             continue;
         }
-        double _Complex rel = (reNum+I*imNum)/(reDen+I*imDen);
+        double _Complex rel;
+        if(false)
+            rel = (reNum/reDen) +  w*(imNum/imDen);
+            //                double _Complex rel = (reNum/reDen) +  w*(imNum/imDen) + w2*(rimNum/rimDen);
+        else
+                rel = (reNum/reDen) +  I*(imNum/imDen);
+//      double _Complex rel = (reNum+I*imNum)/(reDen+I*imDen);
+//      double _Complex rel = (reNum+w*imNum)/(reDen+w*imDen);
         int x, y; numToPic(creal(rel), cimag(rel), &x, &y); y--;
         if(x >= 0 && x < size &&
             y >= 0 && y < size) {
             ((int*)data)[y*size+x] = 0xffffffff;
         }
     }
+
+
+    clock_t end = clock();
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    fprintf(stderr, "\n%lf secs\n", time_spent);
     int xp, yp;
     numToPic(0.618033988, 0, &xp, &yp); yp--;
     if(xp+1 < size && xp - 1 >= 0 &&
@@ -59,13 +87,14 @@ void recalculatePicture() {
         *((int*)(data+ (yp*600+xp)*4)) = 0xffff00ff;
     }
 }
+XImage *res;
 enum { itersMode, selectMode, zoominMode} mode;
 void loop(Painter* pa, bool* consume) {
 
     setCurrentGridPos(0,0);
 //    bool res = false;
     int e = maxDenom;
-    bool recalc = guiNumberEdit(pa, 5, &e, consume);
+    bool recalc = /*persistent*/guiNumberEdit(pa, 5, &e, consume);
 
     setCurrentGridPos(0,1);
     if(resourseToolButton(pa, "minus.png", consume)) {
@@ -91,6 +120,7 @@ void loop(Painter* pa, bool* consume) {
     if(resourseToolButton(pa, "zoomin.png", consume)) {
         mode = zoominMode;
 //        res = true;
+        eisen = true;
     }
 //    setCurrentGridPos(0,6);
 //    if(resourseToolButton(pa, "zoomout.png", consume)) {
@@ -105,17 +135,23 @@ void loop(Painter* pa, bool* consume) {
         recalc/* = res */= true;
     }
 
+    gridNextColumn();
+    if(resourseToolButton(pa, "save.png", consume)) {
+        saveImageSomewhereNewWrongChannelsZT(res, "gauss");
+    }
+
+
     if(recalc) {
         recalculatePicture();
     }
 //    return res;
 }
-int main()
+int main(int argc)
 {
     guiStartDrawing();
     guiSetSize(rootWindow, size, size+30);
     recalculatePicture();
-    XImage *res = XCreateImage(xdisplay, DefaultVisual(xdisplay, DefaultScreen(xdisplay)), 24,
+    res = XCreateImage(xdisplay, DefaultVisual(xdisplay, DefaultScreen(xdisplay)), 24,
                  ZPixmap, 0, data, size, size, 32,
                          size*4);
     GC gc = XCreateGC(xdisplay, rootWindow, 0, NULL);

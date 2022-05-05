@@ -1,4 +1,4 @@
-#include "parse.h"
+﻿#include "parse.h"
 #include <stdio.h>
 #include <ctype.h>
 #include <memory.h>
@@ -170,7 +170,8 @@ ParseRes<Prim> prim(String* thing) {
         res.parsed = p;
         return res;
     }
-    ERROR("unexpected %c, expected primary expression", thing->content[0])
+    ERROR("unexpected %c, expected primary expression",
+          thing->content[0])
 }
 
 ParseRes<Application> application(String* thing) {

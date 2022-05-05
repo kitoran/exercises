@@ -1,4 +1,5 @@
-#include <stdio.h>
+﻿#include <stdio.h>
+#include <signal.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -77,10 +78,26 @@ String readFile(char *filename)
     return res;
 }
 typedef int (*Func)(void);
+void mysighandler(int)
+{
+#define pascalstring(a) a, sizeof(a)-1
+    write(0, pascalstring("segfault\n"));
+    abort();
+}
 int main(int argc, char *argv[])
 {
-    const char* s = "hello %d sailor\n";
-    int g = strlen(s);
+    int r = 0xdeadbead;
+
+    struct sigaction sigIntHandler;
+
+    sigIntHandler.sa_handler = mysighandler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT, &sigIntHandler, NULL);
+    sigaction(SIGSEGV, &sigIntHandler, NULL);
+
+
+
     Assembler a = allocateSomeExecutablePages();
 
 //    Label label = a.newLabel();
@@ -105,6 +122,7 @@ int main(int argc, char *argv[])
 //    a.ret();
 
     ::String thing = readFile("program");
+    printf("\"%.*s\"\n", thing.size, thing.content);
     ParseRes<AddExp> ast = addExp(&thing);
     if(ast.type == error) {
         printf("%.*s", ast.error.size, ast.error.content);
