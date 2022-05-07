@@ -130,7 +130,7 @@ struct Assembler
         dump();
     }
     void pushRbpPlusOffset(int offset) {
-        // a. k. a. push stack variable
+        // a. k. a. push stack argument
         mem[position] = 0xff;
         mem[position+1] = 0x75;
         mem[position+2] = offset;

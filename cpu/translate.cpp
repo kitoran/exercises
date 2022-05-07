@@ -33,19 +33,19 @@ void translatePrim(Assembler* a, Prim *exp) {
 }
 
 void translateApp(Assembler* a, Application *exp) {
-    translatePrim(a, &exp->parameter);
     bool actuallyApplication = exp->applicand != 0;
+    translatePrim(a, &exp->parameter);
 //    int arity = translatePrim(a, exp->parameter);
-//    int paramNumber = 0;
+    int paramNumber = 0;
     while(exp->applicand) {
         translatePrim(a, &exp->applicand->parameter);
-//        paramNumber++;
+        paramNumber++;
         exp = exp->applicand;
     }
     if(actuallyApplication) {
         a->pop(rax);
         a->call(rax);
-        a->add(rsp, int8_t(0x8));
+        a->add(rsp, int8_t(0x8*paramNumber));
 //        a->pop(rdx);
         a->push(rax);
     }

@@ -114,12 +114,17 @@ ParseRes<Prim> prim(String* thing) {
             ERROR("unexpected %c, expected '.'", thing->content[0])
         }
         thing->advance(1);
+
+//        struct Lambda lam;
+        p.lam.vars = varList;
+        // buffer overflow
+//        lambdaStack[lambdasNum] = &p.lam;
+//        lambdasNum++;
         ParseRes<AddExp> ae = addExp(thing);
         PROMOTE_ERROR(ae)
-        struct Lambda lam;
-        lam.vars = varList;
-        lam.exp = new AddExp(ae.parsed);
-        p.lam = lam;
+//        lambdasNum--;
+        p.lam.exp = new AddExp(ae.parsed);
+//        p.lam = lam;
         res.type = ok;
         res.parsed = p;
         for(int i = 0; i < arity; i++) {
@@ -128,16 +133,21 @@ ParseRes<Prim> prim(String* thing) {
         return res;
     }
     if(sym == '(') {
-        p.type = AddExpParen;
         thing->advance(1);
-        ParseRes<AddExp> ae = addExp(thing);
-        PROMOTE_ERROR(ae)
-        p.addExp = new AddExp(ae.parsed);
         skipWhitespase(thing);
+//        if(thing->content[0] == '\\') {
+//            // эта ветка просто чтобы дерево получше выглядело
+//            ParseRes<Prim> lam = prim(thing);
+//            PROMOTE_ERROR(lam)
+//        } else {
+            p.type = AddExpParen;
+            ParseRes<AddExp> ae = addExp(thing);
+            PROMOTE_ERROR(ae)
+            p.addExp = new AddExp(ae.parsed);
+            skipWhitespase(thing);
+//        }
         UNEXPECTED_END
-        if(thing->content[0] != ')') {
-            ERROR("unexpected %c, expected ')'", thing->content[0])
-        }
+        assert(thing->content[0] == ')');
         thing->advance(1);
         res.type = ok;
         res.parsed = p;
@@ -148,7 +158,17 @@ ParseRes<Prim> prim(String* thing) {
         ParseRes<String> varName = var(thing);
         PROMOTE_ERROR(varName)
         String name = varName.parsed;
+        //        int index = findVarInCurrentLambda(name);
         int index = findVar(name);
+//        int descendLambda = lambdasNum;
+//        while(index == (-1) && descendLambda > 0) {
+//            etaExpandLambda(lambdaStack[descendLambda-1]);
+//            index = findVarInLambda(name);
+//        }
+
+
+
+
         if(index == (-1)) {
             ERROR("free variable %.*s", name.size,
                   name.content)
@@ -181,11 +201,7 @@ ParseRes<Application> application(String* thing) {
     app.applicand = 0;
     while(true) {
         ParseRes<Prim> left = prim(thing);
-        if(left.type == error) {
-            res.type = error;
-            res.error = left.error;
-            return res;
-        }
+        PROMOTE_ERROR(left)
         app.parameter = left.parsed;
         skipWhitespase(thing);
         bool end;

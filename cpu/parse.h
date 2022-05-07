@@ -1,4 +1,4 @@
-#ifndef PARSE_H
+﻿#ifndef PARSE_H
 #define PARSE_H
 #include <assert.h>
 
@@ -91,7 +91,7 @@ struct ParseRes {
 };
 
 ParseRes<AddExp> addExp(String* thing);
-inline struct Lambda* lambdas[200];
+inline struct Application* lambdaStack[200];
 inline int lambdasNum = 0;
 
 #endif // PARSE_H
