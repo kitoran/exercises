@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
     printf("\"%.*s\"\n", thing.size, thing.content);
     ParseRes<AddExp> ast = addExp(&thing);
     if(ast.type == error) {
-        printf("%.*s", ast.error.size, ast.error.content);
+        printf("%.*s\n", ast.error.size, ast.error.content);
         return 1;
     }
     print(ast.parsed);

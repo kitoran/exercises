@@ -6,8 +6,8 @@
 
 const int em = 255;
 char errorMessage[em];
-String boundVars[200];
-int boundVarsNum = 0;
+//String boundVars[200];
+//int boundVarsNum = 0;
 
 
 #define ERROR(...) res.type = error; \
@@ -27,22 +27,28 @@ int boundVarsNum = 0;
     return res; \
 }
 
-void pushVar(const String& var) {
-    boundVars[boundVarsNum] = var;
-    boundVarsNum++;
-}
-void popVar() {
-    boundVarsNum--;
-}
-int findVar(const String& var) {
-    int r = boundVarsNum-1;
-    while(r >= 0) {
-        if(var.size == boundVars[r].size &&
-                !memcmp(var.content, boundVars[r].content, var.size)) {
-            return boundVarsNum-1 - r;
-        }
-        r--;
+//void pushVar(const String& var) {
+//    boundVars[boundVarsNum] = var;
+//    boundVarsNum++;
+//}
+//void popVar() {
+//    boundVarsNum--;
+//}
+int findVarInCurrentLambda(const String& var) {
+    assert(lambdasNum >= 0);
+    if(lambdasNum == 0) {
+        return -1;
     }
+    VarList* t = &lambdaStack[lambdasNum-1]->vars;
+    int r = 0;
+    do {
+        if(var.size == t->var.size &&
+                !memcmp(var.content, t->var.content, var.size)) {
+            return r;
+        }
+        t = t->rest;
+        r++;
+    } while(t != 0);
     return -1;
 }
 ParseRes<String> var (String* thing) {
@@ -93,7 +99,7 @@ ParseRes<Prim> prim(String* thing) {
 
             skipWhitespase(thing);
             varList.var = varName.parsed;
-            pushVar(varList.var);
+//            pushVar(varList.var);
             varList.rest = 0;
         }
         UNEXPECTED_END
@@ -104,7 +110,7 @@ ParseRes<Prim> prim(String* thing) {
             end->rest = new VarList;
             end = end->rest;
             end->var = varName.parsed;
-            pushVar(end->var);
+//            pushVar(end->var);
             end->rest = 0;
             skipWhitespase(thing);
 
@@ -118,18 +124,18 @@ ParseRes<Prim> prim(String* thing) {
 //        struct Lambda lam;
         p.lam.vars = varList;
         // buffer overflow
-//        lambdaStack[lambdasNum] = &p.lam;
-//        lambdasNum++;
+        lambdaStack[lambdasNum] = &p.lam;//&p.lam;
+        lambdasNum++;
         ParseRes<AddExp> ae = addExp(thing);
         PROMOTE_ERROR(ae)
-//        lambdasNum--;
+        lambdasNum--;
         p.lam.exp = new AddExp(ae.parsed);
 //        p.lam = lam;
         res.type = ok;
         res.parsed = p;
-        for(int i = 0; i < arity; i++) {
-            popVar();
-        }
+//        for(int i = 0; i < arity; i++) {
+//            popVar();
+//        }
         return res;
     }
     if(sym == '(') {
@@ -158,19 +164,11 @@ ParseRes<Prim> prim(String* thing) {
         ParseRes<String> varName = var(thing);
         PROMOTE_ERROR(varName)
         String name = varName.parsed;
-        //        int index = findVarInCurrentLambda(name);
-        int index = findVar(name);
-//        int descendLambda = lambdasNum;
-//        while(index == (-1) && descendLambda > 0) {
-//            etaExpandLambda(lambdaStack[descendLambda-1]);
-//            index = findVarInLambda(name);
-//        }
 
-
-
-
-        if(index == (-1)) {
-            ERROR("free variable %.*s", name.size,
+        int index = findVarInCurrentLambda(name);
+        if(index == -1) {
+            ERROR("not a supercombinator,"
+                  "free variable %.*s", name.size,
                   name.content)
         }
         p.var = Var{ .name = name, .index = index };

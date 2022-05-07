@@ -13,7 +13,8 @@ DEFINES += ASMJIT_STATIC
 SOURCES += main.cpp \
     parse.cpp \
     translate.cpp \
-    assembler.cpp
+    assembler.cpp \
+    supercombine.cpp
 
 HEADERS += \
     parse.h \

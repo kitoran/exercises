@@ -100,7 +100,7 @@ void translate(Assembler *a, AddExp *exp)
     a->ret();
 
     while (!queue.empty()) {
-        QueuedLambda ql = queue.back();
+        QueuedLambda ql = queue.front();
         queue.pop();
         a->bind(ql.lab);
 

@@ -34,7 +34,7 @@ struct Assembler
     struct LabelLinkListNode
     {
         LabelLinkListNode* tail = 0;
-        bool relative;
+//        bool relative;
         int place = 0;
     };
     struct LabelTableEntry {
@@ -50,16 +50,16 @@ struct Assembler
         return res;
     }
 
-    void call(Label l) {
-        mem[position] = 0xe8;
-        LabelLinkListNode* head = new LabelLinkListNode;
-        head->place = position+1;
-        head->relative = true;
-        head->tail = labelTable[l.id].links;
-        labelTable[l.id].links = head;
-        position+=5;
-        dump();
-    }
+//    void call(Label l) {
+//        mem[position] = 0xe8;
+//        LabelLinkListNode* head = new LabelLinkListNode;
+//        head->place = position+1;
+//        head->relative = true;
+//        head->tail = labelTable[l.id].links;
+//        labelTable[l.id].links = head;
+//        position+=5;
+//        dump();
+//    }
     void call(register64 add) {
         mem[position] = 0xff;
         mem[position+1] = (0b11 << 6/*mod*/) |
@@ -76,18 +76,18 @@ struct Assembler
     void bind(Label l) {
         LabelLinkListNode* llln = labelTable[l.id].links;
         while (llln) {
-            if(llln->relative) {
-                int32_t theNumber;
-                theNumber = position - (llln->place + 4); // +4 is becuse it needs to be relative to the next instruction
-                *(mem + llln->place) = theNumber & 0xff;
-                *(mem + llln->place+1) = (theNumber>>8) & 0xff;
-                *(mem + llln->place+2) = (theNumber>>16) & 0xff;
-                *(mem + llln->place+3) = (theNumber>>24) & 0xff;
-            } else {
+//            if(llln->relative) {
+//                int32_t theNumber;
+//                theNumber = position - (llln->place + 4); // +4 is becuse it needs to be relative to the next instruction
+//                *(mem + llln->place) = theNumber & 0xff;
+//                *(mem + llln->place+1) = (theNumber>>8) & 0xff;
+//                *(mem + llln->place+2) = (theNumber>>16) & 0xff;
+//                *(mem + llln->place+3) = (theNumber>>24) & 0xff;
+//            } else {
                 int64_t theNumber;
                 theNumber = (int64_t)(mem + position);
                 *((int64_t*)(mem + llln->place)) = theNumber;
-            }
+//            }
             llln = llln->tail;
         }
         dump();
@@ -112,7 +112,7 @@ struct Assembler
 
         LabelLinkListNode* head = new LabelLinkListNode;
         head->place = position+2;
-        head->relative = false;
+//        head->relative = false;
         head->tail = labelTable[l.id].links;
         labelTable[l.id].links = head;
         position += 10;

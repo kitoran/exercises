@@ -91,7 +91,7 @@ struct ParseRes {
 };
 
 ParseRes<AddExp> addExp(String* thing);
-inline struct Application* lambdaStack[200];
+inline struct Lambda* lambdaStack[200];
 inline int lambdasNum = 0;
 
 #endif // PARSE_H
