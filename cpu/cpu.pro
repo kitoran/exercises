@@ -3,7 +3,7 @@ QT -= gui core
 CONFIG += c++17 console
 CONFIG -= app_bundle
 
-DEFINES += ASMJIT_STATIC
+#DEFINES += ASMJIT_STATIC
 
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -24,4 +24,4 @@ HEADERS += \
 DISTFILES += \
 
 LIBS += -lrt -lexplain
-QMAKE_CXXFLAGS += -std=gnu++17
+QMAKE_CXXFLAGS += -std=gnu++17 # -O0

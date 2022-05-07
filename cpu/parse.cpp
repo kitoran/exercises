@@ -55,11 +55,7 @@ ParseRes<String> var (String* thing) {
     ParseRes<String> res;
     UNEXPECTED_END
     if(!isalpha(thing->content[0])) {
-        res.type = error;
-        String ems;
-        ems.size = snprintf(errorMessage, em, "unexpected %c, expected alphaetic character", thing->content[0]);
-        res.error = ems;
-        return res;
+        ERROR("unexpected %c, expected alphaetic character", thing->content[0])
     }
     String name; name.content = thing->content;
     int size = 0;
@@ -226,11 +222,7 @@ ParseRes<Application> application(String* thing) {
 ParseRes<MulExp> mulExp(String* thing) {
     ParseRes<MulExp> res;
     ParseRes<Application> left = application(thing);
-    if(left.type == error) {
-        res.type = error;
-        res.error = left.error;
-        return res;
-    }
+    PROMOTE_ERROR(left)
     MulExp mulexp;
     mulexp.left = left.parsed;
     mulexp.r = 0;
@@ -267,11 +259,7 @@ ParseRes<MulExp> mulExp(String* thing) {
 ParseRes<AddExp> addExp(String* thing) {
     ParseRes<AddExp> res;
     ParseRes<MulExp> left = mulExp(thing);
-    if(left.type == error) {
-        res.type = error;
-        res.error = left.error;
-        return res;
-    }
+    PROMOTE_ERROR(left)
     AddExp addexp;
     addexp.left = left.parsed;
     addexp.r = 0;

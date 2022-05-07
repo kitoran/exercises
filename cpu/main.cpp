@@ -124,6 +124,7 @@ int main(int argc, char *argv[])
     ::String thing = readFile("program");
     printf("\"%.*s\"\n", thing.size, thing.content);
     ParseRes<AddExp> ast = addExp(&thing);
+//    String errorMe = ast.error;
     if(ast.type == error) {
         printf("%.*s\n", ast.error.size, ast.error.content);
         return 1;
