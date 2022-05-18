@@ -8,6 +8,10 @@
 #include "assembler.h"
 #include "translate.h"
 #include "parse.h"
+
+
+#include <readline/readline.h>
+
 void print(const AddExp& ae);
 void print(const Prim& p) {
     if(p.type == Lambda) {
@@ -84,50 +88,47 @@ void mysighandler(int)
     write(0, pascalstring("segfault\n"));
     abort();
 }
-int main(int argc, char *argv[])
+void printHelp() {
+    printf("Hello, this is a compiler.\n"
+           "start with -i for repl "
+           "or with a file as an argument\n"
+           "(there is also a secret option -d)\n");
+}
+void repl(Assembler a)
 {
-    int r = 0xdeadbead;
+    printf("Welcome to the compiler of untyped supercombinators\n");
+    char* line = readline("> ");
+    while(line) {
+        size_t size = strlen(line);
+        assert(size < 1<<16);
+        String exp = {size, line};
+        ParseRes<AddExp> ast = addExp(&exp);
 
-    struct sigaction sigIntHandler;
-
-    sigIntHandler.sa_handler = mysighandler;
-    sigemptyset(&sigIntHandler.sa_mask);
-    sigIntHandler.sa_flags = 0;
-    sigaction(SIGINT, &sigIntHandler, NULL);
-    sigaction(SIGSEGV, &sigIntHandler, NULL);
-
-
-
-    Assembler a = allocateSomeExecutablePages();
-
-//    Label label = a.newLabel();
-
-//    a.call(label);
-//    a.ret();
-//    a.bind(label);
-//    a.mov(rdx, g);
-//    a.mov(rsi, (int64_t)s);
-//    a.mov(rdi, 0);
-//    a.mov(rax, 1);
-//    a.syscall();
-
-
-//    a.mov(rdi, (int64_t)s);
-//    a.mov(rsi, 1337);
-//    a.mov(rax, (int64_t)(printf));
-//    a.call(rax);
-
-
-
-//    a.ret();
-
-    ::String thing = readFile("program");
+        if(ast.type == error) {
+            printf("%.*s\n", ast.error.size, ast.error.content);
+        } else {
+            translate(&a, &ast.parsed);
+            Func fn;
+            fn = (Func)(a.mem);
+            int result = fn();                      // Execute the generated code.
+            printf("result: %d\n", result);                 // Print the resulting "1".
+        }
+        free(line);
+        line = readline("> ");
+    }
+}
+void compileAndRun(Assembler a, char* path) {
+    String thing = readFile(path);
+    if(thing.content == NULL) {
+        printf("path not valid or file doesn't exist\n");
+        return;
+    }
     printf("\"%.*s\"\n", thing.size, thing.content);
     ParseRes<AddExp> ast = addExp(&thing);
 //    String errorMe = ast.error;
     if(ast.type == error) {
         printf("%.*s\n", ast.error.size, ast.error.content);
-        return 1;
+        return;
     }
     print(ast.parsed);
     printf("\n\n\n");
@@ -136,6 +137,32 @@ int main(int argc, char *argv[])
     fn = (Func)(a.mem);
     int result = fn();                      // Execute the generated code.
     printf("result: %d\n", result);                 // Print the resulting "1".
+}
+int main(int argc, char *argv[])
+{
+    struct sigaction sigIntHandler;
+    sigIntHandler.sa_handler = mysighandler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT, &sigIntHandler, NULL);
+    sigaction(SIGSEGV, &sigIntHandler, NULL);
 
-    return 0;
+    Assembler a = allocateSomeExecutablePages();
+
+    if(argc == 2 && !memcmp(argv[1], "-i", strlen(argv[1]))) {
+        repl(a);
+        return 0;
+    }
+    if(argc == 2 && argv[1][0] != '-') {
+        compileAndRun(a, argv[1]);
+        return 0;
+    }
+    if(argc == 2 && !memcmp(argv[1], "-d", strlen(argv[1]))) {
+        compileAndRun(a, "program");
+        repl(a);
+        return 0;
+    }
+
+    printHelp();
+    return 1;
 }

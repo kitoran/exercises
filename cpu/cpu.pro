@@ -14,7 +14,8 @@ SOURCES += main.cpp \
     parse.cpp \
     translate.cpp \
     assembler.cpp \
-    supercombine.cpp
+    supercombine.cpp \
+    elf.c
 
 HEADERS += \
     parse.h \
@@ -23,5 +24,5 @@ HEADERS += \
 
 DISTFILES += \
 
-LIBS += -lrt -lexplain
+LIBS += -lrt -lexplain -lreadline
 QMAKE_CXXFLAGS += -std=gnu++17 # -O0
