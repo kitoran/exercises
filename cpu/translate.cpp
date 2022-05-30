@@ -1,8 +1,24 @@
 ﻿#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
 #include "translate.h"
 #include "parse.h"
 #include "assembler.h"
 #include <queue>
+
+int extractItoa(char* loc) {
+    char path[4096] = {0};
+    strcat(path, MY_PATH);
+    strcat(path, "/exe");
+    int exe = open(path, O_RDONLY);
+    lseek(exe, 0x00000000004000f3, SEEK_SET);
+    int len = 0x40012b - 0x4000f3;
+    read(exe, loc, len);
+    return len;
+}
 
 struct QueuedLambda {
     struct Lambda* lam;
@@ -83,22 +99,50 @@ void translateAdd(Assembler* a, AddExp *exp) {
         exp = &exp->r->right;
     }
 }
-
+extern int itoap;
 void translate(Assembler *a, AddExp *exp)
 {
-    const char* s = "%d\n";
-    translateAdd(a, exp);
 
-    a->mov(rdi, (int64_t)s);
-    a->pop(rsi);
-    a->mov(rax, 0);
-    a->mov(rbx, (int64_t)(printf));
+    translateAdd(a, exp);
+    a->push(rax);
+
+    char* strin = "Hello, world!\n";
+    Label string = a->newLabel();
+
+
+    Label itoa = a->newLabel();
+    a->mov(rdi, string);
+    a->pop(rax);
+
+    a->mov(rbx, itoa);
     a->call(rbx);
 
-
     a->mov(rax, 1);
-    a->ret();
+    a->mov(rdi, 1);
+    a->mov(rsi, string);
+    a->mov(rdx, strlen(strin));
+    a->syscall();
 
+//    a->mo1v(rdi, (int64_t)s);
+//    a->pop(rsi);
+//    a->mov(rax, 0);
+//    a->mov(rbx, (int64_t)(printf));
+//    a->call(rbx);
+
+
+
+#define EXIT 60
+    a->mov(rax, EXIT);
+//    a->pop(rdi);
+    a->mov(rdi, 0);
+    a->syscall();
+
+    a->bind(string);
+    a->position+=20;//bytes(strin, strlen(strin));
+
+    a->bind(itoa);
+    itoap = a->position;
+    a->position += extractItoa(a->mem+a->position);
     while (!queue.empty()) {
         QueuedLambda ql = queue.front();
         queue.pop();
@@ -115,7 +159,6 @@ void translate(Assembler *a, AddExp *exp)
         a->ret();
     }
 }
-
 
 //void translateLambda (asmjit::x86::Assembler* a, Lambda* lambda) {
 

@@ -7,8 +7,8 @@ enum register64 {
     rdx,
     rbx,
 
-    rsp,
-    rbp,
+    rsp, noIndex = rsp,
+    rbp, noBase = rbp,
 
     rsi,
     rdi,
@@ -17,6 +17,7 @@ enum register64 {
 enum : char {
     rex = 0x40,
     rexw = 0x08,
+    rew = rex | rexw,
     rexr = 0x01,
 };
 
@@ -36,9 +37,11 @@ struct Assembler
         LabelLinkListNode* tail = 0;
 //        bool relative;
         int place = 0;
+        int size = 0;
     };
     struct LabelTableEntry {
-            LabelLinkListNode* links = 0;
+        int position;
+        LabelLinkListNode* links = 0;
     } labelTable[255] = {0};
 
 
@@ -60,6 +63,7 @@ struct Assembler
 //        position+=5;
 //        dump();
 //    }
+    void bytes(char* data, int size);
     void call(register64 add) {
         mem[position] = 0xff;
         mem[position+1] = (0b11 << 6/*mod*/) |
@@ -75,6 +79,9 @@ struct Assembler
     }
     void bind(Label l) {
         LabelLinkListNode* llln = labelTable[l.id].links;
+        int64_t theNumber;
+        theNumber = (int64_t)(mem + position);
+        labelTable[l.id].position = theNumber;
         while (llln) {
 //            if(llln->relative) {
 //                int32_t theNumber;
@@ -84,10 +91,9 @@ struct Assembler
 //                *(mem + llln->place+2) = (theNumber>>16) & 0xff;
 //                *(mem + llln->place+3) = (theNumber>>24) & 0xff;
 //            } else {
-                int64_t theNumber;
-                theNumber = (int64_t)(mem + position);
                 *((int64_t*)(mem + llln->place)) = theNumber;
 //            }
+            // удалить весь список?
             llln = llln->tail;
         }
         dump();
@@ -107,15 +113,38 @@ struct Assembler
         dump();
     }
     void mov(register64 dest, Label l) {
+//        Надо еще разрешать уже связанные лейблы
         mem[position] = 0x48;
         mem[position+1] = 0xb8 + dest;
-
-        LabelLinkListNode* head = new LabelLinkListNode;
-        head->place = position+2;
-//        head->relative = false;
-        head->tail = labelTable[l.id].links;
-        labelTable[l.id].links = head;
+        if(labelTable[l.id].position == 0) {
+            LabelLinkListNode* head = new LabelLinkListNode;
+            head->place = position+2;
+    //        head->relative = false;
+            head->tail = labelTable[l.id].links;
+            labelTable[l.id].links = head;
+        } else {
+            *((int64_t*)(mem + position+2)) = labelTable[l.id].position;
+        }
         position += 10;
+        dump();
+    }
+    void lea(register64 dest, Label l) {
+        mem[position] = rex | rexw;
+        mem[position+1] = 0x8d;
+        mem[position+2] = dest << 3 | 0x100;
+        mem[position+3] = 0/*scale=1*/ << 6 |
+                        noIndex << 3 |
+                        noBase;
+        if(labelTable[l.id].position == 0) {
+            LabelLinkListNode* head = new LabelLinkListNode;
+            head->place = position+4;
+    //        head->relative = false;
+            head->tail = labelTable[l.id].links;
+            labelTable[l.id].links = head;
+        } else {
+            *((int64_t*)(mem + position+4)) = labelTable[l.id].position;;
+        }
+        position += 8;
         dump();
     }
     void syscall() {
@@ -174,6 +203,30 @@ struct Assembler
         mem[position+2] = (0b11 << 6/*mod*/) | (0x07 << 3) | operand;
 
         position+=3;
+        dump();
+    }
+    void div(register64 operand) {
+        mem[position] = rex | rexw;
+        mem[position+1] = 0xf7;
+        mem[position+2] = (0b11 << 6/*mod*/) | (0x06 << 3) | operand;
+
+        position+=3;
+        dump();
+    }
+    void inc(register64 operand) {
+        mem[position] = rew;
+        mem[position+1] = 0xff;
+        mem[position+2] = (0b11 << 6/*mod*/) | (0x00 << 3) | operand;
+
+        position+=3;
+        dump();
+    }
+    void cmp(register64 operand1, int8_t operand2) {
+        mem[position] = rew;
+        mem[position+1] = 0x83;
+        mem[position+2] = (0b11 << 6/*mod*/) | (0x7 << 3) | operand1;
+        mem[position+3] = operand2;
+        position+=4;
         dump();
     }
     void cqo() {

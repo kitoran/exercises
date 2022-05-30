@@ -10,12 +10,14 @@ CONFIG -= app_bundle
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+DEFINES += MY_PATH=\\\"$$PWD\\\"
 SOURCES += main.cpp \
     parse.cpp \
     translate.cpp \
     assembler.cpp \
     supercombine.cpp \
-    elf.c
+    elf.c \
+    itoa.S.cpp
 
 HEADERS += \
     parse.h \
@@ -23,6 +25,8 @@ HEADERS += \
     assembler.h
 
 DISTFILES += \
+    itoa.S \
+    todo.txt
 
 LIBS += -lrt -lexplain -lreadline
 QMAKE_CXXFLAGS += -std=gnu++17 # -O0

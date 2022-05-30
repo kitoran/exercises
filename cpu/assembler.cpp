@@ -6,6 +6,8 @@
 #include "assembler.h"
 #include <libexplain/open.h>
 
+#include <string.h>
+
 Assembler allocateSomeExecutablePages()
 {
     const int initialSize = 4096*10;
@@ -25,4 +27,10 @@ void Assembler::dump() {
     lseek(file, 0, SEEK_SET);
     ftruncate(file, 0);
     write(file, mem, position);
+}
+
+void Assembler::bytes(char *data, int size) {
+    memcpy(mem+position, data, size);
+    position += size;
+    dump();
 }

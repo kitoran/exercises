@@ -82,10 +82,10 @@ String readFile(char *filename)
     return res;
 }
 typedef int (*Func)(void);
-void mysighandler(int)
+void mysighandler(int s)
 {
 #define pascalstring(a) a, sizeof(a)-1
-    write(0, pascalstring("segfault\n"));
+    write(1, sys_siglist[s], strlen(sys_siglist[s]));
     abort();
 }
 void printHelp() {
@@ -117,6 +117,7 @@ void repl(Assembler a)
         line = readline("> ");
     }
 }
+int itoap;
 void compileAndRun(Assembler a, char* path) {
     String thing = readFile(path);
     if(thing.content == NULL) {
@@ -146,6 +147,7 @@ int main(int argc, char *argv[])
     sigIntHandler.sa_flags = 0;
     sigaction(SIGINT, &sigIntHandler, NULL);
     sigaction(SIGSEGV, &sigIntHandler, NULL);
+    sigaction(SIGFPE, &sigIntHandler, NULL);
 
     Assembler a = allocateSomeExecutablePages();
 
