@@ -5,7 +5,7 @@ _start:
 
 
 
-  mov $0xf0ffffffffffffff, %rax
+  mov $6453, %rax
   lea _output, %rdi
   call rax2uint
 
@@ -65,8 +65,12 @@ rax2uint:
   mov $10, %rbx # base of the decimal system
   mov $0, %rcx  # number of digits generated
 
+  lea nxdiv, %rsi
+  lea neg, %r8
   cmp $0, %rax
-  js neg
+  cmovs %r8, %rsi
+  jmp *%rsi
+#  js neg
 
 nxdiv:
   mov $0, %rdx  # RAX extended to (RDX,RAX)
