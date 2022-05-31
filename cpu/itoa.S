@@ -2,15 +2,10 @@
 .global _start
 
 _start:
-  div %rbx    # divide by the number-base
-  idiv %rbx    # divide by the number-base
-  divl (%rbx)    # divide by the number-base
-  idivl (%rbx)    # divide by the number-base
-  
 
 
 
-  mov $-2345, %rax
+  mov $0xf0ffffffffffffff, %rax
   lea _output, %rdi
   call rax2uint
 
@@ -70,15 +65,21 @@ rax2uint:
   mov $10, %rbx # base of the decimal system
   mov $0, %rcx  # number of digits generated
 
-#  cmp
+  cmp $0, %rax
+  js neg
 
 nxdiv:
   mov $0, %rdx  # RAX extended to (RDX,RAX)
   div %rbx    # divide by the number-base
   push  %rdx    # save remainder on the stack
   inc %rcx    # and count this remainder
+  
+  lea nxdgt, %rsi
+  lea nxdiv, %r8
   cmp $0, %rax  # was the quotient zero?
-  jne nxdiv   # no, do another division
+  cmovne %r8, %rsi
+  jmp *%rsi
+#  jne nxdiv   # no, do another division
 nxdgt:
   pop %rdx    # else pop recent remainder
   add $'0', %dl # and convert to a numeral
@@ -92,9 +93,13 @@ nxdgt:
   pop %rbx
   pop %rax
   ret     # and return to the caller
-
-  .global rax2uint  # make entry-point visible
-  .end      # nothing else to assemble
+neg:
+  movb $'-', (%rdi)
+  inc %rdi
+  imul $-1, %rax, %rax
+  jmp nxdiv
+.global rax2uint  # make entry-point visible
+.end      # nothing else to assemble
 
 
 

@@ -37,7 +37,7 @@ struct Assembler
         LabelLinkListNode* tail = 0;
 //        bool relative;
         int place = 0;
-        int size = 0;
+//        int size = 0;
     };
     struct LabelTableEntry {
         int position;
