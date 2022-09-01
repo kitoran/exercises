@@ -89,20 +89,20 @@ int main() {
                       framesPerBuffer) * framesPerBuffer;
     buffer = (int16_t *) malloc(sizeof(int16_t)*actualSize);
     int index = 0;
-    while(index < actualSize) {
-        alsaRecordBlock(buffer+index, framesPerBuffer);
-        index += framesPerBuffer;
-    }
-    index = 0;
+//    while(index < actualSize) {
+//        alsaRecordBlock(buffer+index, framesPerBuffer);
+//        index += framesPerBuffer;
+//    }
+//    index = 0;
 
-    while(index < actualSize) {
-        alsaPlayBlock(buffer+index, framesPerBuffer);
-        index += framesPerBuffer;
-    }
-    exit(0);
+//    while(index < actualSize) {
+//        alsaPlayBlock(buffer+index, framesPerBuffer);
+//        index += framesPerBuffer;
+//    }
+//    exit(0);
 
 
-    const double freq = 440;
+    const double freq = 15000;
     const double framesPerOsc = alsaSampleRate/freq;
     fprintf(stderr, "%lf frames int one osc\n", framesPerOsc);
     int* indexTable = (int*)malloc(sizeof(int)*framesPerOsc);
@@ -110,20 +110,20 @@ int main() {
     int16_t* valueTable = (int16_t*)malloc(sizeof(int16_t)*framesPerOsc);
     for(int i = 0; i < (int)framesPerOsc; i++) {
         indexTable[i] = i;
-        valueTable[i] = 0;
+        if(i < framesPerOsc/2) valueTable[i] = i*200; else valueTable[i] = 0;
     }
 //    for(int n = 1; n < 600; n+=2) {
 //        float f = 0;//(float)rand()/(float)(RAND_MAX/2.0/M_PI);
-        for(int i = 0; i < (int)framesPerOsc; i++) {
+//        for(int i = 0; i < (int)framesPerOsc; i++) {
 
-//            valueTable[i] += cos(freq*2*M_PI*(n)/sampleRate*i + f)*400.0/n;
-////            fprintf(stderr, "i=%d\n", i);
-//            valueTable[i] += freq/sampleRate*i*i*20;
-            double pv = sin(freq*2*M_PI/alsaSampleRate*i);
-            double sqr = copysign(exp(pv)-1, pv);
-            valueTable[i] += sqr*400.0;
+////            valueTable[i] += cos(freq*2*M_PI*(n)/sampleRate*i + f)*400.0/n;
+//////            fprintf(stderr, "i=%d\n", i);
+////            valueTable[i] += freq/sampleRate*i*i*20;
+//            double pv = sin(freq*2*M_PI/alsaSampleRate*i);
+//            double sqr = copysign(exp(pv)-1, pv);
+//            valueTable[i] += sqr*400.0;
 
-        }
+//        }
 //        for(int i = (int)framesPerOsc/2; i < (int)framesPerOsc; i++) {
 
 //            valueTable[i] += valueTable[(int)framesPerOsc/2-1] - freq/sampleRate*i*i*20;
@@ -148,7 +148,7 @@ int main() {
 //    long long int totalFrames = loops * framesPerPeriod;
     int frameNumber = 0;
     double phase = 0;
-    double frequency = 50;
+    double frequency = 440;
     long long int sample = 0;
 //    struct timeval timecheck;
     subscribe();
@@ -177,7 +177,7 @@ int main() {
         int last;
         for(int j = 0; j < framesPerPeriod; j++, frameNumber++) {
 //            buffer[j].l = 0;
-//            buffer[j].r = buffer[j].l = valueTable[sample%framesPerOscNormal];
+            buffer[j] = valueTable[sample%framesPerOscNormal]*10;
             sample++;
 //            int fewfwe = double(value)/UINT_MAX;
 //            buffer[j] = (fewfwe + simulation[index])/2000000;
@@ -186,7 +186,8 @@ int main() {
 //            index++;
 //            index = index % 100;
 //            phase += M_PI*2/sampleRate*frequency;
-            buffer[j] = ((long long int)(sample*frequency*2/alsaSampleRate)%2 * 2 - 1)*1600;
+//            buffer[j] = ((long long int)(sample*frequency*2/alsaSampleRate) * 2 - 1)*1000;
+//            buffer[j] = ((long long int)(sample*frequency*2/alsaSampleRate) * 2 - 1)*1000;
         }
 
         writeFrames(buffer, framesPerPeriod);

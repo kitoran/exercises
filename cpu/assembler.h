@@ -1,6 +1,7 @@
 ﻿#ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 #include <inttypes.h>
+#include <assert.h>
 enum register64 {
     rax,
     rcx,
@@ -12,13 +13,17 @@ enum register64 {
 
     rsi,
     rdi,
+    r8, r9, r10, r11, r12, r13, r14, r15
 //    rip, call все делает за меня
 };
 enum : char {
     rex = 0x40,
     rexw = 0x08,
     rew = rex | rexw,
-    rexr = 0x01,
+    rexr = 0x04,
+    newRegisterSecondToLast = rexr,
+    rexb = 0x01,
+    newRegisterLast = rexb,
 };
 
 struct Label
@@ -65,6 +70,7 @@ struct Assembler
 //    }
     void bytes(char* data, int size);
     void call(register64 add) {
+        assert(add < r8);
         mem[position] = 0xff;
         mem[position+1] = (0b11 << 6/*mod*/) |
                 (0x02 << 3) | add;
@@ -98,24 +104,26 @@ struct Assembler
         }
         dump();
     }
+#define NEW_LAST(a) ((a) >= r8? newRegisterLast : 0)
+#define NEW_NOTLAST(a) ((a) >= r8? newRegisterSecondToLast : 0)
     void mov(register64 dest, int64_t value) {
-        mem[position] = 0x48;
-        mem[position+1] = 0xb8 + dest;
+        mem[position] = 0x48 | NEW_LAST(dest);
+        mem[position+1] = 0xb8 | (dest & 0b111);
         *((int64_t*)(mem+position+2)) = value;
         position += 10;
         dump();
     }
     void mov(register64 dest, register64 src) {
-        mem[position] = rex | rexw;
+        mem[position] = rex | rexw | NEW_LAST(dest);
         mem[position+1] = 0x89;
-        mem[position+2] = (0b11 << 6) | (src << 3) | dest;
+        mem[position+2] = (0b11 << 6) | (src << 3) | (dest & 0b111);
         position += 3;
         dump();
     }
     void mov(register64 dest, Label l) {
 //        Надо еще разрешать уже связанные лейблы
-        mem[position] = 0x48;
-        mem[position+1] = 0xb8 + dest;
+        mem[position] = 0x48| NEW_LAST(dest);
+        mem[position+1] = 0xb8 | (dest&0b111);
         if(labelTable[l.id].position == 0) {
             LabelLinkListNode* head = new LabelLinkListNode;
             head->place = position+2;
@@ -128,10 +136,19 @@ struct Assembler
         position += 10;
         dump();
     }
+    void cmovs(register64 dest, register64 src) {
+//        Надо еще разрешать уже связанные лейблы
+        mem[position] = 0x48 | NEW_SOURCE(src) | NEW_DEST(dest);
+        mem[position+1] = 0x0f;
+        mem[position+2] = 0x48;
+        mem[position+3] = 0xc0 | ((dest&0b111<<3) | (src&0b111);
+        position += 4;
+        dump();
+    }
     void lea(register64 dest, Label l) {
-        mem[position] = rex | rexw;
+        mem[position] = rex | rexw | NEW_REGISTER(dest);
         mem[position+1] = 0x8d;
-        mem[position+2] = dest << 3 | 0x100;
+        mem[position+2] = (dest&0b111) << 3 | 0x100;
         mem[position+3] = 0/*scale=1*/ << 6 |
                         noIndex << 3 |
                         noBase;
@@ -154,6 +171,7 @@ struct Assembler
         dump();
     }
     void push(register64 src) {
+        assert(src < r8);
         mem[position] = 0x50+src;
         position++;
         dump();
@@ -167,12 +185,13 @@ struct Assembler
         dump();
     }
     void pop(register64 dest) {
+        assert(dest < r8);
         mem[position] = 0x58+dest;
         position++;
         dump();
     }
     void add(register64 dest, register64 addee) {
-        mem[position] = rex | rexw;
+        mem[position] = rex | rexw| NEW_REGISTER(dest);
         mem[position+1] = 0x01;
         mem[position+2] = (0b11 << 6/*mod*/) | (addee << 3) | dest;
 
