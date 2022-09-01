@@ -77,7 +77,38 @@ int grey(int v) {
     int vv = v | v << 8;
     return vv | vv<<8;
 }
+int greyf(double v) {
+    return grey(v*255);
+}
+double functionC (double x) {
+    return -1/(x-1);
+}
+double functionI (double x) {
+    return 1-1/x;
+}
+double functionInit (double x) {
+    return x+1;
+}
+//typedef double (dtd)(double);
+double nthfunction(int n, double x) {
+    if(n == 0) {
+        return x+1;
+    }
+    double intgr, fr = modf(x, &intgr);
+    if(x < 0) { fr = 1+fr; intgr--; }
+    return functionI(nthfunction(n-1, functionC(fr))) + intgr;
+}
+double function (double x) {
+    return nthfunction(3,x);
+}
+const double asin13 = 0.3398369094;
+const double sqrt2 = 1.4142135623730951;
+int* pixel(int x, int y) {
+    return (int*)(data+ (y*600+x)*4);
+}
 void recalculatePicture() {
+    const double side = asin13*2*1.5/sqrt2;
+    const double corner = (tau/4-asin13*2)*1.5/sqrt2;
     double dummy;
     double x;
     picToNum(0,0,&x,&dummy);
@@ -86,22 +117,31 @@ void recalculatePicture() {
     for(int i = 0; i < 600 - 1; i++) {
         double xp, yp;
         picToNum(i,0,&x,&dummy);
-        numToPic(x, x*x, &xp, &yp);
+        numToPic(x, function(x), &xp, &yp);
         if(!(xp+10 < size && xp - 10 >= 0 &&
                                         yp+10 < size && yp - 10 >= 0)) {
             goto end;
         }
-        if(fabs(yp-lasty) > 1) {
-            int sign = yp > lasty? 1 : -1;
-            for(double i = lasty/*+sign*/; abs(i-lasty) <= abs(yp-lasty); i+=sign) {
-                double greyRight = fabs(i*1.0-yp)/fabs(lasty-yp);
-                *((int*)(data+ ((int)round(i)*600+(int)round(xp))*4)) = grey((greyRight)*255);
-                *((int*)(data+ ((int)round(i)*600+(int)round(xp)+1)*4)) = grey((1-greyRight)*255);
-            }
+        if(fabs(yp-lasty) >= 1+0.01) {
+//            int sign = yp > lasty? 1 : -1;
+//            for(double i = lasty/ *+sign* /; abs(i-lasty) <= abs(yp-lasty); i+=sign) {
+//                double greyRight = fabs(i*1.0-yp)/fabs(lasty-yp);
+//                *((int*)(data+ ((int)round(i)*600+(int)round(xp)-1)*4)) = grey((greyRight)*255);
+//                *((int*)(data+ ((int)round(i)*600+(int)round(xp))*4)) = grey(255);
+//                *((int*)(data+ ((int)round(i)*600+(int)round(xp)+1)*4)) = grey((1-greyRight)*255);
+//            }
+            *pixel(xp+1, yp-1) = *pixel(xp+1, yp)= *pixel(xp, yp+1)=*pixel(xp, yp-2) = //greyf(side);
+            *pixel(xp-1, yp+1) = *pixel(xp-1, yp-2)=*pixel(xp-2, yp-1)=*pixel(xp-2, yp) = greyf(corner);
+            *pixel(xp, yp-1) = *pixel(xp, yp)= *pixel(xp-1, yp-1)=*pixel(xp-1, yp) = 0xffffffff;
 
-        } else {
+
+            *pixel(xp+1, lasty-1) = *pixel(xp+1, lasty)= *pixel(xp, lasty+1)=*pixel(xp, lasty-2) = //greyf(side);
+            *pixel(xp-1, lasty+1) = *pixel(xp-1, lasty-2)=*pixel(xp-2, lasty-1)=*pixel(xp-2, lasty) = greyf(corner);
+            *pixel(xp, lasty-1) = *pixel(xp, lasty)= *pixel(xp-1, lasty-1)=*pixel(xp-1, lasty) = 0;
+        } else/**/ {
             double intgr, fr = modf(yp, &intgr);
-            *((int*)(data+ (((int)(intgr))*600+(int)round(xp))*4)) = grey(fr*255);
+            *((int*)(data+ (((int)(intgr+1))*600+(int)round(xp))*4)) = grey(fr*255);
+            *((int*)(data+ (((int)(intgr))*600+(int)round(xp))*4)) = grey(255);
             *((int*)(data+ ((int)(intgr-1)*600+(int)round(xp))*4)) = grey((1-fr)*255);
         }
 //        if(xp+1 < size && xp - 1 >= 0 &&
