@@ -171,7 +171,7 @@ void recalculatePicture() {
 
 int main()
 {
-    guiStartDrawing();
+    guiStartDrawing("continuous fraction fractals");
     guiSetSize(rootWindow, size, size);
     recalculatePicture();
     XImage *res = XCreateImage(xdisplay, DefaultVisual(xdisplay, DefaultScreen(xdisplay)), 24,

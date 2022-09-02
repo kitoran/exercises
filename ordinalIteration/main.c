@@ -1,8 +1,12 @@
 ﻿#include <stdio.h>
+#include <string.h>
 #include <X11/Xlib.h>
+#include <X11/extensions/Xdbe.h>
 extern char appName[] = "ordinalIteration";
 #include "gui.h"
+#include <time.h>
 #include "gridlayout.h"
+//#include "timeAFunction.h"
 #include "math.h"
 #include "persistent.h"
 #include "color.h"
@@ -23,56 +27,47 @@ void numToPic (double x, double y,double * restrict rx, double * restrict ry) {
     *rx = (x+xm)/c*size;
     *ry = -(y +ym - c)/c*size;
 }
-enum { itersMode, selectMode, zoominMode} mode;
+enum { itersMode, selectMode} mode;
 void loop(Painter* pa, bool* consume) {
+    setCurrentGridPos(0,0);
+//    bool res = false;
+    bool recalc = guiNumberEdit(pa, 5, &itNum, consume);
 
-//    setCurrentGridPos(0,0);
-////    bool res = false;
-//    bool recalc = guiNumberEdit(pa, 5, &itNum, consume);
-
-//    setCurrentGridPos(0,1);
-//    if(resourseToolButton(pa, "minus.png", consume)) {
-//        itNum--;
-//        recalc = /*res = */true;
-//    }
-//    setCurrentGridPos(0,2);
-//    if(resourseToolButton(pa, "plus.png", consume)) {
-//        itNum++;
-//        recalc = /*res = */true;
-//    }
-//    setCurrentGridPos(0,3);
-//    if(resourseToolButton(pa, "select.png", consume)) {
+    gridNextColumn();
+    if(resourseToolButton(pa, "minus.png", consume)) {
+        itNum--;
+        recalc = /*res = */true;
+    }
+    gridNextColumn();
+    if(resourseToolButton(pa, "plus.png", consume)) {
+        itNum++;
+        recalc = /*res = */true;
+    }
+//    gridNextColumn();
+//    resourseModeToolButton(pa, "select.png", consume);
 //        mode = selectMode;
-////        res = true;
+//        res = true;
 //    }
-//    setCurrentGridPos(0,4);
-//    if(resourseToolButton(pa, "iters.png", consume)) {
-//        mode = itersMode;
-////        res = true;
-//    }
-//    setCurrentGridPos(0,5);
-//    if(resourseToolButton(pa, "zoomin.png", consume)) {
-//        mode = zoominMode;
-////        res = true;
-//    }
-////    setCurrentGridPos(0,6);
-////    if(resourseToolButton(pa, "zoomout.png", consume)) {
-////        mode = zoominMode;
-//////        res = true;
-////    }
-//    setCurrentGridPos(0,7);
-//    if(resourseToolButton(pa, "100percent.png", consume)) {
-//        c = 1;
-//        xm = 0;
-//        ym = 0;
-//        recalc/* = res */= true;
-//    }
+    gridNextColumn();
+    if(resourseToolButton(pa, "iters.png", consume)) {
+        mode = itersMode;
+//        res = true;
+    }
+    gridNextColumn();
+    if(resourseToolButton(pa, "100percent.png", consume)) {
+        c = 1;
+        xm = 0;
+        ym = 0;
+        recalc/* = res */= true;
+    }
 
-//    if(recalc) {
-//        recalculatePicture();
-//    }
+    if(recalc) {
+        recalculatePicture();
+    }
+
 //    return res;
 }
+
 int grey(int v) {
     int vv = v | v << 8;
     return vv | vv<<8;
@@ -107,20 +102,33 @@ int* pixel(int x, int y) {
     return (int*)(data+ (y*600+x)*4);
 }
 void recalculatePicture() {
+    memset(data, 30, 600*600*4);
     const double side = asin13*2*1.5/sqrt2;
     const double corner = (tau/4-asin13*2)*1.5/sqrt2;
     double dummy;
     double x;
+    for(int i = 0; i < 600; i++) {
+        double xp, yp;
+        picToNum(i,0,&x,&dummy);
+        numToPic(x, x, &xp, &yp);
+        if(!(xp+10 < size && xp - 10 >= 0 &&
+                                        yp+10 < size && yp - 10 >= 0)) {
+            continue;
+//            goto end;
+        }
+        *pixel(round(xp),round(yp)) = 0xffff0000;
+    }
     picToNum(0,0,&x,&dummy);
-    double lasty ;
-    numToPic(x, x*x, &dummy, &lasty);
+    double lasty = 0;
+//    numToPic(x, x*x, &dummy, &lasty);
     for(int i = 0; i < 600 - 1; i++) {
         double xp, yp;
         picToNum(i,0,&x,&dummy);
         numToPic(x, function(x), &xp, &yp);
         if(!(xp+10 < size && xp - 10 >= 0 &&
                                         yp+10 < size && yp - 10 >= 0)) {
-            goto end;
+            continue;
+//            goto end;
         }
         if(fabs(yp-lasty) >= 1+0.01) {
 //            int sign = yp > lasty? 1 : -1;
@@ -134,10 +142,11 @@ void recalculatePicture() {
             *pixel(xp-1, yp+1) = *pixel(xp-1, yp-2)=*pixel(xp-2, yp-1)=*pixel(xp-2, yp) = greyf(corner);
             *pixel(xp, yp-1) = *pixel(xp, yp)= *pixel(xp-1, yp-1)=*pixel(xp-1, yp) = 0xffffffff;
 
-
-            *pixel(xp+1, lasty-1) = *pixel(xp+1, lasty)= *pixel(xp, lasty+1)=*pixel(xp, lasty-2) = //greyf(side);
-            *pixel(xp-1, lasty+1) = *pixel(xp-1, lasty-2)=*pixel(xp-2, lasty-1)=*pixel(xp-2, lasty) = greyf(corner);
-            *pixel(xp, lasty-1) = *pixel(xp, lasty)= *pixel(xp-1, lasty-1)=*pixel(xp-1, lasty) = 0;
+            if(lasty != 0) {
+                *pixel(xp+1, lasty-1) = *pixel(xp+1, lasty)= *pixel(xp, lasty+1)=*pixel(xp, lasty-2) = //greyf(side);
+                *pixel(xp-1, lasty+1) = *pixel(xp-1, lasty-2)=*pixel(xp-2, lasty-1)=*pixel(xp-2, lasty) = greyf(corner);
+                *pixel(xp, lasty-1) = *pixel(xp, lasty)= *pixel(xp-1, lasty-1)=*pixel(xp-1, lasty) = 0;
+            }
         } else/**/ {
             double intgr, fr = modf(yp, &intgr);
             *((int*)(data+ (((int)(intgr+1))*600+(int)round(xp))*4)) = grey(fr*255);
@@ -155,38 +164,37 @@ void recalculatePicture() {
 
 //            }
 //        }
-        end:
+//        end:
         lasty = yp;
     }
-}
 
+}
 extern char appName1[] = "ordinalIteration1";
 int main()
 {char appName2[] = "ordinalIteration2";
     guiStartDrawing(appName);
-    guiSetSize(rootWindow, size, size);
+    guiSetSize(rootWindow, size, size+50);
     recalculatePicture();
     XImage *res = XCreateImage(xdisplay, DefaultVisual(xdisplay, DefaultScreen(xdisplay)), 24,
                  ZPixmap, 0, data, size, size, 32,
                          size*4);
-    GC gc = XCreateGC(xdisplay, rootWindow, 0, NULL);
+    XdbeBackBuffer bb = XdbeAllocateBackBufferName(xdisplay, rootWindow, XdbeUndefined);
+    GC gc = XCreateGC(xdisplay, bb, 0, NULL);
     XPutImage(xdisplay, rootWindow, gc, res, 0, 0, 0,0, 600, 600);
 
-    Painter pa = {rootWindow, gc};
+    Painter pa = {bb, gc};
     getPos = gridGetPos;
     feedbackSize = gridFeedbackSize;
     gridStart.x = 5;
     gridStart.y = 5;
-
     while(true) {
         guiNextEvent();
-        XPutImage(xdisplay, rootWindow, gc, res, 0, 0, 0,0, 600, 600);
+
+        XPutImage(xdisplay, bb, gc, res, 0, 0, 0,50, 600, 600);
         volatile int t;
-        if(xEvent.type == ButtonPress) {
-           fprintf(stderr, "hi%d", t);
-        }
         bool consume = false;
         loop(&pa, &consume);
+
         printf("%d", consume);
         if(xEvent.type == DestroyNotify) {
             goto exit;
@@ -207,30 +215,43 @@ int main()
 //                    guiDrawLine(&pa,xl,yl,xc,yc);
 //                }
 //            };
-//        } else if(!consume && mode == selectMode) {
-//            static int startx, starty;
-//            static bool sel = false;
-//            if(xEvent.type == ButtonPress) {
-//                startx = xEvent.xbutton.x;
-//                starty = xEvent.xbutton.y;
-//                sel = true;
-//            } else if(xEvent.type == ButtonRelease) {
-//                double sx, sy;
-//                picToNum(startx, starty,
-//                         &sx, &sy);
-//                double ex, ey;
-//                picToNum(xEvent.xbutton.x, xEvent.xbutton.y,
-//                         &ex, &ey);
-//#define MAX(x,y) ((x)>(y)?(x):(y))
-//#define MIN(x,y) ((x)<(y)?(x):(y))
-//                c = MAX(fabs(ex-sx), fabs(ey-sy));
-//                xm = -MIN(sx,ex);
-//                ym = -MIN(sy,ey);
-//                sel = false;
+//        } else
+        if(!consume /*&& mode == selectMode*/) {
+            static int startx, starty;
+            static bool sel = false;
+            if(xEvent.type == ButtonPress) {
+                startx = xEvent.xbutton.x;
+                starty = xEvent.xbutton.y-50;
+                sel = true;
+            } else if(xEvent.type == MotionNotify) {
+                guiSetForeground(&pa, 0xffffffff);
+                int endx = xEvent.xbutton.x;
+                int endy = xEvent.xbutton.y-50;
+#define MAX(x,y) ((x)>(y)?(x):(y))
+#define MIN(x,y) ((x)<(y)?(x):(y))
+                int c = MAX(abs(endx-startx), abs(endy-starty));
+                int xm = endx>startx?startx:startx-c;
+                int ym = endy>starty?starty:starty-c;
+//                int ym = MIN(starty,endy);
+                guiDrawRectangle(&pa, xm, ym+50, c, c);
 //                recalculatePicture();
-//            }
-
-//        } else if(!consume && mode == zoominMode) {
+            } if(xEvent.type == ButtonRelease) {
+                double sx, sy;
+                picToNum(startx, starty,
+                         &sx, &sy);
+                double ex, ey;
+                picToNum(xEvent.xbutton.x, xEvent.xbutton.y-50,
+                         &ex, &ey);
+#define MAX(x,y) ((x)>(y)?(x):(y))
+#define MIN(x,y) ((x)<(y)?(x):(y))
+                c = MAX(fabs(ex-sx), fabs(ey-sy));
+                xm = -MIN(sx,ex);
+                ym = -MIN(sy,ey);
+                sel = false;
+                recalculatePicture();
+            }
+        }
+//        else if(!consume && mode == zoominMode) {
 //            if(xEvent.type == ButtonRelease) {
 //                double mouseX = xEvent.xbutton.x;
 //                double mouseY = xEvent.xbutton.y;
@@ -268,6 +289,9 @@ int main()
 //                recalculatePicture();
 //            }
 //        }
+        XdbeSwapInfo si = {rootWindow, XdbeUndefined};
+        XdbeSwapBuffers(xdisplay, &si, 1);
+        XFlush(xdisplay);
     }
 exit:
     XDestroyWindow(xdisplay,

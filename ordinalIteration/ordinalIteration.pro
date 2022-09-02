@@ -2,7 +2,7 @@ TEMPLATE = app
 CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
-
+LIBS += -lXext
 
 include(../../library/guiS/gui.pri)
 include(../../library/misc/misc.pri)
