@@ -11,7 +11,7 @@
 
 
 #include <readline/readline.h>
-
+//-fuse-ld
 void print(const AddExp& ae);
 void print(const Prim& p) {
     if(p.type == Lambda) {
@@ -61,7 +61,7 @@ void print(const AddExp& ae) {
     }
 }
 
-String readFile(char *filename)
+String readFile(const char *filename)
 {   //gets the PATH of the txt file
     char *file_contents;
     long input_file_size;
@@ -101,7 +101,7 @@ void repl(Assembler a)
     while(line) {
         size_t size = strlen(line);
         assert(size < 1<<16);
-        String exp = {size, line};
+        String exp = {(int)size, line};
         ParseRes<AddExp> ast = addExp(&exp);
 
         if(ast.type == error) {
@@ -118,7 +118,7 @@ void repl(Assembler a)
     }
 }
 int itoap;
-void compileAndRun(Assembler a, char* path) {
+void compileAndRun(Assembler a, const char* path) {
     String thing = readFile(path);
     if(thing.content == NULL) {
         printf("path not valid or file doesn't exist\n");
