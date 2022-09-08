@@ -9,6 +9,9 @@ const SCREEN_HEIGHT = 600;
 const ComicSans = @embedFile("comic.ttf");
 
 const tau = 6.283185307179586;
+
+
+var freq : f64 = 440.0;
 var have : sdl.SDL_AudioSpec = undefined;
 export  fn MyAudioCallback(  userdata:?*anyopaque,
                        stream8:[*c]u8,
@@ -24,7 +27,7 @@ export  fn MyAudioCallback(  userdata:?*anyopaque,
     };
     var i : u32 = 0;
     while(i <  @divFloor(len, 2)) {
-      stream[i] = @floatToInt(i16,@sin(@intToFloat(f64 , ph.ase) * 440 * tau / @intToFloat(f64 ,have.freq))*3000);
+      stream[i] = @floatToInt(i16,@sin(@intToFloat(f64 , ph.ase) * freq * tau / @intToFloat(f64 ,have.freq))*3000);
       ph.ase = ph.ase+1;
       i+=1;
     } 
@@ -133,7 +136,12 @@ pub fn main() anyerror!void {
         while(true) {
           _ = sdl.SDL_PollEvent(&e);
           
-          
+          if(e.type == sdl.SDL_MOUSEMOTION) {
+            freq = @intToFloat(f64, e.motion.y) + 140.0;
+            
+  std.log.info("motion {} {}", .{e.motion.y, @intToFloat(f64, e.motion.y) + 140.0});
+  
+          }
 //          std.log.info("{}", .{@intToEnum(sdl.SDL_EventType, e.type)});
         // std.debug.print("{}", .{sdl.SDL_POLLSENTINEL          });
           if(e.type == sdl.SDL_QUIT) {
