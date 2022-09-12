@@ -43,11 +43,11 @@ int itNum = 0;
 double c = 8;
 double xm = 4;
 double ym = 4;
-void picToNum (int x, int y, double* restrict rx, double* restrict ry) {
+void picToNumDD (int x, int y, double* restrict rx, double* restrict ry) {
     *rx = x*c/size - xm;
     *ry = c - y*c/size - ym;
 }
-void numToPic (double x, double y,int * restrict rx, int * restrict ry) {
+void numToPicDD (double x, double y,int * restrict rx, int * restrict ry) {
     *rx = (x+xm)/c*size;
     *ry = -(y +ym - c)/c*size;
 }
@@ -108,7 +108,7 @@ void recalculatePicture() {
             bool in = false;
 //            ((int*)data)[i*600+j] =
             double xn,yn;
-            picToNum(i, j, &xn, &yn);
+            picToNumDD(i, j, &xn, &yn);
             int cn = 0;
             for(; cn < itNum; cn ++) {
 //                double xw = xn,yw = yn;
@@ -155,7 +155,7 @@ void recalculatePicture() {
 //    *((int*)(data+ (598*600+xp-1)*4)) = 0x000000ff;
 //    *((int*)(data+ (598*600+xp)*4)) = 0x000000ff;
     int xp, yp;
-    numToPic(0.618033988, 0, &xp, &yp);
+    numToPicDD(0.618033988, 0, &xp, &yp);
     if(xp+1 < size && xp - 1 >= 0 &&
             yp < size && yp - 1 >= 0 ) {
 
@@ -203,14 +203,14 @@ int main()
             if(xEvent.type == ButtonPress || xEvent.type == MotionNotify) {
                 double x, y;
                 double xn, yn;
-                picToNum(xEvent.xbutton.x, xEvent.xbutton.y, &x, &y);
+                picToNumDD(xEvent.xbutton.x, xEvent.xbutton.y, &x, &y);
                 for(int i = 0; i < 10; i++) {
                     xn = x; yn = y;
                     iter(&x, &y);
 
                     int xl, yl, xc, yc;
-                    numToPic(x, y, &xc, &yc);
-                    numToPic(xn, yn, &xl, &yl);
+                    numToPicDD(x, y, &xc, &yc);
+                    numToPicDD(xn, yn, &xl, &yl);
 
                     guiDrawLine(&pa,xl,yl,xc,yc);
                 }
@@ -224,10 +224,10 @@ int main()
                 sel = true;
             } else if(xEvent.type == ButtonRelease) {
                 double sx, sy;
-                picToNum(startx, starty,
+                picToNumDD(startx, starty,
                          &sx, &sy);
                 double ex, ey;
-                picToNum(xEvent.xbutton.x, xEvent.xbutton.y,
+                picToNumDD(xEvent.xbutton.x, xEvent.xbutton.y,
                          &ex, &ey);
 #define MAX(x,y) ((x)>(y)?(x):(y))
 #define MIN(x,y) ((x)<(y)?(x):(y))
@@ -257,7 +257,7 @@ int main()
                  */
                 double cxcx = mouseX * c/size - xm;
                 double newxm, newym;
-                double cxcxoldx, d; picToNum((int)mouseX, (int)mouseY, &cxcxoldx, &d);
+                double cxcxoldx, d; picToNumDD((int)mouseX, (int)mouseY, &cxcxoldx, &d);
 //                picToNum(mouseX - size/4,
 //                         mouseY - size/4,
 //                         &newxm,
@@ -270,7 +270,7 @@ int main()
                 ym = ym - c + mouseY*c/size + c/2 - c/4;//ym-mouseY*c/size + c/4;
                 c/=2;
 
-                double cxcxnewx; picToNum(size/2, size/2,&cxcxnewx, &d);
+                double cxcxnewx; picToNumDD(size/2, size/2,&cxcxnewx, &d);
                 fprintf(stderr, "cxcx %lf, cxcxoldx %lf, cxcxnew %lf, "
                         "cxcxnewx %lf\n", cxcx, cxcxoldx, cxcxnew, cxcxnewx);
                 recalculatePicture();
