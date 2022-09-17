@@ -46,6 +46,7 @@ void numToPicDI64 (double x, double y,long long int* restrict rx, long long int*
     *ry = round(-(y +ym - c)/c*size);
 }
 
+char text[30];
 enum { itersMode, selectMode} mode;
 void loop(Painter* pa, bool* consume) {
     setCurrentGridPos(0,0);
@@ -97,6 +98,8 @@ void loop(Painter* pa, bool* consume) {
         // xnm = c - c/2 + xm = xm + c/2
         recalc/* = res */= true;
     }
+    gridNextColumn();
+    guiLabelZT(pa, text);
 
     if(recalc) {
         recalculatePicture();
@@ -122,6 +125,7 @@ double functionInit (double x) {
     return x+1;
 }
 //typedef double (dtd)(double);
+typedef long long int i64;
 double nthfunction(int n, double x) {
     if(n == 0) {
         return x+1;
@@ -145,13 +149,16 @@ int* pixel(int x, int y) {
 }
 int* pixelWithSelection(int x, int y) {
     static int oob;
-    if(x >= 0 && x < 600&& y >= 0 && y < 600) {
+    if(x >= 0 && x < 600 && y >= 0 && y < 600) {
         return (int*)(dataWithSelection+ (y*600+x)*4);
     } else {
         return &oob;
     }
 }
+#define SMALLFLOAT 0.001
 void recalculatePicture() {
+    int start = clock();
+
     memset(data, 30, 600*600*4);
     const double side = asin13*2*1.5/sqrt2;
     const double corner = (tau/4-asin13*2)*1.5/sqrt2;
@@ -168,6 +175,7 @@ void recalculatePicture() {
 //        }
         *pixel(round(xp),round(yp)) = 0xffff0000;
     }
+
     picToNumDD(0,0,&x,&dummy);
     double lasty = NAN;
 //    numToPic(x, x*x, &dummy, &lasty);
@@ -177,7 +185,7 @@ void recalculatePicture() {
         numToPicDD(x, function(x), &xp, &yp);
 //        bool insideScope = (xp+10 < size && xp - 10 >= 0 &&
 //                            yp+10 < size && yp - 10 >= 0);
-        bool jump = fabs(yp-lasty) > 1+0.001;
+        bool jump = fabs(yp-lasty) > 1+SMALLFLOAT;
         if(jump) {
 //            if(insideScope) {
                 *pixel(xp+1, yp-1) = *pixel(xp+1, yp)= *pixel(xp, yp+1)=*pixel(xp, yp-2) = //greyf(side);
@@ -215,6 +223,25 @@ void recalculatePicture() {
         lasty = yp;
     }
     x = 0;
+    /*{
+        long long int x1;
+        numToPicDI64(x, 0, &x1, &dummy);
+        if(x1 < 0) {
+            i64 i = 0;
+            double lastxp, lastyp, yp;
+            picToNumDD(i,0,&x,&dummy);
+            numToPicDD(0, function(x), &dummy, &yp);
+            lastyp = yp;
+            while(lastyp - yp < 1+SMALLFLOAT) {
+                lastyp = yp;
+                lastxp = x;
+                i++;
+                picToNumDD(i,0,&x,&dummy);
+                numToPicDD(0, function(x), &dummy, &yp);
+            }
+            x = lastxp; // go back one iteration to get after the jump
+        }
+    }*/
 //    for(int n = 0; n < 10; n++) {
     while(true) {
         volatile double y = function(x);
@@ -283,6 +310,9 @@ void recalculatePicture() {
         x = y;
     }
     memcpy(dataWithSelection, data, 600*600*4);
+    int end = clock();
+    snprintf(text,sizeof(text), "%lf ms", (double)(end - start) / CLOCKS_PER_SEC*1000);
+    guiRedraw();
 }
 extern char appName1[] = "ordinalIteration1";
 int main()
@@ -310,6 +340,9 @@ int main()
 
         volatile int t;
         bool consume = false;
+        if(xEvent.type == Expose)
+            XClearWindow(xdisplay, rootWindow);
+
         loop(&pa, &consume);
 
 //        printf("%d", consume);
