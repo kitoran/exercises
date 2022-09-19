@@ -39,12 +39,12 @@ void ui(Painter *p)
 {
     Size size = guiGetSize();
 //    fprintf(stderr, "got size %d x %d", size.width, size.height);
-
-    int gh = getGridBottom() + 5;
+    Grid* g = topGrid();
+    int gh = g->gridStart.y + getGridHeight(g) + 5;
     graphProcessEvent(&widget/*, p*/, 0, gh, size.width, size.height-gh);
     //    gtk_grid_attach(layout, widget, 4, 0, 1, 17);
 
-    setCurrentGridPos(0, 0);
+    setCurrentGridPos(g, 0, 0);
 
 
     if(resourseToolButton(p, "open.png", NULL)) {
@@ -71,54 +71,54 @@ void ui(Painter *p)
 //    if(resourseToolButton(p, "demo.png", NULL)) {
 //        demo(&widget.spectrogramDrawingPicture,
 //    }
-    gridNextColumn();
+    gridNextColumn(g);
 
     guiLabelZT(p, "max");
     int maxx = max;
-    gridNextRow();
+    gridNextRow(g);
     persistentNumberEdit(p, 6, &maxx, NULL);
-    gridNextColumn();
+    gridNextColumn(g);
 
 
     guiLabelZT(p, "method");
-    gridNextRow();
+    gridNextRow(g);
     INTROSPECT_ENUM(method, original, multiply, divide);
     static int cmethod = 2;
     persistentEnumComboBox(method, p, &cmethod);
-    gridNextColumn();
+    gridNextColumn(g);
 
 
     guiLabelZT(p, "action");
-    gridNextRow();
+    gridNextRow(g);
     persistentEnumComboBox(MouseAction, p, &action);
-    gridNextColumn();
+    gridNextColumn(g);
 
 
     guiLabelZT(p, "treshold");
-    gridNextRow();
+    gridNextRow(g);
     int dummy = 0;
     persistentNumberEdit(p, 6, &dummy, NULL);
-    gridNextColumn();
+    gridNextColumn(g);
 
 
     guiLabelZT(p, "frequency cadr");
-    gridNextRow();
+    gridNextRow(g);
 //    int dummy2 = 44100;
     persistentNumberEdit(p, 7, &cutoff, NULL);
-    gridNextColumn();
+    gridNextColumn(g);
 
     guiLabelZT(p,  "number of harmonics");
-    gridNextRow();
+    gridNextRow(g);
     persistentNumberEdit(p, 6, &numberOfHarmonics, NULL);
-    gridNextColumn();
+    gridNextColumn(g);
 
 
     char label_2[] = "window (sampls)";
     guiLabel(p, label_2, sizeof(label_2)-1);
-    gridNextRow();
+    gridNextRow(g);
     int ws = windowSize;
     persistentNumberEdit(p,  5, &ws, NULL);
-    gridNextColumn();
+    gridNextColumn(g);
 
     if(guiButtonZT(p, "redraw")) {
         Painter p = {
@@ -132,11 +132,11 @@ void ui(Painter *p)
 //        spectrogram->draw(spectrogram, &p, widget.width, widget.height);
         guiRedraw();
     }
-    gridNextRow();
+    gridNextRow(g);
     if(guiButtonZT(p, "<|>")) {
         MainWindowon_toolButton_2_clicked();
     }
-    gridNextColumn();
+    gridNextColumn(g);
 
     char toolButton[] = ">";
     if(guiButton(p, toolButton, sizeof(toolButton)-1)) {
@@ -144,7 +144,7 @@ void ui(Painter *p)
     }
 
 //    static XImage* recIcon = loadLocalImageZT("rec.png");
-    gridNextRow();
+    gridNextRow(g);
     if(recordingInAThread) {
         if(resourseToolButton(p, "stop.png", 0)) {
 
@@ -161,23 +161,23 @@ void ui(Painter *p)
             guiRedraw();
         }
     }
-    gridNextColumn();
+    gridNextColumn(g);
 
     char label_3[] = "windowFrequency (sampls)";
     guiLabel(p, label_3, sizeof(label_3)-1);
-    gridNextRow();
+    gridNextRow(g);
     int step = stepSize;
     persistentNumberEdit(p,  5, &step, NULL);
-    gridNextColumn();
+    gridNextColumn(g);
 
     guiLabelZT(p, "denominstor");
-    gridNextRow();
+    gridNextRow(g);
     guiDoubleEdit(p, 6, &denominator);
-    gridNextColumn();
+    gridNextColumn(g);
 
     guiLabelZT(p, "num of samples");
     int s = arrlen(samplsStbArray);
-    gridNextRow();
+    gridNextRow(g);
     guiNumberEdit(p, 6, &s, NULL);
 
 
@@ -187,7 +187,7 @@ void ui(Painter *p)
 
 
 
-    setCurrentGridPos(3,0);
+    setCurrentGridPos(g,3,0);
     if(guiButtonZT(p, "audacity")) {
         MainWindowon_pushButton_clicked();
     }

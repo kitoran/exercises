@@ -4,7 +4,7 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 guiPers = true;
-include(../../library/guiS/gui.pri)
+include(../../library/gui-X/gui.pri)
 include(../../library/misc/misc.pri)
 QMAKE_CFLAGS += -Wno-pointer-sign
 QMAKE_CFLAGS +=  -Ofast

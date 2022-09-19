@@ -96,9 +96,10 @@ int main(int argc, char *argv[])
 
         getPos = gridGetPos;
         feedbackSize = gridFeedbackSize;
-        gridStart.x = 5;
-        gridStart.y = 5;
-
+        Grid g = allocateGrid(100, 100, 5);
+        g.gridStart.x = 5;
+        g.gridStart.y = 5;
+        pushGrid(&g);
         guiSetSize(rootWindow, 992, 402);
         GC gc2 = XCreateGC(xdisplay, rootWindow, 0, NULL);
         Painter pa = {rootWindow, gc2};

@@ -4,7 +4,9 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 guiPers = true;
-include(../../library/guiS/gui.pri)
+
+include(../../library/gui-X/gui.pri)
+#include(../../library/guiS/gui.pri)
 include(../../library/misc/misc.pri)
 include(../../library/loadImage/loadImage.pri)
 QMAKE_CFLAGS += -Wno-pointer-sign -fno-PIC

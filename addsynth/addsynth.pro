@@ -6,5 +6,6 @@ CONFIG -= qt
 SOURCES += main.c
 
 INCLUDEPATH += ../sound
+
 INCLUDEPATH += ../../library/guiS/gui
 INCLUDEPATH += ../../library/extmath

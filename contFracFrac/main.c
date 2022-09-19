@@ -7,7 +7,7 @@
 #include "complex.h"
 #define tau 6.283185307179586
 XEvent xEvent;
-char appName[] = "contfracfrac";
+//char appName[] = "contfracfrac";
 //int getColor(int blue, int red) {
 //    // or = rb*b + rr*r + ofr
 //    // og = gb*b + gr*g + ofg
@@ -53,32 +53,32 @@ void numToPicDD (double x, double y,int * restrict rx, int * restrict ry) {
 }
 enum { itersMode, selectMode, zoominMode} mode;
 void loop(Painter* pa, bool* consume) {
-
-    setCurrentGridPos(0,0);
+    Grid* g = topGrid();
+    setCurrentGridPos(g, 0,0);
 //    bool res = false;
     bool recalc = guiNumberEdit(pa, 5, &itNum, consume);
 
-    setCurrentGridPos(0,1);
+    setCurrentGridPos(g,0,1);
     if(resourseToolButton(pa, "minus.png", consume)) {
         itNum--;
         recalc = /*res = */true;
     }
-    setCurrentGridPos(0,2);
+    setCurrentGridPos(g,0,2);
     if(resourseToolButton(pa, "plus.png", consume)) {
         itNum++;
         recalc = /*res = */true;
     }
-    setCurrentGridPos(0,3);
+    setCurrentGridPos(g,0,3);
     if(resourseToolButton(pa, "select.png", consume)) {
         mode = selectMode;
 //        res = true;
     }
-    setCurrentGridPos(0,4);
+    setCurrentGridPos(g,0,4);
     if(resourseToolButton(pa, "iters.png", consume)) {
         mode = itersMode;
 //        res = true;
     }
-    setCurrentGridPos(0,5);
+    setCurrentGridPos(g,0,5);
     if(resourseToolButton(pa, "zoomin.png", consume)) {
         mode = zoominMode;
 //        res = true;
@@ -88,7 +88,7 @@ void loop(Painter* pa, bool* consume) {
 //        mode = zoominMode;
 ////        res = true;
 //    }
-    setCurrentGridPos(0,7);
+    setCurrentGridPos(g,0,7);
     if(resourseToolButton(pa, "100percent.png", consume)) {
         c = 1;
         xm = 0;
@@ -168,10 +168,10 @@ void recalculatePicture() {
         *((int*)(data+ (yp*600+xp)*4)) = 0xffffffff;
     }
 }
-
+const char* appName = "continuous fraction fractals";
 int main()
 {
-    guiStartDrawing("continuous fraction fractals");
+    guiStartDrawing();
     guiSetSize(rootWindow, size, size);
     recalculatePicture();
     XImage *res = XCreateImage(xdisplay, DefaultVisual(xdisplay, DefaultScreen(xdisplay)), 24,
@@ -183,9 +183,10 @@ int main()
     Painter pa = {rootWindow, gc};
     getPos = gridGetPos;
     feedbackSize = gridFeedbackSize;
-    gridStart.x = 5;
-    gridStart.y = 5;
-
+    Grid g = allocateGrid(100,100,5);
+    g.gridStart.x = 5;
+    g.gridStart.y = 5;
+    pushGrid(&g);
     while(true) {
         guiNextEvent();
         XPutImage(xdisplay, rootWindow, gc, res, 0, 0, 0,0, 600, 600);

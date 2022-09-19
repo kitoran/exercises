@@ -4,6 +4,7 @@
 #include <X11/Xlib.h>
 #include "gui.h"
 #include "time.h"
+#include "newFile.h"
 #include "loadImage.h"
 #include "gridlayout.h"
 #include "persistent.h"
@@ -90,33 +91,38 @@ void recalculatePicture() {
 XImage *res;
 enum { itersMode, selectMode, zoominMode} mode;
 void loop(Painter* pa, bool* consume) {
-
-    setCurrentGridPos(0,0);
+    Grid* g = topGrid();
+    setCurrentGridPos(g, 0,0);
 //    bool res = false;
     int e = maxDenom;
     bool recalc = /*persistent*/guiNumberEdit(pa, 5, &e, consume);
 
-    setCurrentGridPos(0,1);
+    gridNextColumn(g);
     if(resourseToolButton(pa, "minus.png", consume)) {
         maxDenom--;
         recalc = /*res = */true;
     }
-    setCurrentGridPos(0,2);
+//    setCurrentGridPos(0,2);
+
+    gridNextColumn(g);
     if(resourseToolButton(pa, "plus.png", consume)) {
         maxDenom++;
         recalc = /*res = */true;
     }
-    setCurrentGridPos(0,3);
+
+    gridNextColumn(g);//    setCurrentGridPos(0,3);
     if(resourseToolButton(pa, "select.png", consume)) {
         mode = selectMode;
 //        res = true;
     }
-    setCurrentGridPos(0,4);
+
+    gridNextColumn(g);//    setCurrentGridPos(0,4);
     if(resourseToolButton(pa, "iters.png", consume)) {
         mode = itersMode;
 //        res = true;
     }
-    setCurrentGridPos(0,5);
+
+    gridNextColumn(g);//    setCurrentGridPos(0,5);
     if(resourseToolButton(pa, "zoomin.png", consume)) {
         mode = zoominMode;
 //        res = true;
@@ -127,7 +133,8 @@ void loop(Painter* pa, bool* consume) {
 //        mode = zoominMode;
 ////        res = true;
 //    }
-    setCurrentGridPos(0,7);
+
+    gridNextColumn(g);//    setCurrentGridPos(0,7);
     if(resourseToolButton(pa, "100percent.png", consume)) {
         c = 1;
         xm = 0;
@@ -135,7 +142,7 @@ void loop(Painter* pa, bool* consume) {
         recalc/* = res */= true;
     }
 
-    gridNextColumn();
+    gridNextColumn(g);
     if(resourseToolButton(pa, "save.png", consume)) {
         saveImageSomewhereNewWrongChannelsZT(res, "gauss");
     }
@@ -160,14 +167,15 @@ int main(int argc)
     Painter pa = {rootWindow, gc};
     getPos = gridGetPos;
     feedbackSize = gridFeedbackSize;
-    gridStart.x = 5;
-    gridStart.y = 5;
-
+    Grid g = allocateGrid(100, 100, 5);
+    g.gridStart.x = 5;
+    g.gridStart.y = 5;
+    pushGrid(&g);
     while(true) {
         guiNextEvent();
         volatile Size wsize = guiGetSize();bool resize = false;
-        if(wsize.height < getGridBottom()+size) {
-            wsize.height = getGridBottom()+size;
+        if(wsize.height < g.gridStart.y+getGridHeight(&g)+size) {
+            wsize.height = g.gridStart.y+getGridHeight(&g)+size;
             resize = true;
         }
         if(wsize.width < size) {
@@ -175,7 +183,7 @@ int main(int argc)
             resize = true;
         }
         if(resize) guiSetSize(rootWindow, wsize.width, wsize.height);
-        XPutImage(xdisplay, rootWindow, gc, res, 0, 0, 0,getGridBottom(), size, size);
+        XPutImage(xdisplay, rootWindow, gc, res, 0, 0, 0, g.gridStart.y+getGridHeight(&g), size, size);
         volatile int t;
         if(xEvent.type == ButtonPress) {
            fprintf(stderr, "hi%d", t);
@@ -191,14 +199,14 @@ int main(int argc)
             static bool sel = false;
             if(xEvent.type == ButtonPress) {
                 startx = xEvent.xbutton.x;
-                starty = xEvent.xbutton.y-getGridBottom();
+                starty = xEvent.xbutton.y-(g.gridStart.y+getGridHeight(&g));
                 sel = true;
             } else if(xEvent.type == ButtonRelease) {
                 double sx, sy;
                 picToNum(startx, starty,
                          &sx, &sy);
                 double ex, ey;
-                picToNum(xEvent.xbutton.x, xEvent.xbutton.y-getGridBottom(),
+                picToNum(xEvent.xbutton.x, xEvent.xbutton.y-getGridBottom(&g),
                          &ex, &ey);
 #define MAX(x,y) ((x)>(y)?(x):(y))
 #define MIN(x,y) ((x)<(y)?(x):(y))
@@ -212,7 +220,7 @@ int main(int argc)
         } else if(!consume && mode == zoominMode) {
             if(xEvent.type == ButtonRelease) {
                 double mouseX = xEvent.xbutton.x;
-                double mouseY = xEvent.xbutton.y-getGridBottom();
+                double mouseY = xEvent.xbutton.y-getGridBottom(&g);
                 /*
                  * mouseX * c / 2 - xmnew = mouseX * c - xmold
                  * mouseY * c / 2 - ymnew = mouseY * c - ymold

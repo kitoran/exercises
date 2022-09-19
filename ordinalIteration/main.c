@@ -3,10 +3,11 @@
 #include <float.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xdbe.h>
-extern char appName[] = "ordinalIteration";
+//char appName[] = "ordinalIteration";
 #include "gui.h"
 #include <time.h>
 #include "gridlayout.h"
+#include "shittyintrospection.h"
 //#include "timeAFunction.h"
 #include "math.h"
 #include "persistent.h"
@@ -18,11 +19,9 @@ struct Ordinal {
 } iters;
 
 void ordinalEdit(Painter*p/*, Ordinal max*/) {
-    Point pos = getPos();
-    Size size = {500,
-                30};
-
-
+//    Point pos = getPos();
+//    Size size = {500,
+//                30};
 }
 
 XEvent xEvent;
@@ -45,20 +44,22 @@ void numToPicDI64 (double x, double y,long long int* restrict rx, long long int*
     *rx = round((x+xm)/c*size);
     *ry = round(-(y +ym - c)/c*size);
 }
-
+void recalculatePicture();
 char text[30];
-enum { itersMode, selectMode} mode;
+INTROSPECT_ENUM( modeEnum, selectMode, moveMode );
+modeEnum mode;
+Grid mainGrid;
 void loop(Painter* pa, bool* consume) {
-    setCurrentGridPos(0,0);
+    setCurrentGridPos(&mainGrid, 0,0);
 //    bool res = false;
     bool recalc = guiNumberEdit(pa, 5, &itNum, consume);
 
-    gridNextColumn();
+    gridNextColumn(&mainGrid);
     if(resourseToolButton(pa, "minus.png", consume)) {
         itNum--;
         recalc = /*res = */true;
     }
-    gridNextColumn();
+    gridNextColumn(&mainGrid);
     if(resourseToolButton(pa, "plus.png", consume)) {
         itNum++;
         recalc = /*res = */true;
@@ -68,27 +69,27 @@ void loop(Painter* pa, bool* consume) {
 //        mode = selectMode;
 //        res = true;
 //    }
-    gridNextColumn();
-    if(resourseToolButton(pa, "iters.png", consume)) {
-        recalc = true;
-        mode = itersMode;
-//        res = true;
-    }
-    gridNextColumn();
+    gridNextColumn(&mainGrid);
+//    if(resourseToolButton(pa, "iters.png", consume)) {
+//        recalc = true;
+//        mode = itersMode;
+////        res = true;
+//    }
+    gridNextColumn(&mainGrid);
     if(resourseToolButton(pa, "100percent.png", consume)) {
         c = 1;
         xm = 0;
         ym = 0;
         recalc/* = res */= true;
     }
-    gridNextColumn();
+    gridNextColumn(&mainGrid);
     if(resourseToolButton(pa, "zoomin.png", consume)) {
         c /= 2;
         xm = xm - c/2;
         ym = ym - c/2;
         recalc/* = res */= true;
     }
-    gridNextColumn();
+    gridNextColumn(&mainGrid);
     if(resourseToolButton(pa, "zoomout.png", consume)) {
         xm = xm + c/2;
         ym = ym + c/2;
@@ -98,7 +99,13 @@ void loop(Painter* pa, bool* consume) {
         // xnm = c - c/2 + xm = xm + c/2
         recalc/* = res */= true;
     }
-    gridNextColumn();
+
+//    guiToolButtonGroup(&move);
+
+
+
+
+    gridNextColumn(&mainGrid);
     guiLabelZT(pa, text);
 
     if(recalc) {
@@ -160,7 +167,7 @@ void recalculatePicture() {
     int start = clock();
 
     memset(data, 30, 600*600*4);
-    const double side = asin13*2*1.5/sqrt2;
+//    const double side = asin13*2*1.5/sqrt2;
     const double corner = (tau/4-asin13*2)*1.5/sqrt2;
     double dummy;
     double x;
@@ -314,9 +321,11 @@ void recalculatePicture() {
     snprintf(text,sizeof(text), "%lf ms", (double)(end - start) / CLOCKS_PER_SEC*1000);
     guiRedraw();
 }
-extern char appName1[] = "ordinalIteration1";
+char *appName = "ordinalIteration";
 int main()
-{char appName2[] = "ordinalIteration2";
+{//char appName2[] = "ordinalIteration2";
+    mainGrid = allocateGrid(50, 50, 5);
+    pushGrid(&mainGrid);
     guiStartDrawing(appName);
     guiSetSize(rootWindow, size, size+50);
     recalculatePicture();
@@ -331,8 +340,8 @@ int main()
     Painter pa = {bb, gc};
     getPos = gridGetPos;
     feedbackSize = gridFeedbackSize;
-    gridStart.x = 5;
-    gridStart.y = 5;
+    mainGrid.gridStart.x = 5;
+    mainGrid.gridStart.y = 5;
 //    Pixmap pixm = XCreatePixmap(xdisplay, bb, 600, 600, xDepth);
 //    GC pixgc = XCreateGC(xdisplay, pixm, 0, NULL);
     while(true) {

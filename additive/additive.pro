@@ -81,7 +81,7 @@ SOURCES += \
 #    $$PWD/../../library/guiS/gui/persistent.c
 
 #include(../../library/loadImage/loadImage.pri)
-include(../../library/guiS/gui.pri)
+include(../../library/gui-X/gui.pri)
 include(../../library/settingsS/settings/settings.pri)
 #include(../../library/stb/stb_image.pri)
 
