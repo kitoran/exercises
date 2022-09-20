@@ -15,10 +15,10 @@ pub fn build(b: *std.build.Builder) void {
     const exe = b.addExecutable("iteration", "src/main.zig");
     exe.linkLibC();
 //    exe.addLibraryPath(/src/SDL2-2.24.0/x86_64-w64-mingw32");
-    exe.addIncludePath("/src/SDL2-2.24.0/x86_64-w64-mingw32/include/SDL2");
-    exe.addIncludePath("/src/SDL2_ttf-devel-2.20.1-VC/SDL2_ttf-2.20.1/include");
-    exe.addLibraryPath("/src/SDL2_ttf-devel-2.20.1-VC/SDL2_ttf-2.20.1/lib/x64");
-    exe.addLibraryPath("C:\\src\\iteration");
+    exe.addIncludeDir("/src/SDL2-2.24.0/x86_64-w64-mingw32/include/SDL2");
+    exe.addIncludeDir("/src/SDL2_ttf-devel-2.20.1-VC/SDL2_ttf-2.20.1/include");
+    exe.addLibPath("/src/SDL2_ttf-devel-2.20.1-VC/SDL2_ttf-2.20.1/lib/x64");
+    exe.addLibPath("C:\\src\\exercises\\zigsdl");
     exe.linkSystemLibrary("SDL2_ttf");
     exe.linkSystemLibrary("SDL2");
     //exe.linkSystemLibraryName("SDL2");
