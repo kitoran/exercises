@@ -6,7 +6,7 @@ LIBS += -lXext
 
 include(../../library/gui-X/gui.pri)
 include(../../library/misc/misc.pri)
-QMAKE_CFLAGS += -Wno-pointer-sign -Wno-unused-parameter
+QMAKE_CFLAGS += -Wno-pointer-sign -Wno-unused-parameter -Wno-unused-function
 #QMAKE_CFLAGS +=  -Ofast
 DEFINES += MY_PATH=\\\"$$PWD\\\"
 

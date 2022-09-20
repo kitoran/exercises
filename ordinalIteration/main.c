@@ -7,6 +7,7 @@
 #include "gui.h"
 #include <time.h>
 #include "gridlayout.h"
+#include "toolbuttongroup.h"
 #include "shittyintrospection.h"
 //#include "timeAFunction.h"
 #include "math.h"
@@ -46,7 +47,7 @@ void numToPicDI64 (double x, double y,long long int* restrict rx, long long int*
 }
 void recalculatePicture();
 char text[30];
-INTROSPECT_ENUM( modeEnum, selectMode, moveMode );
+INTROSPECT_ENUM_FILENAMES( modeEnum, selectMode, select.png, moveMode, move.png);
 modeEnum mode;
 Grid mainGrid;
 void loop(Painter* pa, bool* consume) {
@@ -100,7 +101,7 @@ void loop(Painter* pa, bool* consume) {
         recalc/* = res */= true;
     }
 
-//    guiToolButtonGroup(&move);
+    guiToolButtonGroup(pa, modeEnum, &mode);
 
 
 
@@ -281,7 +282,7 @@ void recalculatePicture() {
         volatile long long int lastyi;
         numToPicDI64(0, y, &dummy, &lastyi);
         xi++;
-        while(true) {
+        while(true) { break;// ***
             picToNumDD(xi, 0, &x, &dummy);
             y = function(x);
             long long int yi;
