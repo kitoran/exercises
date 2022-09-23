@@ -2,6 +2,7 @@
 #include <string.h>
 #include <float.h>
 #include <X11/Xlib.h>
+#include <X11/Xft/Xft.h>
 #include <X11/extensions/Xdbe.h>
 //char appName[] = "ordinalIteration";
 #include "gui.h"
@@ -14,10 +15,15 @@
 #include "persistent.h"
 #include "color.h"
 #include "complex.h"
+
+#define MAX(x,y) ((x)>(y)?(x):(y))
+#define MIN(x,y) ((x)<(y)?(x):(y))
+
 #define tau 6.283185307179586
-struct Ordinal {
-    int val[5];
-} iters;
+//struct Ordinal {
+//    int val[6];
+//}
+int iters[6] = {0};
 
 void ordinalEdit(Painter*p/*, Ordinal max*/) {
 //    Point pos = getPos();
@@ -26,31 +32,54 @@ void ordinalEdit(Painter*p/*, Ordinal max*/) {
 }
 
 XEvent xEvent;
-int size = 600;
-unsigned char data[600*600*4];
-unsigned char dataWithSelection[600*600*4];
+int width = 600;
+int height = 600;
+#define WIDTH_MAX 2000
+#define HEIGHT_MAX 2000
+unsigned char data[WIDTH_MAX*HEIGHT_MAX*4];
+unsigned char dataWithSelection[WIDTH_MAX*HEIGHT_MAX*4];
 int itNum = 0;
 double c = 8;
 double xm = 4;
 double ym = 4;
 void picToNumDD (double x, double y, double* restrict rx, double* restrict ry) {
-    *rx = x*c/size - xm;
-    *ry = c - y*c/size - ym;
+    int scale = MIN(width, height);
+    *rx = x*c/scale - xm;
+    *ry = c - y*c/scale - ym;
 }
 void numToPicDD (double x, double y,double * restrict rx, double * restrict ry) {
-    *rx = (x+xm)/c*size;
-    *ry = -(y +ym - c)/c*size;
+    int scale = MIN(width, height);
+    *rx = (x+xm)/c*scale;
+    *ry = -(y +ym - c)/c*scale;
 }
 void numToPicDI64 (double x, double y,long long int* restrict rx, long long int* restrict ry) {
-    *rx = round((x+xm)/c*size);
-    *ry = round(-(y +ym - c)/c*size);
+    int scale = MIN(width, height);
+    *rx = round((x+xm)/c*scale);
+    *ry = round(-(y +ym - c)/c*scale);
 }
 void recalculatePicture();
 char text[30];
 INTROSPECT_ENUM_FILENAMES( modeEnum, selectMode, select.png, moveMode, move.png);
 modeEnum mode;
 Grid mainGrid;
+void zoomin()
+{
+    c /= 2;
+    xm = xm - c/2;
+    ym = ym - c/2;
+    recalculatePicture();
+}
+
+void zoomout()
+{
+    xm = xm + c/2;
+    ym = ym + c/2;
+    c *= 2;
+    recalculatePicture();
+}
+
 void loop(Painter* pa, bool* consume) {
+//    popGrid();
     setCurrentGridPos(&mainGrid, 0,0);
 //    bool res = false;
     bool recalc = guiNumberEdit(pa, 5, &itNum, consume);
@@ -85,32 +114,58 @@ void loop(Painter* pa, bool* consume) {
     }
     gridNextColumn(&mainGrid);
     if(resourseToolButton(pa, "zoomin.png", consume)) {
-        c /= 2;
-        xm = xm - c/2;
-        ym = ym - c/2;
-        recalc/* = res */= true;
+        zoomin();
     }
     gridNextColumn(&mainGrid);
     if(resourseToolButton(pa, "zoomout.png", consume)) {
-        xm = xm + c/2;
-        ym = ym + c/2;
-        c *= 2;
-        //cent = (-xm + -xm+c)/2 = -xm + c/2
-        // -xm + c/2 = -xnm + c
-        // xnm = c - c/2 + xm = xm + c/2
-        recalc/* = res */= true;
+        zoomout();
     }
 
+    gridNextColumn(&mainGrid);
     guiToolButtonGroup(pa, modeEnum, &mode);
 
-
-
+    gridNextColumn(&mainGrid);
+    guiLabelZTWithBackground(pa, text, true);
 
     gridNextColumn(&mainGrid);
-    guiLabelZT(pa, text);
+    STATIC(Grid, exprGrid, allocateGrid(12, 1, 1));
+
+    exprGrid.gridStart = getPos();
+    pushGrid(&exprGrid);
+    setCurrentGridPos(&exprGrid, 0,0);
+    gridNextColumn(&exprGrid);
+    recalc |= guiNumberEdit(pa, 2, iters, consume);
+    gridNextColumn(&exprGrid);
+    guiLabelZTWithBackground(pa, "ω⁵+", true);
+    gridNextColumn(&exprGrid);
+    recalc |= guiNumberEdit(pa, 2, iters+1, consume);
+    gridNextColumn(&exprGrid);
+    guiLabelZTWithBackground(pa, "ω⁴+", true);
+    gridNextColumn(&exprGrid);
+    recalc |= guiNumberEdit(pa, 2, iters+2, consume);
+    gridNextColumn(&exprGrid);
+    guiLabelZTWithBackground(pa, "ω³+", true);
+    gridNextColumn(&exprGrid);
+    recalc |= guiNumberEdit(pa, 2, iters+3, consume);
+    gridNextColumn(&exprGrid);
+    guiLabelZTWithBackground(pa, "ω²+", true);
+    gridNextColumn(&exprGrid);
+    recalc |= guiNumberEdit(pa, 2, iters+4, consume);
+    gridNextColumn(&exprGrid);
+    guiLabelZTWithBackground(pa, "ω+", true);
+    gridNextColumn(&exprGrid);
+    recalc |= guiNumberEdit(pa, 2, iters+5, consume);
+    Size size; size.width = getGridWidth(&exprGrid);
+               size.height = getGridHeight(&exprGrid);
+
+    popGrid();
+    feedbackSize(size);
+//    guiLabel(pa, text, true);
+
 
     if(recalc) {
         recalculatePicture();
+//        guiRedraw();
     }
 
 //    return res;
@@ -143,22 +198,22 @@ double nthfunction(int n, double x) {
     return functionI(nthfunction(n-1, functionC(fr))) + intgr;
 }
 double function (double x) {
-    return nthfunction(3,x);
+    return nthfunction(4,x);
 }
 const double asin13 = 0.3398369094;
 const double sqrt2 = 1.4142135623730951;
 int* pixel(int x, int y) {
     static int oob;
-    if(x >= 0 && x < 600&& y >= 0 && y < 600) {
-        return (int*)(data+ (y*600+x)*4);
+    if(x >= 0 && x < width && y >= 0 && y < height) {
+        return (int*)(data+ (y*WIDTH_MAX+x)*4);
     } else {
         return &oob;
     }
 }
 int* pixelWithSelection(int x, int y) {
     static int oob;
-    if(x >= 0 && x < 600 && y >= 0 && y < 600) {
-        return (int*)(dataWithSelection+ (y*600+x)*4);
+    if(x >= 0 && x < width && y >= 0 && y < height) {
+        return (int*)(dataWithSelection+ (y*WIDTH_MAX+x)*4);
     } else {
         return &oob;
     }
@@ -167,12 +222,12 @@ int* pixelWithSelection(int x, int y) {
 void recalculatePicture() {
     int start = clock();
 
-    memset(data, 30, 600*600*4);
+    memset(data, 30, WIDTH_MAX*height*4);
 //    const double side = asin13*2*1.5/sqrt2;
     const double corner = (tau/4-asin13*2)*1.5/sqrt2;
     double dummy;
     double x;
-    for(int i = 0; i < 600; i++) {
+    for(int i = 0; i < width; i++) {
         double xp, yp;
         picToNumDD(i,0,&x,&dummy);
         numToPicDD(x, x, &xp, &yp);
@@ -187,7 +242,7 @@ void recalculatePicture() {
     picToNumDD(0,0,&x,&dummy);
     double lasty = NAN;
 //    numToPic(x, x*x, &dummy, &lasty);
-    for(int i = 0; i < 600 - 1; i++) {
+    for(int i = 0; i < width - 1; i++) {
         double xp, yp;
         picToNumDD(i,0,&x,&dummy);
         numToPicDD(x, function(x), &xp, &yp);
@@ -212,9 +267,9 @@ void recalculatePicture() {
             *pixel(round(xp), intgr+1) =grey(fr*255);
             *pixel(round(xp), intgr) =grey(255);
             *pixel(round(xp), intgr-1) =grey((1-fr)*255);
-//            *((int*)(data+ (((int)(intgr+1))*600+(int)round(xp))*4)) = grey(fr*255);
-//            *((int*)(data+ (((int)(intgr))*600+(int)round(xp))*4)) = grey(255);
-//            *((int*)(data+ ((int)(intgr-1)*600+(int)round(xp))*4)) = grey((1-fr)*255);
+//            *((int*)(data+ (((int)(intgr+1))*WIDTH_MAX+(int)round(xp))*4)) = grey(fr*255);
+//            *((int*)(data+ (((int)(intgr))*WIDTH_MAX+(int)round(xp))*4)) = grey(255);
+//            *((int*)(data+ ((int)(intgr-1)*WIDTH_MAX+(int)round(xp))*4)) = grey((1-fr)*255);
         }
 //        if(xp+1 < size && xp - 1 >= 0 &&
 //                yp < size && yp - 1 >= 0 ) {
@@ -222,8 +277,8 @@ void recalculatePicture() {
 
 //            for(double i = lasty+sign; abs(i-lasty) < abs(yp-lasty); i+=sign) {
 //                double greyRight = fabs(i*1.0-yp)/fabs(lasty-yp);
-//                *((int*)(data+ (((int)(intgr)+1)*600+(int)(xp)+1)*4)) = grey(fr*(1-greyRight)*255);
-//                *((int*)(data+ ((int)(intgr)*600+(int)xp+1)*4)) = grey((1-fr)*(1-greyRight)*255);
+//                *((int*)(data+ (((int)(intgr)+1)*WIDTH_MAX+(int)(xp)+1)*4)) = grey(fr*(1-greyRight)*255);
+//                *((int*)(data+ ((int)(intgr)*WIDTH_MAX+(int)xp+1)*4)) = grey((1-fr)*(1-greyRight)*255);
 
 //            }
 //        }
@@ -251,76 +306,60 @@ void recalculatePicture() {
         }
     }*/
 //    for(int n = 0; n < 10; n++) {
-    while(true) {
-        volatile double y = function(x);
-        long long int y1, y2, x1, x2;
-        numToPicDI64(x, x, &x1, &y1);
-        numToPicDI64(y, y, &x2, &y2);
-        if(x2 < 0 || y2 > 600) {
-            goto nextIter;
-        }
-        if(x1 > 600 || y1 < 0) {
-            break;
-        }
-        for(int i = y1; i > y2; i--) {
-            *pixel(x1, i) = 0xffff0000;
-        }
-        for(int i = x1; i < x2; i++) {
-            *pixel(i, y2) = 0xff00ff00;
-        }
-        nextIter:
-        if(x1 == x2) {
-            fprintf(stderr, "hi^))");
-            break;
-        }
-        x = y;
-    }
-    {
-        long long int xi;
-        numToPicDI64(x, 0, &xi, &dummy);
-        volatile double y = function(x);
-        volatile long long int lastyi;
-        numToPicDI64(0, y, &dummy, &lastyi);
-        xi++;
-        while(true) { break;// ***
-            picToNumDD(xi, 0, &x, &dummy);
-            y = function(x);
-            long long int yi;
-            numToPicDI64(0, y, &dummy, &yi);
-            if(yi - lastyi < -2) break;
-            lastyi = yi;
-            xi++;
-        }
+    for(int w1 = 0; w1 < iters[4] + 1; w1++) {
 
-        picToNumDD(xi+1, 0, &x, &dummy);
+        for(int w0 = 0; w1 < iters[4] || w0 < iters[5]; w0++) {
+            fprintf(stderr, "w1 = %d w0 = %d\n", w1, w0);
+
+            volatile double y = function(x);
+            long long int y1, y2, x1, x2;
+            numToPicDI64(x, x, &x1, &y1);
+            numToPicDI64(y, y, &x2, &y2);
+            if(x2 < 0 || y2 > height) {
+                goto nextIter;
+            }
+            if(x1 > width || y1 < 0) {
+                break;
+            }
+            for(int i = y1; i > y2; i--) {
+                *pixel(x1, i) = 0xffff0000;
+            }
+            if(w1 != iters[4] || w0 != iters[5]-1) {
+                for(int i = x1; i < x2; i++) {
+                    *pixel(i, y2) = 0xff00ff00;
+                }
+            }
+            nextIter:
+            if(x1 == x2) {
+                fprintf(stderr, "hi^))");
+                break;
+            }
+            x = y;
+        }
+        {
+            long long int xi;
+            numToPicDI64(x, 0, &xi, &dummy);
+            volatile double y = function(x);
+            volatile long long int lastyi;
+            numToPicDI64(0, y, &dummy, &lastyi);
+            xi++;
+            while(true) { /*break;*/// ***
+                picToNumDD(xi, 0, &x, &dummy);
+                y = function(x);
+                long long int yi;
+                numToPicDI64(0, y, &dummy, &yi);
+                if(yi - lastyi < -2) break;
+                lastyi = yi;
+                xi++;
+            }
+
+            picToNumDD(xi+1, 0, &x, &dummy);
+        }
     }
-    while(true) {
-        volatile double y = function(x);
-        long long int y1, y2, x1, x2;
-        numToPicDI64(x, x, &x1, &y1);
-        numToPicDI64(y, y, &x2, &y2);
-        if(x2 < 0 || y2 > 600) {
-            goto nextIter2;
-        }
-        if(x1 > 600 || y1 < 0) {
-            break;
-        }
-        for(int i = y1; i > y2; i--) {
-            *pixel(x1, i) = 0xffff0000;
-        }
-        for(int i = x1; i < x2; i++) {
-            *pixel(i, y2) = 0xff00ff00;
-        }
-        nextIter2:
-        if(x1 == x2) {
-            break;
-        }
-        x = y;
-    }
-    memcpy(dataWithSelection, data, 600*600*4);
+    memcpy(dataWithSelection, data, WIDTH_MAX*height*4);
     int end = clock();
     snprintf(text,sizeof(text), "%lf ms", (double)(end - start) / CLOCKS_PER_SEC*1000);
-    guiRedraw();
+//    guiRedraw();
 }
 char *appName = "ordinalIteration";
 int main()
@@ -328,91 +367,117 @@ int main()
     mainGrid = allocateGrid(50, 50, 5);
     pushGrid(&mainGrid);
     guiStartDrawing(appName);
-    guiSetSize(rootWindow, size, size+50);
+    guiSetSize(rootWindow, width, height+50);
     recalculatePicture();
     XImage *res = XCreateImage(xdisplay, DefaultVisual(xdisplay, DefaultScreen(xdisplay)), 24,
-                 ZPixmap, 0, dataWithSelection, size, size, 32,
-                         size*4);
+                 ZPixmap, 0, dataWithSelection, WIDTH_MAX, HEIGHT_MAX, 32,
+                         WIDTH_MAX*4);
 //    XdbeBackBuffer bb = XdbeAllocateBackBufferName(xdisplay, rootWindow, XdbeUndefined);
     Window bb = rootWindow;
     GC gc = XCreateGC(xdisplay, bb, 0, NULL);
-    XPutImage(xdisplay, rootWindow, gc, res, 0, 0, 0,50, 600, 600);
+    XPutImage(xdisplay, rootWindow, gc, res, 0, 0, 0,50, width, height);
 
     Painter pa = {bb, gc};
     getPos = gridGetPos;
     feedbackSize = gridFeedbackSize;
     mainGrid.gridStart.x = 5;
     mainGrid.gridStart.y = 5;
-//    Pixmap pixm = XCreatePixmap(xdisplay, bb, 600, 600, xDepth);
+//    Pixmap pixm = XCreatePixmap(xdisplay, bb, width, height, xDepth);
 //    GC pixgc = XCreateGC(xdisplay, pixm, 0, NULL);
+
     while(true) {
         guiNextEvent();
-
+        if(xEvent.type == ButtonPress ) {
+            fprintf(stderr, "%d", xEvent.type);
+        }
+        {
+            int queued = XEventsQueued(xdisplay, QueuedAlready);
+            if(queued > 1){
+                fprintf(stderr, "%d queued\n", queued);
+            }
+        }
         volatile int t;
         bool consume = false;
         if(xEvent.type == Expose)
             XClearWindow(xdisplay, rootWindow);
 
         loop(&pa, &consume);
-
-//        printf("%d", consume);
+        int bottom = getGridBottom(&mainGrid) + 5;
         if(xEvent.type == DestroyNotify) {
             goto exit;
         };
-//        if(!consume && mode == itersMode) {
-//            if(xEvent.type == ButtonPress || xEvent.type == MotionNotify) {
-//                double x, y;
-//                double xn, yn;
-//                picToNum(xEvent.xbutton.x, xEvent.xbutton.y, &x, &y);
-//                for(int i = 0; i < 10; i++) {
-//                    xn = x; yn = y;
-//                    iter(&x, &y);
-
-//                    int xl, yl, xc, yc;
-//                    numToPic(x, y, &xc, &yc);
-//                    numToPic(xn, yn, &xl, &yl);
-
-//                    guiDrawLine(&pa,xl,yl,xc,yc);
-//                }
-//            };
-//        } else
+        if(xEvent.type == ConfigureNotify) {
+            if(xEvent.xconfigure.width != width ||
+                    xEvent.xconfigure.height-bottom != height) {
+                width = MIN(xEvent.xconfigure.width, WIDTH_MAX);
+                height = MIN(xEvent.xconfigure.height - bottom, WIDTH_MAX);
+                recalculatePicture();
+                guiRedraw();
+            }
+        }
         if(!consume /*&& mode == selectMode*/) {
             static int startx, starty;
             static bool sel = false;
-            if(xEvent.type == ButtonPress) {
-                startx = xEvent.xbutton.x;
-                starty = xEvent.xbutton.y-50;
-                sel = true;
-            } else if(xEvent.type == MotionNotify) {
-                int endx = xEvent.xbutton.x;
-                int endy = xEvent.xbutton.y-50;
-#define MAX(x,y) ((x)>(y)?(x):(y))
-#define MIN(x,y) ((x)<(y)?(x):(y))
-                int c = MAX(abs(endx-startx), abs(endy-starty));
-                int xm = endx>startx?startx:startx-c;
-                int ym = endy>starty?starty:starty-c;
-//                int ym = MIN(starty,endy);
-//                XSetForeground(xdisplay, pixgc, 0xffffffff);
-//                XDrawRectangle(xdisplay, pixm, pixgc,
-//                                 xm, ym+50, c, c);
-                memcpy(dataWithSelection, data, 600*600*4);
-                for(int i = 0; i < c; i++) {
-                    *pixelWithSelection(xm+i, ym) =
-                    *pixelWithSelection(xm+i, ym+c) =
-                    *pixelWithSelection(xm, ym+i) =
-                    *pixelWithSelection(xm+c, ym+i) = 0xffffffff;
-
+            if(xEvent.type == ButtonPress && xEvent.xbutton.y > bottom) {
+                fprintf(stderr, "\n button %d\n",xEvent.xbutton.button);
+                switch (xEvent.xbutton.button){
+                    case Button1:
+                        startx = xEvent.xbutton.x;
+                        starty = xEvent.xbutton.y-bottom;
+                        if(mode == selectMode) sel = true;
+                        break;
+                    case Button4:
+                        zoomin();
+                        break;
+                    case Button5:
+                        zoomout();
+                        break;
                 }
-//                recalculatePicture();
-            } if(xEvent.type == ButtonRelease) {
+            } else if(xEvent.type == MotionNotify) {
+                XEvent newEvent;
+                bool predicate(Display*d, XEvent* e, XPointer ar) {
+                    return e->type == MotionNotify;
+                }
+                while(XCheckIfEvent(xdisplay, &newEvent,predicate, NULL)) {
+                    xEvent = newEvent;
+                }
+
+                if(mode == selectMode) {
+                    int endx = xEvent.xmotion.x;
+                    int endy = xEvent.xmotion.y-bottom;
+                    int c = MAX(abs(endx-startx), abs(endy-starty));
+                    int xm = endx>startx?startx:startx-c;
+                    int ym = endy>starty?starty:starty-c;
+                    memcpy(dataWithSelection, data, WIDTH_MAX*height*4);
+                    for(int i = 0; i < c; i++) {
+                        *pixelWithSelection(xm+i, ym) =
+                        *pixelWithSelection(xm+i, ym+c) =
+                        *pixelWithSelection(xm, ym+i) =
+                        *pixelWithSelection(xm+c, ym+i) = 0xffffffff;
+
+                    }
+                } else if(mode == moveMode) {
+                    int endx = xEvent.xmotion.x;
+                    int endy = xEvent.xmotion.y-bottom;
+                    double sx, sy, ex,ey;                    picToNumDD(startx, starty, &sx, &sy);
+                    picToNumDD(endx, endy, &ex, &ey);
+
+                    picToNumDD(startx, starty, &sx, &sy);
+                    picToNumDD(endx, endy, &ex, &ey);
+                    xm += (ex-sx);
+                    ym += (ey-sy);
+                    startx  = endx;
+                    starty  = endy;
+                    recalculatePicture();
+
+                }                    //                recalculatePicture();
+            } if(xEvent.type == ButtonRelease && sel && xEvent.xbutton.y > bottom) {
                 double sx, sy;
                 picToNumDD(startx, starty,
                          &sx, &sy);
                 double ex, ey;
-                picToNumDD(xEvent.xbutton.x, xEvent.xbutton.y-50,
+                picToNumDD(xEvent.xbutton.x, xEvent.xbutton.y-bottom,
                          &ex, &ey);
-#define MAX(x,y) ((x)>(y)?(x):(y))
-#define MIN(x,y) ((x)<(y)?(x):(y))
                 c = MAX(fabs(ex-sx), fabs(ey-sy));
                 if(c < DBL_MIN) {
                     c = DBL_MIN*100;// normalized
@@ -423,50 +488,12 @@ int main()
                 recalculatePicture();
             }
         }
-        XPutImage(xdisplay, rootWindow, gc, res, 0, 0, 0,50, 600, 600);
-//        XPutImage(xdisplay, pixm, pixgc, res, 0, 0, 0,0, 600, 600);
-//        XCopyArea(xdisplay, pixm, bb, gc, 0, 0, 600, 600, 0, 50);
-//        else if(!consume && mode == zoominMode) {
-//            if(xEvent.type == ButtonRelease) {
-//                double mouseX = xEvent.xbutton.x;
-//                double mouseY = xEvent.xbutton.y;
-//                /*
-//                 * mouseX * c / 2 - xmnew = mouseX * c - xmold
-//                 * mouseY * c / 2 - ymnew = mouseY * c - ymold
-//                 *
-//                 * xmnew = xmold - mouseX * c *1.5
-//                 *
-//                 * size/2*c/2/size - xmnew = mouseX * c/size - xmold
-//                 * c/2 - size/2*c/2/size - ymnew = c - mouseY * c/size - ymold
-//                 * ymnew - c/2 + c/4 = ymold - c + mouseY*c/size
-//                 * ymnew = ymold - c + mouseY*c/size + c/2 - c/4
-//                 *
-//                 * xmnew = xmold - mouseX*c + c/2
-//                 */
-//                double cxcx = mouseX * c/size - xm;
-//                double newxm, newym;
-//                double cxcxoldx, d; picToNum((int)mouseX, (int)mouseY, &cxcxoldx, &d);
-////                picToNum(mouseX - size/4,
-////                         mouseY - size/4,
-////                         &newxm,
-////                         &newym);
-////                picToNum(
-//                fprintf(stderr, "xm bef %lf \n", xm);
-//                xm = xm-mouseX*c/size + c/4;
-//                fprintf(stderr, "xm aft %lf \n", xm);
-//                double cxcxnew = size/2*c/size - xm;
-//                ym = ym - c + mouseY*c/size + c/2 - c/4;//ym-mouseY*c/size + c/4;
-//                c/=2;
+        XPutImage(xdisplay, rootWindow, gc, res, 0, 0, 0,bottom, width, height);
 
-//                double cxcxnewx; picToNum(size/2, size/2,&cxcxnewx, &d);
-//                fprintf(stderr, "cxcx %lf, cxcxoldx %lf, cxcxnew %lf, "
-//                        "cxcxnewx %lf\n", cxcx, cxcxoldx, cxcxnew, cxcxnewx);
-//                recalculatePicture();
-//            }
-//        }
-//        XdbeSwapInfo si = {rootWindow, XdbeUndefined};
-//        XdbeSwapBuffers(xdisplay, &si, 1);
-//        XFlush(xdisplay);
+        {int w = getGridWidth(&mainGrid);
+        if(w > width) {
+            guiSetSize(rootWindow, w, height+bottom);
+        }}
     }
 exit:
     XDestroyWindow(xdisplay,
