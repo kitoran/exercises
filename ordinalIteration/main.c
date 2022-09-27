@@ -1,5 +1,6 @@
 ﻿#include <stdio.h>
 #include <string.h>
+#include <settings.h>
 #include <float.h>
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
@@ -59,7 +60,7 @@ void numToPicDI64 (double x, double y,long long int* restrict rx, long long int*
 }
 void recalculatePicture();
 char text[30];
-INTROSPECT_ENUM_FILENAMES( modeEnum, selectMode, select.png, moveMode, move.png);
+INTROSPECT_ENUM_FILENAMES( modeEnum, selectMode, select.png, moveMode, move.png, pointMode, point.png);
 modeEnum mode;
 Grid mainGrid;
 void zoomin()
@@ -77,21 +78,24 @@ void zoomout()
     c *= 2;
     recalculatePicture();
 }
+int startx, starty;
 
 void loop(Painter* pa, bool* consume) {
 //    popGrid();
     setCurrentGridPos(&mainGrid, 0,0);
 //    bool res = false;
-    bool recalc = guiNumberEdit(pa, 5, &itNum, consume);
+    bool recalc = persistentNumberEdit(pa, 5, itNum, consume);
 
     gridNextColumn(&mainGrid);
     if(resourseToolButton(pa, "minus.png", consume)) {
         itNum--;
+        SAVE_INT(itNum);
         recalc = /*res = */true;
     }
     gridNextColumn(&mainGrid);
     if(resourseToolButton(pa, "plus.png", consume)) {
         itNum++;
+        SAVE_INT(itNum);
         recalc = /*res = */true;
     }
 //    gridNextColumn();
@@ -122,7 +126,9 @@ void loop(Painter* pa, bool* consume) {
     }
 
     gridNextColumn(&mainGrid);
-    guiToolButtonGroup(pa, modeEnum, &mode);
+    if(persistentToolButtonGroup(pa, modeEnum, mode)) {
+        startx = starty = -1;
+    }
 
     gridNextColumn(&mainGrid);
     guiLabelZTWithBackground(pa, text, true);
@@ -168,10 +174,10 @@ int greyf(double v) {
     return grey(v*255);
 }
 double functionC (double x) {
-    return -1/(x-1);
+    return -1/(x-1)-1;
 }
 double functionI (double x) {
-    return 1-1/(x);
+    return 1-1/(x+1);
 }
 double functionInit (double x) {
     return x+1;
@@ -207,71 +213,48 @@ int* pixelWithSelection(int x, int y) {
         return &oob;
     }
 }
+#define CORNER ((tau/4-asin13*2)*1.5/sqrt2)
+void drawSmallCircle(int* getPixel(int , int ), int xp, int yp, int c) {
+    *getPixel(xp+1, yp-1) = *getPixel(xp+1, yp)= *getPixel(xp, yp+1)=*getPixel(xp, yp-2) = //greyf(side);
+    *getPixel(xp-1, yp+1) = *getPixel(xp-1, yp-2)=*getPixel(xp-2, yp-1)=*getPixel(xp-2, yp) = greyf(CORNER) & c;
+    *getPixel(xp, yp-1) = *getPixel(xp, yp)= *getPixel(xp-1, yp-1)=*getPixel(xp-1, yp) = c;
+}
 #define SMALLFLOAT 0.001
 void recalculatePicture() {
     int start = clock();
 
     memset(data, 30, WIDTH_MAX*height*4);
-//    const double side = asin13*2*1.5/sqrt2;
-    const double corner = (tau/4-asin13*2)*1.5/sqrt2;
     double dummy;
     double x;
-    for(int i = 0; i < width; i++) {
+    {
+        int i = 0;
         double xp, yp;
         picToNumDD(i,0,&x,&dummy);
         numToPicDD(x, x, &xp, &yp);
-//        if(!(xp+10 < size && xp - 10 >= 0 &&
-//                                        yp+10 < size && yp - 10 >= 0)) {
-//            continue;
-////            goto end;
-//        }
-        *pixel(round(xp),round(yp)) = 0xffff0000;
+        int ys = round(yp);
+        for(; i < width; i++) {
+            *pixel(i, ys-i) = 0xffff0000;
+        }
     }
-
     picToNumDD(0,0,&x,&dummy);
     double lasty = NAN;
-//    numToPic(x, x*x, &dummy, &lasty);
     for(int i = 0; i < width - 1; i++) {
         double xp, yp;
         picToNumDD(i,0,&x,&dummy);
         numToPicDD(x, function(x), &xp, &yp);
-//        bool insideScope = (xp+10 < size && xp - 10 >= 0 &&
-//                            yp+10 < size && yp - 10 >= 0);
         bool jump = fabs(yp-lasty) > 1+SMALLFLOAT;
         if(jump) {
-//            if(insideScope) {
-                *pixel(xp+1, yp-1) = *pixel(xp+1, yp)= *pixel(xp, yp+1)=*pixel(xp, yp-2) = //greyf(side);
-                *pixel(xp-1, yp+1) = *pixel(xp-1, yp-2)=*pixel(xp-2, yp-1)=*pixel(xp-2, yp) = greyf(corner);
-                *pixel(xp, yp-1) = *pixel(xp, yp)= *pixel(xp-1, yp-1)=*pixel(xp-1, yp) = 0xffffffff;
-//            }
-//            bool lastInsideScope = (xp+10 < size && xp - 10 >= 0 &&
-//                                lasty+10 < size && lasty - 10 >= 0);
-//            if(lastInsideScope) {
-                *pixel(xp+1, lasty-1) = *pixel(xp+1, lasty)= *pixel(xp, lasty+1)=*pixel(xp, lasty-2) = //greyf(side);
-                *pixel(xp-1, lasty+1) = *pixel(xp-1, lasty-2)=*pixel(xp-2, lasty-1)=*pixel(xp-2, lasty) = greyf(corner);
-                *pixel(xp, lasty-1) = *pixel(xp, lasty)= *pixel(xp-1, lasty-1)=*pixel(xp-1, lasty) = 0;
-//            }
-        } else /*if(insideScope)*/ {
+            drawSmallCircle(pixel, xp, yp, 0xffffffff);
+
+            *pixel(xp+1, lasty-1) = *pixel(xp+1, lasty)= *pixel(xp, lasty+1)=*pixel(xp, lasty-2) = //greyf(side);
+            *pixel(xp-1, lasty+1) = *pixel(xp-1, lasty-2)=*pixel(xp-2, lasty-1)=*pixel(xp-2, lasty) = greyf(CORNER);
+            *pixel(xp, lasty-1) = *pixel(xp, lasty)= *pixel(xp-1, lasty-1)=*pixel(xp-1, lasty) = 0;
+        } else {
             double intgr, fr = modf(yp, &intgr);
             *pixel(round(xp), intgr+1) =grey(fr*255);
             *pixel(round(xp), intgr) =grey(255);
             *pixel(round(xp), intgr-1) =grey((1-fr)*255);
-//            *((int*)(data+ (((int)(intgr+1))*WIDTH_MAX+(int)round(xp))*4)) = grey(fr*255);
-//            *((int*)(data+ (((int)(intgr))*WIDTH_MAX+(int)round(xp))*4)) = grey(255);
-//            *((int*)(data+ ((int)(intgr-1)*WIDTH_MAX+(int)round(xp))*4)) = grey((1-fr)*255);
         }
-//        if(xp+1 < size && xp - 1 >= 0 &&
-//                yp < size && yp - 1 >= 0 ) {
-////            fprintf(stderr, "%d\n", xp);
-
-//            for(double i = lasty+sign; abs(i-lasty) < abs(yp-lasty); i+=sign) {
-//                double greyRight = fabs(i*1.0-yp)/fabs(lasty-yp);
-//                *((int*)(data+ (((int)(intgr)+1)*WIDTH_MAX+(int)(xp)+1)*4)) = grey(fr*(1-greyRight)*255);
-//                *((int*)(data+ ((int)(intgr)*WIDTH_MAX+(int)xp+1)*4)) = grey((1-fr)*(1-greyRight)*255);
-
-//            }
-//        }
-//        end:
         lasty = yp;
     }
     /*{
@@ -296,41 +279,43 @@ void recalculatePicture() {
 //    for(int n = 0; n < 10; n++) {
     x = 0;
     long long int y2, x1;
-    int colors[6] = {0xffffffff, 0xffffff00, 0xff00ff00, 0xff00ffff,
-                    0xff0000ff, 0xffff00ff};
+    int colors[6] = {0xffffff00, 0xff00ff00, 0xff00ffff,
+                    0xff0000ff, 0xffff00ff, 0xffffffff};
     int maxExponent = 5; for(; maxExponent >= 0; maxExponent--) { if(iters[maxExponent] > 0) break; }
-    bool repeat = maxExponent > itNum;
-    int maxExponentVisibleOnUnitSegment = MIN(maxExponent, itNum);
-    for(int exponent = maxExponentVisibleOnUnitSegment; exponent >= 0; exponent--) {
-        for(int i = 1; i < iters[exponent]; i++) {
-            double disc = i;
-            for(int it = 0; it < itNum - exponent; it++) {
-                disc = functionI(disc+1);
-            }
-    //        double ndisc = functionI(i+1);
-    //        for(int j = 0; j < 10; j++) {
-    //            double discj = functionI(functionI(j)+i);
-    //                    (1-1.0/j)*(ndisc-disc)+disc;
-    //            double ndisc = 1-1.0/(i+1);
-
-    //            numToPicDI64(discj, discj, &x1, &y2);
-
-    //            *pixel(x1+1, y2-1) = *pixel(x1+1, y2)= *pixel(x1, y2+1)=*pixel(x1, y2-2) = //greyf(side);
-    //            *pixel(x1-1, y2+1) = *pixel(x1-1, y2-2)=*pixel(x1-2, y2-1)=*pixel(x1-2, y2) = greyf(corner) & 0xffff00ff;
-    //            *pixel(x1, y2-1) = *pixel(x1, y2)= *pixel(x1-1, y2-1)=*pixel(x1-1, y2) = 0xffff00ff;
-    //        }
-            numToPicDI64(disc, disc, &x1, &y2);
-
-            *pixel(x1+1, y2-1) = *pixel(x1+1, y2)= *pixel(x1, y2+1)=*pixel(x1, y2-2) = //greyf(side);
-            *pixel(x1-1, y2+1) = *pixel(x1-1, y2-2)=*pixel(x1-2, y2-1)=*pixel(x1-2, y2) = greyf(corner) & colors[exponent];
-            *pixel(x1, y2-1) = *pixel(x1, y2)= *pixel(x1-1, y2-1)=*pixel(x1-1, y2) = colors[exponent];
+//    int maxExponentVisibleOnUnitSegment = MIN(maxExponent, itNum);
+//    double lastRes = 0;
+//    for(int exponent = 5; exponent >= 0; exponent--) {
+//        for(int i = 1; i <= iters[exponent]; i++) {
+    double endingArg;
+    if(maxExponent > itNum) {
+        picToNumDD(width, 0, &endingArg, &dummy);
+    } else {
+        endingArg = iters[0];
+        for(int it = 1; it <= itNum; it++) {
+            endingArg = (it>5?0:iters[it]) + functionI(endingArg);
         }
     }
-    for(int w1 = 0; w1 < iters[1] + 1; w1++) {
-        i64 startingx;
-        numToPicDI64(x, 0, &startingx, &dummy);
-        for(int w0 = 0; w1 < iters[1] || w0 < iters[0]; w0++) {
-            fprintf(stderr, "w1 = %d w0 = %d\n", w1, w0);
+///*    for(int w1 = 0; w1 < iters[1] + 1; w1++)
+    {
+
+        double ci(int depth, double ar) {
+
+            double intgr, fr = modf(ar, &intgr);
+            if(ar < 0) { fr = 1+fr; intgr--; }
+            if(depth == 0) {
+                return intgr;
+            }
+            return functionI(ci(depth-1, functionC(fr))) + intgr;
+        }
+        picToNumDD(0, 0, &x, &dummy);
+//        i64 startingx;
+        if(x < 0) x = 0;
+//        drawSmallCircle(pixel, x1, y2, 0xff00ff00);
+
+
+        while(/*x1 <= width && */x <= endingArg+SMALLFLOAT) {
+//            fprintf(stderr, "w1 = %d w0 = %d\n", w1, w0);
+//            fprintf(stderr, "x = %lf endingArg+SMALLFLOAT = %lf\n", x, endingArg+SMALLFLOAT);
 
             volatile double y = function(x);
             volatile long long int y1, x2;
@@ -345,7 +330,7 @@ void recalculatePicture() {
             for(int i = y1; i > y2; i--) {
                 *pixel(x1, i) = 0xffff0000;
             }
-            if(w1 != iters[1] || w0 != iters[0]-1) {
+            if(y < endingArg) {
                 for(int i = x1; i < x2; i++) {
                     *pixel(i, y2) = 0xff00ff00;
                 }
@@ -353,19 +338,23 @@ void recalculatePicture() {
             nextIter:
             if(x1 == x2) {
                 fprintf(stderr, "hi^))");
-                break;
+                picToNumDD(x1+1, 0, &x, &dummy);
+//                break;
+            } else {
+                x = y;
             }
-            x = y;
         }
-        {
-            i64 endingx;
-            numToPicDI64(x, 0, &endingx, &dummy);
-            fprintf(stderr, "startingx %d endingx %d", startingx, endingx);
-            if(endingx <= startingx + 1) {
 
-                break;
-            }
-        }
+
+//        {
+//            i64 endingx;
+//            numToPicDI64(x, 0, &endingx, &dummy);
+//            fprintf(stderr, "startingx %d endingx %d", startingx, endingx);
+//            if(endingx <= startingx + 1) {
+
+//                break;
+//            }
+//        }
 //        {
 //            long long int xi;
 //            numToPicDI64(x, 0, &xi, &dummy);
@@ -386,10 +375,10 @@ void recalculatePicture() {
 //            picToNumDD(xi+1, 0, &x, &dummy);
 //        }
     }
-    *pixel(x1+1, y2-1) = *pixel(x1+1, y2)= *pixel(x1, y2+1)=*pixel(x1, y2-2) = //greyf(side);
-    *pixel(x1-1, y2+1) = *pixel(x1-1, y2-2)=*pixel(x1-2, y2-1)=*pixel(x1-2, y2) = greyf(corner) & 0xffff0000;
-    *pixel(x1, y2-1) = *pixel(x1, y2)= *pixel(x1-1, y2-1)=*pixel(x1-1, y2) = 0xffff0000;
 
+
+    numToPicDI64(endingArg, function(endingArg), &x1, &y2);
+    drawSmallCircle(pixel, x1, y2, 0xffff0000);
 
     memcpy(dataWithSelection, data, WIDTH_MAX*height*4);
     int end = clock();
@@ -459,15 +448,21 @@ int main()
             }
         }
         if(!consume /*&& mode == selectMode*/) {
-            static int startx, starty;
+            static int prevx, prevy;
             static bool sel = false;
+            if(xEvent.type == ButtonPress  && xEvent.xbutton.button == Button1) {
+                prevx = startx = xEvent.xbutton.x;
+                prevy = starty = xEvent.xbutton.y-bottom;
+            }
             if(xEvent.type == ButtonPress && xEvent.xbutton.y > bottom) {
-                fprintf(stderr, "\n button %d\n",xEvent.xbutton.button);
+                fprintf(stderr, "\n button %d starty %d\n",xEvent.xbutton.button, starty);
                 switch (xEvent.xbutton.button){
                     case Button1:
-                        startx = xEvent.xbutton.x;
-                        starty = xEvent.xbutton.y-bottom;
                         if(mode == selectMode) sel = true;
+                        if(mode == pointMode) {
+                            recalculatePicture();
+                            drawSmallCircle(pixelWithSelection, startx, starty, 0xffff0000);
+                        }
                         break;
                     case Button4:
                         zoomin();
@@ -477,6 +472,7 @@ int main()
                         break;
                 }
             } else if(xEvent.type == MotionNotify) {
+                if(starty < 0) continue;
                 XEvent newEvent;
                 bool predicate(Display*d, XEvent* e, XPointer ar) {
                     return e->type == MotionNotify;
@@ -502,15 +498,14 @@ int main()
                 } else if(mode == moveMode) {
                     int endx = xEvent.xmotion.x;
                     int endy = xEvent.xmotion.y-bottom;
-                    double sx, sy, ex,ey;                    picToNumDD(startx, starty, &sx, &sy);
-                    picToNumDD(endx, endy, &ex, &ey);
+                    double sx, sy, ex,ey;
 
-                    picToNumDD(startx, starty, &sx, &sy);
+                    picToNumDD(prevx, prevy, &sx, &sy);
                     picToNumDD(endx, endy, &ex, &ey);
                     xm += (ex-sx);
                     ym += (ey-sy);
-                    startx  = endx;
-                    starty  = endy;
+                    prevx  = endx;
+                    prevy  = endy;
                     recalculatePicture();
 
                 }                    //                recalculatePicture();
@@ -531,7 +526,7 @@ int main()
                 recalculatePicture();
             }
         }
-        XPutImage(xdisplay, rootWindow, gc, res, 0, 0, 0,bottom, width, height);
+        XPutImage(xdisplay, rootWindow, gc, res, 0, 0, 0, bottom, width, height);
 
         {int w = getGridWidth(&mainGrid);
         if(w > width) {
