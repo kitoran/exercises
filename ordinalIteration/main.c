@@ -38,7 +38,7 @@ int height = 600;
 #define HEIGHT_MAX 2000
 unsigned char data[WIDTH_MAX*HEIGHT_MAX*4];
 unsigned char dataWithSelection[WIDTH_MAX*HEIGHT_MAX*4];
-int itNum = 0;
+int itNum = 2;
 double c = 8;
 double xm = 4;
 double ym = 4;
@@ -133,28 +133,17 @@ void loop(Painter* pa, bool* consume) {
     exprGrid.gridStart = getPos();
     pushGrid(&exprGrid);
     setCurrentGridPos(&exprGrid, 0,0);
-    gridNextColumn(&exprGrid);
-    recalc |= guiNumberEdit(pa, 2, iters, consume);
-    gridNextColumn(&exprGrid);
-    guiLabelZTWithBackground(pa, "ω⁵+", true);
-    gridNextColumn(&exprGrid);
-    recalc |= guiNumberEdit(pa, 2, iters+1, consume);
-    gridNextColumn(&exprGrid);
-    guiLabelZTWithBackground(pa, "ω⁴+", true);
-    gridNextColumn(&exprGrid);
-    recalc |= guiNumberEdit(pa, 2, iters+2, consume);
-    gridNextColumn(&exprGrid);
-    guiLabelZTWithBackground(pa, "ω³+", true);
-    gridNextColumn(&exprGrid);
-    recalc |= guiNumberEdit(pa, 2, iters+3, consume);
-    gridNextColumn(&exprGrid);
-    guiLabelZTWithBackground(pa, "ω²+", true);
-    gridNextColumn(&exprGrid);
-    recalc |= guiNumberEdit(pa, 2, iters+4, consume);
-    gridNextColumn(&exprGrid);
-    guiLabelZTWithBackground(pa, "ω+", true);
-    gridNextColumn(&exprGrid);
-    recalc |= guiNumberEdit(pa, 2, iters+5, consume);
+
+    char* sups[] = {"​", "", "²","³",  "⁴", "⁵"};
+    for(int exponent = 5; exponent > 0; exponent--) {
+        char* label[30];
+        int len = snprintf(label, 30, "ω%s+", sups[exponent]);
+        recalc |= persistentNumberEdit_(pa, 2, iters+exponent, label, consume);
+        gridNextColumn(&exprGrid);
+        guiLabelWithBackground(pa, label, len, true);
+        gridNextColumn(&exprGrid);
+    }
+    recalc |= persistentNumberEdit(pa, 2, iters, consume);
     Size size; size.width = getGridWidth(&exprGrid);
                size.height = getGridHeight(&exprGrid);
 
@@ -182,7 +171,7 @@ double functionC (double x) {
     return -1/(x-1);
 }
 double functionI (double x) {
-    return 1-1/x;
+    return 1-1/(x);
 }
 double functionInit (double x) {
     return x+1;
@@ -198,7 +187,7 @@ double nthfunction(int n, double x) {
     return functionI(nthfunction(n-1, functionC(fr))) + intgr;
 }
 double function (double x) {
-    return nthfunction(4,x);
+    return nthfunction( itNum,x);
 }
 const double asin13 = 0.3398369094;
 const double sqrt2 = 1.4142135623730951;
@@ -285,7 +274,6 @@ void recalculatePicture() {
 //        end:
         lasty = yp;
     }
-    x = 0;
     /*{
         long long int x1;
         numToPicDI64(x, 0, &x1, &dummy);
@@ -306,13 +294,46 @@ void recalculatePicture() {
         }
     }*/
 //    for(int n = 0; n < 10; n++) {
-    for(int w1 = 0; w1 < iters[4] + 1; w1++) {
+    x = 0;
+    long long int y2, x1;
+    int colors[6] = {0xffffffff, 0xffffff00, 0xff00ff00, 0xff00ffff,
+                    0xff0000ff, 0xffff00ff};
+    int maxExponent = 5; for(; maxExponent >= 0; maxExponent--) { if(iters[maxExponent] > 0) break; }
+    bool repeat = maxExponent > itNum;
+    int maxExponentVisibleOnUnitSegment = MIN(maxExponent, itNum);
+    for(int exponent = maxExponentVisibleOnUnitSegment; exponent >= 0; exponent--) {
+        for(int i = 1; i < iters[exponent]; i++) {
+            double disc = i;
+            for(int it = 0; it < itNum - exponent; it++) {
+                disc = functionI(disc+1);
+            }
+    //        double ndisc = functionI(i+1);
+    //        for(int j = 0; j < 10; j++) {
+    //            double discj = functionI(functionI(j)+i);
+    //                    (1-1.0/j)*(ndisc-disc)+disc;
+    //            double ndisc = 1-1.0/(i+1);
 
-        for(int w0 = 0; w1 < iters[4] || w0 < iters[5]; w0++) {
+    //            numToPicDI64(discj, discj, &x1, &y2);
+
+    //            *pixel(x1+1, y2-1) = *pixel(x1+1, y2)= *pixel(x1, y2+1)=*pixel(x1, y2-2) = //greyf(side);
+    //            *pixel(x1-1, y2+1) = *pixel(x1-1, y2-2)=*pixel(x1-2, y2-1)=*pixel(x1-2, y2) = greyf(corner) & 0xffff00ff;
+    //            *pixel(x1, y2-1) = *pixel(x1, y2)= *pixel(x1-1, y2-1)=*pixel(x1-1, y2) = 0xffff00ff;
+    //        }
+            numToPicDI64(disc, disc, &x1, &y2);
+
+            *pixel(x1+1, y2-1) = *pixel(x1+1, y2)= *pixel(x1, y2+1)=*pixel(x1, y2-2) = //greyf(side);
+            *pixel(x1-1, y2+1) = *pixel(x1-1, y2-2)=*pixel(x1-2, y2-1)=*pixel(x1-2, y2) = greyf(corner) & colors[exponent];
+            *pixel(x1, y2-1) = *pixel(x1, y2)= *pixel(x1-1, y2-1)=*pixel(x1-1, y2) = colors[exponent];
+        }
+    }
+    for(int w1 = 0; w1 < iters[1] + 1; w1++) {
+        i64 startingx;
+        numToPicDI64(x, 0, &startingx, &dummy);
+        for(int w0 = 0; w1 < iters[1] || w0 < iters[0]; w0++) {
             fprintf(stderr, "w1 = %d w0 = %d\n", w1, w0);
 
             volatile double y = function(x);
-            long long int y1, y2, x1, x2;
+            volatile long long int y1, x2;
             numToPicDI64(x, x, &x1, &y1);
             numToPicDI64(y, y, &x2, &y2);
             if(x2 < 0 || y2 > height) {
@@ -324,7 +345,7 @@ void recalculatePicture() {
             for(int i = y1; i > y2; i--) {
                 *pixel(x1, i) = 0xffff0000;
             }
-            if(w1 != iters[4] || w0 != iters[5]-1) {
+            if(w1 != iters[1] || w0 != iters[0]-1) {
                 for(int i = x1; i < x2; i++) {
                     *pixel(i, y2) = 0xff00ff00;
                 }
@@ -337,25 +358,39 @@ void recalculatePicture() {
             x = y;
         }
         {
-            long long int xi;
-            numToPicDI64(x, 0, &xi, &dummy);
-            volatile double y = function(x);
-            volatile long long int lastyi;
-            numToPicDI64(0, y, &dummy, &lastyi);
-            xi++;
-            while(true) { /*break;*/// ***
-                picToNumDD(xi, 0, &x, &dummy);
-                y = function(x);
-                long long int yi;
-                numToPicDI64(0, y, &dummy, &yi);
-                if(yi - lastyi < -2) break;
-                lastyi = yi;
-                xi++;
-            }
+            i64 endingx;
+            numToPicDI64(x, 0, &endingx, &dummy);
+            fprintf(stderr, "startingx %d endingx %d", startingx, endingx);
+            if(endingx <= startingx + 1) {
 
-            picToNumDD(xi+1, 0, &x, &dummy);
+                break;
+            }
         }
+//        {
+//            long long int xi;
+//            numToPicDI64(x, 0, &xi, &dummy);
+//            volatile double y = function(x);
+//            volatile long long int lastyi;
+//            numToPicDI64(0, y, &dummy, &lastyi);
+//            xi++;
+//            while(true) { /*break;*/// ***
+//                picToNumDD(xi, 0, &x, &dummy);
+//                y = function(x);
+//                long long int yi;
+//                numToPicDI64(0, y, &dummy, &yi);
+//                if(yi - lastyi < -2) break;
+//                lastyi = yi;
+//                xi++;
+//            }
+
+//            picToNumDD(xi+1, 0, &x, &dummy);
+//        }
     }
+    *pixel(x1+1, y2-1) = *pixel(x1+1, y2)= *pixel(x1, y2+1)=*pixel(x1, y2-2) = //greyf(side);
+    *pixel(x1-1, y2+1) = *pixel(x1-1, y2-2)=*pixel(x1-2, y2-1)=*pixel(x1-2, y2) = greyf(corner) & 0xffff0000;
+    *pixel(x1, y2-1) = *pixel(x1, y2)= *pixel(x1-1, y2-1)=*pixel(x1-1, y2) = 0xffff0000;
+
+
     memcpy(dataWithSelection, data, WIDTH_MAX*height*4);
     int end = clock();
     snprintf(text,sizeof(text), "%lf ms", (double)(end - start) / CLOCKS_PER_SEC*1000);
@@ -387,9 +422,9 @@ int main()
 
     while(true) {
         guiNextEvent();
-        if(xEvent.type == ButtonPress ) {
-            fprintf(stderr, "%d", xEvent.type);
-        }
+//        if(xEvent.type == ButtonPress ) {
+            fprintf(stderr, "received event %d \n", xEvent.type);
+//        }
         {
             int queued = XEventsQueued(xdisplay, QueuedAlready);
             if(queued > 1){
@@ -401,11 +436,19 @@ int main()
         if(xEvent.type == Expose)
             XClearWindow(xdisplay, rootWindow);
 
-        loop(&pa, &consume);
         int bottom = getGridBottom(&mainGrid) + 5;
         if(xEvent.type == DestroyNotify) {
             goto exit;
         };
+        if(xEvent.type == KeyPress) {
+            XKeyEvent e = xEvent.xkey;
+            KeySym sym = XLookupKeysym(&e, 0);
+            if((sym == XK_M || sym == XK_m) && (e.state & ControlMask)) {
+                mode = !mode;
+                guiRedraw();
+            };
+        };
+        loop(&pa, &consume);
         if(xEvent.type == ConfigureNotify) {
             if(xEvent.xconfigure.width != width ||
                     xEvent.xconfigure.height-bottom != height) {
