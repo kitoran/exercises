@@ -5,6 +5,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
 #include <X11/extensions/Xdbe.h>
+//#include "backend.h"
 //char appName[] = "ordinalIteration";
 #include "gui.h"
 #include <time.h>
@@ -34,7 +35,7 @@ void ordinalEdit(Painter*p/*, Ordinal max*/) {
 //                30};
 }
 
-XEvent xEvent;
+extern XEvent event;
 int width = 600;
 int height = 600;
 #define WIDTH_MAX 2000
@@ -188,6 +189,13 @@ void drawSmallCircle(int* getPixel(int , int ), int xp, int yp, int c) {
     *getPixel(xp, yp-1) = *getPixel(xp, yp)= *getPixel(xp-1, yp-1)=*getPixel(xp-1, yp) = c;
 }
 enum {drawLines, drawText};
+extern Display* xdisplay;
+extern Window rootWindow;
+extern int xDepth;
+extern XFontSet xFontSet;
+struct _XftFont;
+extern struct _XftFont *xFont;
+
 void drawCoordinateLines(int mode) {
 
     double startx, starty,endx,endy;
@@ -757,7 +765,7 @@ int main()
     mainGrid = allocateGrid(50, 50, 5);
     pushGrid(&mainGrid);
     guiStartDrawing();
-    guiSetSize(rootWindow, width, height+50);
+    guiSetSize(/*rootWindow, */width, height+50);
 //    recalculatePicture();
     rawImage = XCreateImage(xdisplay, DefaultVisual(xdisplay, DefaultScreen(xdisplay)), 24,
                             ZPixmap, 0, data, WIDTH_MAX, HEIGHT_MAX, 32,
@@ -809,23 +817,23 @@ int main()
 //            XClearWindow(xdisplay, rootWindow);
 
         int bottom = getGridBottom(&mainGrid) + 5;
-        if(xEvent.type == DestroyNotify) {
+        if(event.type == DestroyNotify) {
             goto exit;
         };
-        if(xEvent.type == KeyPress) {
-            XKeyEvent e = xEvent.xkey;
+        if(event.type == KeyPress) {
+            XKeyEvent e = event.xkey;
             KeySym sym = XLookupKeysym(&e, 0);
             if((sym == XK_M || sym == XK_m) && (e.state & ControlMask)) {
                 mode = !mode;
                 guiRedraw();
             };
         };
-        if(xEvent.type != MotionNotify) loop(&pa, &consume);
-        if(xEvent.type == ConfigureNotify) {
-            if(xEvent.xconfigure.width != width ||
-                    xEvent.xconfigure.height-bottom != height) {
-                width = MIN(xEvent.xconfigure.width, WIDTH_MAX);
-                height = MIN(xEvent.xconfigure.height - bottom, WIDTH_MAX);
+        if(event.type != MotionNotify) loop(&pa, &consume);
+        if(event.type == ConfigureNotify) {
+            if(event.xconfigure.width != width ||
+                    event.xconfigure.height-bottom != height) {
+                width = MIN(event.xconfigure.width, WIDTH_MAX);
+                height = MIN(event.xconfigure.height - bottom, WIDTH_MAX);
                 recalculatePicture();
                 guiRedraw();
             }
@@ -833,13 +841,13 @@ int main()
         if(true /*!consume /*&& mode == selectMode*/) {
             static int prevx, prevy;
             static bool sel = false;
-            if(xEvent.type == ButtonPress  && xEvent.xbutton.button == Button1) {
-                prevx = startx = xEvent.xbutton.x;
-                prevy = starty = xEvent.xbutton.y-bottom;
+            if(event.type == ButtonPress  && event.xbutton.button == Button1) {
+                prevx = startx = event.xbutton.x;
+                prevy = starty = event.xbutton.y-bottom;
             }
-            if(xEvent.type == ButtonPress && xEvent.xbutton.y > bottom) {
-                fprintf(stderr, "\n button %d starty %d\n",xEvent.xbutton.button, starty);
-                switch (xEvent.xbutton.button){
+            if(event.type == ButtonPress && event.xbutton.y > bottom) {
+                fprintf(stderr, "\n button %d starty %d\n",event.xbutton.button, starty);
+                switch (event.xbutton.button){
                     case Button1:
                         if(mode == selectMode) sel = true;
                         if(mode == pointMode) {
@@ -854,7 +862,7 @@ int main()
                         zoomout();
                         break;
                 }
-            } else if(xEvent.type == MotionNotify) {
+            } else if(event.type == MotionNotify) {
                 DEBUG_PRINT(starty, "%d");
                 if(starty < 0) continue;
                 XEvent newEvent;
@@ -862,12 +870,12 @@ int main()
                     return e->type == MotionNotify;
                 }
                 while(XCheckIfEvent(xdisplay, &newEvent,predicate, NULL)) {
-                    xEvent = newEvent;
+                    event = newEvent;
                 }
 
                 if(mode == selectMode) {
-                    int endx = xEvent.xmotion.x;
-                    int endy = xEvent.xmotion.y-bottom;
+                    int endx = event.xmotion.x;
+                    int endy = event.xmotion.y-bottom;
                     double c = MAX(abs(endx-startx), abs(endy-starty));
                     int xm = endx>startx?startx:startx-c;
                     int ym = endy>starty?starty:starty-c;
@@ -879,8 +887,8 @@ int main()
                         *pixelWithSelection(xm+c, ym+i) = 0xffffffff;
                     }
                 } else if(mode == moveMode) {
-                    int endx = xEvent.xmotion.x;
-                    int endy = xEvent.xmotion.y-bottom;
+                    int endx = event.xmotion.x;
+                    int endy = event.xmotion.y-bottom;
                     double sx, sy, ex,ey;
 
                     picToNumDD(prevx, prevy, &sx, &sy);
@@ -892,12 +900,12 @@ int main()
                     recalculatePicture();
 
                 }                    //                recalculatePicture();
-            } if(xEvent.type == ButtonRelease && sel && xEvent.xbutton.y > bottom) {
+            } if(event.type == ButtonRelease && sel && event.xbutton.y > bottom) {
                 double sx, sy;
                 picToNumDD(startx, starty,
                          &sx, &sy);
                 double ex, ey;
-                picToNumDD(xEvent.xbutton.x, xEvent.xbutton.y-bottom,
+                picToNumDD(event.xbutton.x, event.xbutton.y-bottom,
                          &ex, &ey);
                 c = MAX(fabs(ex-sx), fabs(ey-sy));
                 if(c < DBL_MIN) {
@@ -919,7 +927,7 @@ int main()
 
         {int w = getGridWidth(&mainGrid);
         if(w > width) {
-            guiSetSize(rootWindow, w, height+bottom);
+            guiSetSize(/*rootWindow, */w, height+bottom);
         }}
     }
 exit:
