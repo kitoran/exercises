@@ -1,0 +1,41 @@
+(\x. (\c. c x) (\t. t)) 5
+(\x. (\x c. c x) x (\t. t)) 5
+or (\x. (\c x. c x) (\t. t) x) 5
+
+5
+
+5 (\x. (\c. c x) (\t. t)) clo and add
+
+5 (\x. (\c. c x) (\t. t)) clo
+
+5 (\x. (\c. c x) (\t. t)) clo (\t. t) clo and add
+
+
+
+5 (\x. (\c. c x) (\t. t)) clo (\t. t) clo and add (\c. c x) clo and add
+5 (\x. (\c. c x) (\t. t)) clo (\t. t) clo and add (\c. c x) clo and add (\t. t) clo and add
+5 (\x. (\c. c x) (\t. t)) clo (\t. t) clo and add (\c. c x) clo and add (\t. t) clo and add
+
+
+
+
+
+(\f. f 5) (\x y. x+y) 3
+
+3 
+3 (\x y. x+y)
+3 (\x y. x+y) (\f. f 5)
+3 (\x y. x+y) 5
+3 (\x y. x+y) 5 (\x y. x+y)
+3 (\x y. x+y) 5 
+
+
+
+
+
+(\f : int -> int -> int . (\r -> f 5 r)) (\x y int, int. x+y) 3
+
+
+
+
+
