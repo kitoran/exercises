@@ -36,6 +36,7 @@ void ordinalEdit(Painter*p/*, Ordinal max*/) {
 }
 
 extern XEvent event;
+XEvent event;
 int width = 600;
 int height = 600;
 #define WIDTH_MAX 2000

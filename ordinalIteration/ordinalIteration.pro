@@ -3,6 +3,8 @@ CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
 LIBS += -lXext
+#DEFINES += SDL
+#CONFIG += SDL
 
 #include(../midieditor/library/gui-X/gui.pri)
 #include(../../library/stb/stb_ds.pri)
