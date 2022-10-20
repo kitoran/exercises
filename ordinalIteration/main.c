@@ -105,10 +105,10 @@ int greyf(double v) {
     return grey(v*255);
 }
 double functionC (double x) {
-    return -1/(x-1)-1;
+    return -1/(x-1)-1; // =x/(1-x)
 }
 double functionI (double x) {
-    return 1-1/(x+1);
+    return 1-1/(x+1); // = x/(x+1)
 }
 double xplus1 (double x) {
     return x+1;
