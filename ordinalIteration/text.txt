@@ -1,3 +1,7 @@
+В конец добавить полное опр-е функции для лимитных ординалов с гаммой для сукцессоров ит д
+Б/?/?/?/?/?бр/?ёЁйцук||||ёёёЁ
+
+
 Hello everyone! 
 In this video i want to demonstrate the concept of ordinals. I will only talk about the beginning of the ordinal hierarchy. 
 Imagine we have a function, y = x+1. We can repeatedly iterate this funtion any number of times starting from zero, the result will be n.

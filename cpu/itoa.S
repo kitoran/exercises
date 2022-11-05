@@ -1,3 +1,21 @@
+  jmp *%rsi
+  lea _output, %rax
+  lea _output, %r8
+  lea _output, %rax
+  lea _output, %r8
+  cmovs %rax, %rax
+  cmovs %rax, %r8
+  cmovs %r8, %rax
+  cmovs %r8, %r8
+  cmovs %rax, %rax
+  cmovs %rax, %rbx
+  cmovs %rbx, %rax
+  cmovs %rbx, %rbx
+  mov %rax, %rax
+  mov %rax, %r8
+  mov %r8, %rax
+  mov %r8, %r8
+
 
 .global _start
 

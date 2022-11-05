@@ -16,6 +16,7 @@ to the default PCM device for 5 seconds of data.
 #include "audio.h"
 #include "midi.h"
 #include <stdio.h>
+
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
 extern uint alsaSampleRate;
@@ -163,10 +164,13 @@ int main() {
 //        time();
             snd_seq_event_t* ev = midi_read();
             if(ev) {
-                fprintf(stderr, "%c %d\n", ev->data.note.note, (int)(ev->data.note.note));
-                if(ev->type == SND_SEQ_EVENT_NOTEON) {
-                    frequency = 440 * pow(2, ((double)(ev->data.note.note-69))/12);
-                }
+//                fprintf(stderr, "%c %d\n", ev->data.note.note, (int)(ev->data.note.note));
+//                if(ev->type == SND_SEQ_EVENT_NOTEON) {
+//                    frequency = 440 * pow(2, ((double)(ev->data.note.note-69))/12);
+//                }
+//                if(ev->type == SND_SEQ_EVENT_SONGPOS) {
+//                }
+                fprintf(stderr, "%d\n", ev->type);//ev->data.note.note, (int)(ev->data.note.note));
             }
 //        fprintf(stderr, ".");
 //        int remainingSize = framesPerPeriod;

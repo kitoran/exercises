@@ -84,8 +84,9 @@ String readFile(const char *filename)
 typedef int (*Func)(void);
 void mysighandler(int s)
 {
+    char* str = strsignal(s);
 #define pascalstring(a) a, sizeof(a)-1
-    write(1, sys_siglist[s], strlen(sys_siglist[s]));
+    write(1, str, strlen(str));
     abort();
 }
 void printHelp() {

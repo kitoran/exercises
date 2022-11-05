@@ -138,13 +138,15 @@ struct Assembler
     }
     void cmovs(register64 dest, register64 src) {
 //        Надо еще разрешать уже связанные лейблы
-        mem[position] = 0x48 | NEW_SOURCE(src) | NEW_DEST(dest);
+#warning может тут перепутаны last и notlast
+        mem[position] = 0x48 | NEW_NOTLAST(src) | NEW_LAST(dest);
         mem[position+1] = 0x0f;
         mem[position+2] = 0x48;
-        mem[position+3] = 0xc0 | ((dest&0b111<<3) | (src&0b111);
+        mem[position+3] = 0xc0 | (dest&0b111<<3) | (src&0b111);
         position += 4;
         dump();
     }
+#define NEW_REGISTER(a) ((a)>=r8?0b100:0)
     void lea(register64 dest, Label l) {
         mem[position] = rex | rexw | NEW_REGISTER(dest);
         mem[position+1] = 0x8d;
@@ -191,7 +193,7 @@ struct Assembler
         dump();
     }
     void add(register64 dest, register64 addee) {
-        mem[position] = rex | rexw| NEW_REGISTER(dest);
+        mem[position] = rex | rexw | NEW_REGISTER(dest);
         mem[position+1] = 0x01;
         mem[position+2] = (0b11 << 6/*mod*/) | (addee << 3) | dest;
 

@@ -5,6 +5,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
 #include <X11/extensions/Xdbe.h>
+#include "loadImage.h"
 //#include "backend.h"
 //char appName[] = "ordinalIteration";
 #include "gui.h"
@@ -36,11 +37,13 @@ void ordinalEdit(Painter*p/*, Ordinal max*/) {
 }
 
 extern XEvent event;
-XEvent event;
+//XEvent event;
 int width = 600;
 int height = 600;
-#define WIDTH_MAX 2000
-#define HEIGHT_MAX 2000
+#define WIDTH_MAX 700
+//2000
+#define HEIGHT_MAX 700
+//2000
 XImage* rawImage;
 unsigned char data[WIDTH_MAX*HEIGHT_MAX*4];
 unsigned char dataWithSelection[WIDTH_MAX*HEIGHT_MAX*4];
@@ -500,7 +503,7 @@ void drawIterations() {
             iterationsDoneOmegaZero++;
         }
     }
-    DEBUG_PRINT(maxExponent, "%d");
+//    DEBUG_PRINT(maxExponent, "%d");
     if(function == xplus1) {
         if(maxExponent <= 0) {
             i64 y1;
@@ -761,7 +764,7 @@ void drawIterationsOneovertwominusxJump() {
 }
 char *appName = "ordinalIteration";
 
-int main()
+int mainApp()
 {//char appName2[] = "ordinalIteration2";
     mainGrid = allocateGrid(50, 50, 5);
     pushGrid(&mainGrid);
@@ -937,6 +940,46 @@ exit:
 
     XCloseDisplay(xdisplay);
     return 0;
+}
+double parameterT = 0;
+//double (*squishedFunction) (double x) = xplus1;
+double squishedFunction(double x) {
+    return 1/x;
+}
+double functionSquish(double x) {
+    double functionCI (double x) {
+        if(parameterT <= FLT_MIN) {
+            return x;
+        }
+        return (-1/(x*parameterT-1)-1)/parameterT; // =x/(1-x)
+    }
+    double functionII (double x) {
+        if(parameterT <= FLT_MIN) {
+            return x;
+        }
+        return (1-1/(x*parameterT+1))/parameterT; // = x/(x+1)
+    }
+    return functionII(squishedFunction(functionCI(x)));
+}
+int mainBatch() {
+    guiStartDrawing();
+    guiSetSize(700,700);
+    width = 700; height = 700;
+    rawImage = XCreateImage(xdisplay, DefaultVisual(xdisplay, DefaultScreen(xdisplay)), 24,
+                            ZPixmap, 0, data, 700, 700, 32,
+                                    700*4);
+    function = functionSquish;
+    int frames = 10;
+    for(int i = 0; i <= frames; i++) {
+        parameterT = 1.0*i/frames;
+        recalculatePicture();
+        saveImageSomewhereNewWrongChannelsZT(rawImage, "frame");
+    }
+    return 0;
+}
+int main(int argc) {
+    if(argc > 1) return mainBatch();
+    else return mainApp();
 }
 void loop(Painter* pa, bool* consume) {
 //    popGrid();

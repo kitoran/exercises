@@ -1,0 +1,11 @@
+*.pro.user
+*.pro.user.*
+vst/VST_SDK
+squaredsound/*.wav
+squaredsound/06. Wander.mp3
+zig-cache
+mandelbrot/mandelbrot-gtk
+cpu/xed
+cpu/mbuild
+build-*/
+additive/*.wav
