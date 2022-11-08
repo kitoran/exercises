@@ -4,7 +4,13 @@
 #include "audio.h"
 #include "soundext.h"
 #include <stdbool.h>
+#include <X11/X.h>
+
+#define EXPOSE_X11_GLOBALS_PLEASE
 #include "gui.h"
+extern Display* xdisplay;
+extern int xDepth;
+
 
 //draw() {
 //p.setPen(transparent());
@@ -51,7 +57,7 @@ void drawAxes(struct Spectrogram* sg, Painter* image, int w, int h) {
                       10, h-10-y,
                        w-10, h-10-y);
         int len = sprintf(text, "%2.lf", freq);
-        guiDrawTextWithLen(image, 10, h-10-y, text, len);
+        guiDrawText(image, text, len, STRU(Point,10, h-10-y),0xffffffff);
     }
 }
 

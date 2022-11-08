@@ -4,14 +4,18 @@
 #include "synthesis.h"
 #include "audio.h"
 #include "math.h"
+#define EXPOSE_X11_GLOBALS_PLEASE
 #include "gui.h"
+extern Display* xdisplay;
+extern int xDepth;
+
+#include "backend.h"
 #include "mathext.h"
 #include "alsathread.h"
 #include <X11/cursorfont.h>
+#include <X11/X.h>
 #include <stdbool.h>
 #include <time.h>
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#define MIN(a,b) ((a)<(b)?(a):(b))
 
 MouseAction action = actionPlay;
 //#include <gdk/gdk.h>
@@ -240,7 +244,7 @@ void mousePressEvent(struct graph* g, int x)
         blockAndPut(&channelForPlayback, &m, sizeof(m));
     }
     if(g->selecting) {
-        if(xEvent.xbutton.button == Button3) {
+        if(event.xbutton.button == Button3) {
             g->selectStart = g->selectEnd = -1;
             g->selecting = false;
         }
@@ -289,7 +293,7 @@ void mouseReleaseEvent(struct graph* g)
 
 
 void graphProcessEvent(graph *g, /*Painter *p, */int x, int y, int w, int h) {
-//    if(xEvent.type == Expose) {
+//    if(event.type == Expose) {
         drawGraph(g, /*p,*/ x, y);
    /* } else*/
     int nw = MAX(25, w);
@@ -299,16 +303,16 @@ void graphProcessEvent(graph *g, /*Painter *p, */int x, int y, int w, int h) {
         g->height = nh;
         redrawSpectrogram(g);
     }
-    if((xEvent.type == MotionNotify ||
-              xEvent.type == ButtonPress ||
-              xEvent.type == ButtonRelease) &&
-              xEvent.xmotion.x >= x && xEvent.xmotion.x <= x+w &&
-              xEvent.xmotion.y >= y && xEvent.xmotion.y <= y+h) {
-        if(xEvent.type == MotionNotify) {
-            mouseMoveEvent(g, xEvent.xmotion.x - x);
-        } else if(xEvent.type == ButtonPress) {
-            mousePressEvent(g, xEvent.xbutton.x - x);
-        } else if(xEvent.type == ButtonRelease) {
+    if((event.type == MotionNotify ||
+              event.type == ButtonPress ||
+              event.type == ButtonRelease) &&
+              event.xmotion.x >= x && event.xmotion.x <= x+w &&
+              event.xmotion.y >= y && event.xmotion.y <= y+h) {
+        if(event.type == MotionNotify) {
+            mouseMoveEvent(g, event.xmotion.x - x);
+        } else if(event.type == ButtonPress) {
+            mousePressEvent(g, event.xbutton.x - x);
+        } else if(event.type == ButtonRelease) {
             mouseReleaseEvent(g);
         }
     }

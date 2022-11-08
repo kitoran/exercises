@@ -1,4 +1,6 @@
 ﻿#include <X11/extensions/Xrender.h>
+#define EXPOSE_X11_GLOBALS_PLEASE
+#include "backend.h"
 #include "spectrogram.h"
 #include "globals.h"
 #include "audio.h"

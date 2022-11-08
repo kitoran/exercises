@@ -4,6 +4,7 @@
 #
 #-------------------------------------------------
 
+CONFIG += X
 QT       -= core
 QMAKE_CXXFLAGS += -std=gnu++2a
 QMAKE_CFLAGS += -std=gnu11  -Wstrict-overflow=5 -Wno-comment
@@ -33,6 +34,7 @@ QMAKE_CFLAGS += -Werror=implicit-function-declaration -Wno-unused-variable -Wno-
     -Wno-discarded-qualifiers
 INCLUDEPATH += ../sound
 include(../../library/misc/misc.pri)
+include(../../library/stb/stb_ds.pri)
 LIBS += -lsndfile -lssl -lcrypto -lexplain -lX11 -lXrender
 SOURCES *= \
     ../sound/audio.c \
@@ -81,12 +83,11 @@ SOURCES += \
 #    $$PWD/../../library/guiS/gui/persistent.c
 
 #include(../../library/loadImage/loadImage.pri)
-include(../../library/gui-X/gui.pri)
+include(../../library/gui/gui.pri)
 include(../../library/settingsS/settings/settings.pri)
 #include(../../library/stb/stb_image.pri)
 
 DEFINES += MY_PATH=\\\"$$PWD\\\"
-
 #HEADERS += \
 #    $$PWD/../../library/guiS/gui/gui.h \
 #    $$PWD/../../library/guiS/gui/persistent.h \

@@ -13,13 +13,16 @@
 #include "gridlayout.h"
 #include "actions.h"
 
-
+#define EXPOSE_X11_GLOBALS_PLEASE
 #include "gui.h"
+extern Display* xdisplay;
+extern int xDepth;
 
 char* appName = "additive";
 
 XEvent xEvent;
 int handler(Display *d, XErrorEvent *e) {
+    (void)d;(void)e;
     abort();
 }
 
@@ -100,9 +103,8 @@ int main(int argc, char *argv[])
         g.gridStart.x = 5;
         g.gridStart.y = 5;
         pushGrid(&g);
-        guiSetSize(rootWindow, 992, 402);
-        GC gc2 = XCreateGC(xdisplay, rootWindow, 0, NULL);
-        Painter pa = {rootWindow, gc2};
+        guiSetSize(992, 402);
+        Painter pa = guiMakePainter(rootWindow);
         while(true) {
             guiNextEvent();
             if(xEvent.type == Expose)

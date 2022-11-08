@@ -80,7 +80,7 @@ void* alsathread(void* d) {
             void demo(/*Picture * picture, */int position/*, int w, int h*/) ;
 
             demo(pos.pos);
-            MaximaSpectrogram* sgfdgsfd = spectrogram;
+            MaximaSpectrogram* sgfdgsfd = (MaximaSpectrogram*)spectrogram;
             struct harmonic* hs = sgfdgsfd->maxima[pos.pos];
 //            static int harmonic_number = 0;
             static int periodCount;
@@ -93,7 +93,7 @@ void* alsathread(void* d) {
 
             whichHarmonic  = whichHarmonic % (arrlen(hs));
 
-            for(int j = 0; j < framesPerPeriod; j++) {
+            for(uint j = 0; j < framesPerPeriod; j++) {
                 double v = 0;
 
 
@@ -164,28 +164,28 @@ void* recordingThread(void* d) {
     Action action;
     wait(&channelForRecording);
     int pos = 0;
-    fprintf(stderr, "recordingThread before while pos=%d size=%d\n", pos, arrlen(samplsStbArray));
+    fprintf(stderr, "recordingThread before while pos=%d size=%ld\n", pos, arrlen(samplsStbArray));
     while(true) { external:
-        fprintf(stderr, "recordingThread start of loop pos=%d size=%d\n", pos, arrlen(samplsStbArray));
+        fprintf(stderr, "recordingThread start of loop pos=%d size=%ld\n", pos, arrlen(samplsStbArray));
         if(channelForRecording.full) {
-            fprintf(stderr, "recordingThread inside if pos=%d size=%d\n", pos, arrlen(samplsStbArray));
+            fprintf(stderr, "recordingThread inside if pos=%d size=%ld\n", pos, arrlen(samplsStbArray));
             takeC(&channelForRecording, &action, sizeof(action));
             if(action == stop) {
                 alsaDropCapture();
-                fprintf(stderr, "recordingThread inside stop if pos=%d size=%d\n", pos, arrlen(samplsStbArray));
+                fprintf(stderr, "recordingThread inside stop if pos=%d size=%ld\n", pos, arrlen(samplsStbArray));
                 pos = 0;
                 wait(&channelForRecording);
                 goto external;
             }
             else {
                 initAudioCaptureS16LE();
-                fprintf(stderr, "recordingThread inside stop else pos=%d size=%d\n", pos, arrlen(samplsStbArray));
+                fprintf(stderr, "recordingThread inside stop else pos=%d size=%ld\n", pos, arrlen(samplsStbArray));
                 pos = 0;
 //                arrsetlen(samplsStbArray, 0);
             }
         }
         if(pos + framesPerPeriod > arrlen(samplsStbArray)) {
-            fprintf(stderr, "recordingThread inside enlarging if pos=%d size=%d\n", pos, arrlen(samplsStbArray));
+            fprintf(stderr, "recordingThread inside enlarging if pos=%d size=%ld\n", pos, arrlen(samplsStbArray));
             arrsetlen(samplsStbArray,
                       arrlen(samplsStbArray)+framesPerPeriod);
             memset(samplsStbArray+ pos, 0, arrlen(samplsStbArray)-pos-1);

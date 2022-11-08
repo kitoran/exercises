@@ -5,6 +5,8 @@
 #include "graph.h"
 #include "audio.h"
 #include "gui.h"
+extern Display* xdisplay;
+extern int xDepth;
 #include "gridlayout.h"
 #include "globals.h"
 #include "actions.h"
@@ -44,7 +46,7 @@ void ui(Painter *p)
     graphProcessEvent(&widget/*, p*/, 0, gh, size.width, size.height-gh);
     //    gtk_grid_attach(layout, widget, 4, 0, 1, 17);
 
-    setCurrentGridPos(g, 0, 0);
+    setCurrentGridPos(0, 0);
 
 
     if(resourseToolButton(p, "open.png", NULL)) {
@@ -76,7 +78,7 @@ void ui(Painter *p)
     guiLabelZT(p, "max");
     int maxx = max;
     gridNextRow(g);
-    persistentNumberEdit(p, 6, &maxx, NULL);
+    persistentNumberEdit(p, 6, maxx, NULL);
     gridNextColumn(g);
 
 
@@ -84,32 +86,32 @@ void ui(Painter *p)
     gridNextRow(g);
     INTROSPECT_ENUM(method, original, multiply, divide);
     static int cmethod = 2;
-    persistentEnumComboBox(method, p, &cmethod);
+    persistentEnumComboBox(method, p, cmethod);
     gridNextColumn(g);
 
 
     guiLabelZT(p, "action");
     gridNextRow(g);
-    persistentEnumComboBox(MouseAction, p, &action);
+    persistentEnumComboBox(MouseAction, p, action);
     gridNextColumn(g);
 
 
     guiLabelZT(p, "treshold");
     gridNextRow(g);
     int dummy = 0;
-    persistentNumberEdit(p, 6, &dummy, NULL);
+    persistentNumberEdit(p, 6, dummy, NULL);
     gridNextColumn(g);
 
 
     guiLabelZT(p, "frequency cadr");
     gridNextRow(g);
 //    int dummy2 = 44100;
-    persistentNumberEdit(p, 7, &cutoff, NULL);
+    persistentNumberEdit(p, 7, cutoff, NULL);
     gridNextColumn(g);
 
     guiLabelZT(p,  "number of harmonics");
     gridNextRow(g);
-    persistentNumberEdit(p, 6, &numberOfHarmonics, NULL);
+    persistentNumberEdit(p, 6, numberOfHarmonics, NULL);
     gridNextColumn(g);
 
 
@@ -117,7 +119,7 @@ void ui(Painter *p)
     guiLabel(p, label_2, sizeof(label_2)-1);
     gridNextRow(g);
     int ws = windowSize;
-    persistentNumberEdit(p,  5, &ws, NULL);
+    persistentNumberEdit(p,  5, ws, NULL);
     gridNextColumn(g);
 
     if(guiButtonZT(p, "redraw")) {
@@ -167,7 +169,7 @@ void ui(Painter *p)
     guiLabel(p, label_3, sizeof(label_3)-1);
     gridNextRow(g);
     int step = stepSize;
-    persistentNumberEdit(p,  5, &step, NULL);
+    persistentNumberEdit(p,  5, step, NULL);
     gridNextColumn(g);
 
     guiLabelZT(p, "denominstor");
@@ -187,7 +189,7 @@ void ui(Painter *p)
 
 
 
-    setCurrentGridPos(g,3,0);
+    setCurrentGridPos(3,0);
     if(guiButtonZT(p, "audacity")) {
         MainWindowon_pushButton_clicked();
     }
