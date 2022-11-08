@@ -2,6 +2,7 @@
 #include <math.h>
 #include <string.h>
 #include <X11/Xlib.h>
+#define EXPOSE_X11_GLOBALS_PLEASE
 #include "gui.h"
 #include "time.h"
 #include "newFile.h"
@@ -35,10 +36,10 @@ void recalculatePicture() {
 
 
     /* here, do your time-consuming job */
-    volatile bool condition = true;
+//    volatile bool condition = true;
     memset(data, 0, size*size*4);
     double _Complex w = -1.0/2 + I*sqrt(3)/2;
-    double _Complex w2 = -1.0/2 - I*sqrt(3)/2;
+//    double _Complex w2 = -1.0/2 - I*sqrt(3)/2;
     clock_t begin = clock();
     for(double reNum = ceil(-maxDenom*sqrt2); reNum < floor(maxDenom*sqrt2); reNum++)
     for(double imNum = ceil(-maxDenom*sqrt2); imNum < floor(maxDenom*sqrt2); imNum++)
@@ -82,7 +83,7 @@ void recalculatePicture() {
         fprintf(stderr, "%d\n", xp);
         *((int*)(data+ (yp*600+xp)*4)) = 0xffff00ff;
         *((int*)(data+ (yp*600+xp-1)*4)) = 0xffff00ff;
-        *((int*)(data+ (yp*600+xp+1)*4)) = 0xfffff00ff;
+        *((int*)(data+ (yp*600+xp+1)*4)) = 0xffff00ff;
         *((int*)(data+ (yp*600+xp+1)*4)) = 0xffff00ff;
         *((int*)(data+ (yp*600+xp-1)*4)) = 0xffff00ff;
         *((int*)(data+ (yp*600+xp)*4)) = 0xffff00ff;
@@ -91,38 +92,38 @@ void recalculatePicture() {
 XImage *res;
 enum { itersMode, selectMode, zoominMode} mode;
 void loop(Painter* pa, bool* consume) {
-    Grid* g = topGrid();
-    setCurrentGridPos(g, 0,0);
+//    Grid* g = topGrid();
+    setCurrentGridPos(0,0);
 //    bool res = false;
     int e = maxDenom;
     bool recalc = /*persistent*/guiNumberEdit(pa, 5, &e, consume);
 
-    gridNextColumn(g);
+    gridNextColumn();
     if(resourseToolButton(pa, "minus.png", consume)) {
         maxDenom--;
         recalc = /*res = */true;
     }
 //    setCurrentGridPos(0,2);
 
-    gridNextColumn(g);
+    gridNextColumn();
     if(resourseToolButton(pa, "plus.png", consume)) {
         maxDenom++;
         recalc = /*res = */true;
     }
 
-    gridNextColumn(g);//    setCurrentGridPos(0,3);
+    gridNextColumn();//    setCurrentGridPos(0,3);
     if(resourseToolButton(pa, "select.png", consume)) {
         mode = selectMode;
 //        res = true;
     }
 
-    gridNextColumn(g);//    setCurrentGridPos(0,4);
+    gridNextColumn();//    setCurrentGridPos(0,4);
     if(resourseToolButton(pa, "iters.png", consume)) {
         mode = itersMode;
 //        res = true;
     }
 
-    gridNextColumn(g);//    setCurrentGridPos(0,5);
+    gridNextColumn();//    setCurrentGridPos(0,5);
     if(resourseToolButton(pa, "zoomin.png", consume)) {
         mode = zoominMode;
 //        res = true;
@@ -134,7 +135,7 @@ void loop(Painter* pa, bool* consume) {
 ////        res = true;
 //    }
 
-    gridNextColumn(g);//    setCurrentGridPos(0,7);
+    gridNextColumn();//    setCurrentGridPos(0,7);
     if(resourseToolButton(pa, "100percent.png", consume)) {
         c = 1;
         xm = 0;
@@ -142,7 +143,7 @@ void loop(Painter* pa, bool* consume) {
         recalc/* = res */= true;
     }
 
-    gridNextColumn(g);
+    gridNextColumn();
     if(resourseToolButton(pa, "save.png", consume)) {
         saveImageSomewhereNewWrongChannelsZT(res, "gauss");
     }
@@ -153,10 +154,10 @@ void loop(Painter* pa, bool* consume) {
     }
 //    return res;
 }
-int main(int argc)
+int main()
 {
     guiStartDrawing();
-    guiSetSize(rootWindow, size, size+30);
+    guiSetSize(size, size+30);
     recalculatePicture();
     res = XCreateImage(xdisplay, DefaultVisual(xdisplay, DefaultScreen(xdisplay)), 24,
                  ZPixmap, 0, data, size, size, 32,
@@ -174,15 +175,15 @@ int main(int argc)
     while(true) {
         guiNextEvent();
         volatile Size wsize = guiGetSize();bool resize = false;
-        if(wsize.height < g.gridStart.y+getGridHeight(&g)+size) {
+        if((i32)wsize.height < g.gridStart.y+getGridHeight(&g)+size) {
             wsize.height = g.gridStart.y+getGridHeight(&g)+size;
             resize = true;
         }
-        if(wsize.width < size) {
+        if((i32)wsize.width < size) {
             wsize.width = size;
             resize = true;
         }
-        if(resize) guiSetSize(rootWindow, wsize.width, wsize.height);
+        if(resize) guiSetSize(wsize.width, wsize.height);
         XPutImage(xdisplay, rootWindow, gc, res, 0, 0, 0, g.gridStart.y+getGridHeight(&g), size, size);
         volatile int t;
         if(xEvent.type == ButtonPress) {
@@ -196,11 +197,11 @@ int main(int argc)
         };
         if(!consume && mode == selectMode) {
             static int startx, starty;
-            static bool sel = false;
+//            static bool sel = false;
             if(xEvent.type == ButtonPress) {
                 startx = xEvent.xbutton.x;
                 starty = xEvent.xbutton.y-(g.gridStart.y+getGridHeight(&g));
-                sel = true;
+//                sel = true;
             } else if(xEvent.type == ButtonRelease) {
                 double sx, sy;
                 picToNum(startx, starty,
@@ -213,7 +214,7 @@ int main(int argc)
                 c = MAX(fabs(ex-sx), fabs(ey-sy));
                 xm = -MIN(sx,ex);
                 ym = -MIN(sy,ey);
-                sel = false;
+//                sel = false;
                 recalculatePicture();
             }
 
@@ -235,7 +236,7 @@ int main(int argc)
                  * xmnew = xmold - mouseX*c + c/2
                  */
                 double cxcx = mouseX * c/size - xm;
-                double newxm, newym;
+//                double newxm, newym;
                 double cxcxoldx, d; picToNum((int)mouseX, (int)mouseY, &cxcxoldx, &d);
 //                picToNum(mouseX - size/4,
 //                         mouseY - size/4,

@@ -4,8 +4,8 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 guiPers = true;
-
-include(../../library/gui-X/gui.pri)
+CONFIG += X
+include(../../library/gui/gui.pri)
 #include(../../library/guiS/gui.pri)
 include(../../library/misc/misc.pri)
 include(../../library/loadImage/loadImage.pri)
