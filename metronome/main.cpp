@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     double wholeInterval = 60/tempo;
     array samples = readSamples();
 
-    initAudio(2, SND_PCM_FORMAT_S16_LE);
+    initAudioPlayback(2, SND_PCM_FORMAT_S16_LE);
 
     struct sigevent sev;
     sev.sigev_notify = SIGEV_THREAD;

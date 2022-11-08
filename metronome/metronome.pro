@@ -4,7 +4,7 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += main.cpp \
-    ../sound/audio.cpp \
+    ../sound/audio.c \
 
 
 INCLUDEPATH += ../sound
