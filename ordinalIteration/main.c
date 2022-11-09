@@ -986,7 +986,7 @@ void loop(Painter* pa) {
 //    popGrid();
     setCurrentGridPos(0,0);
 //    bool res = false;
-    bool recalc = persistentNumberEdit(pa, 5, itNum);
+    bool recalc = persistentIntField(pa, 5, itNum);
     gridNextRow();
     recalc |= guiCheckBox(pa, &drawJumps);
 
@@ -1079,7 +1079,7 @@ void loop(Painter* pa) {
     for(int exponent = 5; exponent > 0; exponent--) {
         char label[30];
         int len = snprintf(label, 30, "ω%s+", sups[exponent]);
-        recalc |= persistentNumberEdit_(pa, 2, iters+exponent, label);
+        recalc |= persistentIntField_(pa, 2, iters+exponent, label);
         gridNextRow();
         if(resourseToolButton(pa, "plus.png")) {
             iters[exponent]++; recalc = true; guiRedraw();
@@ -1095,7 +1095,7 @@ void loop(Painter* pa) {
         }
         gridNextColumn();
     }
-    recalc |= persistentNumberEdit(pa, 2, iters);
+    recalc |= persistentIntField(pa, 2, iters);
     gridNextRow();
     if(resourseToolButton(pa, "plus.png")) {
         iters[0]++; recalc = true; guiRedraw();
