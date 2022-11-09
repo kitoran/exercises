@@ -14,7 +14,7 @@ void tri() {
     initializeMathExt();
     typedef int16_t frameType;
     frameType *buffer;
-    initAudio(1, SND_PCM_FORMAT_S16_LE);//SND_PCM_FORMAT_FLOAT64_LE
+    initAudioPlayback(1, SND_PCM_FORMAT_S16_LE);//SND_PCM_FORMAT_FLOAT64_LE
     buffer = (frameType *) malloc(sizeof(frameType)*framesPerPeriod);
 
 

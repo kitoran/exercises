@@ -40,7 +40,8 @@ extern XEvent event;
 //XEvent event;
 int width = 600;
 int height = 600;
-#define WIDTH_MAX 700
+#define WIDTH_MAX 2000
+//700
 //2000
 #define HEIGHT_MAX 700
 //2000
@@ -99,7 +100,7 @@ void zoomout()
 int startx, starty;
 bool drawJumps = false;
 
-void loop(Painter* pa, bool* consume);
+void loop(Painter* pa);
 int grey(int v) {
     int vv = v | v << 8;
     return vv | vv<<8;
@@ -807,7 +808,7 @@ int mainApp()
     while(true) {
         guiNextEvent();
 //        if(xEvent.type == ButtonPress ) {
-//            fprintf(stderr, "received event %d \n", xEvent.type);
+            fprintf(stderr, "received event %d \n", event.type);
 //        }
 //        {
 //            int queued = XEventsQueued(xdisplay, QueuedAlready);
@@ -816,7 +817,6 @@ int mainApp()
 //            }
 //        }
 //        int t;
-        bool consume = false;
 //        if(xEvent.type == Expose)
 //            XClearWindow(xdisplay, rootWindow);
 
@@ -832,7 +832,7 @@ int mainApp()
                 guiRedraw();
             };
         };
-        if(event.type != MotionNotify) loop(&pa, &consume);
+        if(event.type != MotionNotify) loop(&pa);
         if(event.type == ConfigureNotify) {
             if(event.xconfigure.width != width ||
                     event.xconfigure.height-bottom != height) {
@@ -842,7 +842,7 @@ int mainApp()
                 guiRedraw();
             }
         }
-        if(true /*!consume /*&& mode == selectMode*/) {
+        if(true /*&& mode == selectMode*/) {
             static int prevx, prevy;
             static bool sel = false;
             if(event.type == ButtonPress  && event.xbutton.button == Button1) {
@@ -931,6 +931,7 @@ int mainApp()
 
         {int w = getGridWidth(&mainGrid);
         if(w > width) {
+            fprintf(stderr, "setting size %d %d\n", w, height+bottom);
             guiSetSize(/*rootWindow, */w, height+bottom);
         }}
     }
@@ -981,53 +982,53 @@ int main(int argc) {
     if(argc > 1) return mainBatch();
     else return mainApp();
 }
-void loop(Painter* pa, bool* consume) {
+void loop(Painter* pa) {
 //    popGrid();
     setCurrentGridPos(0,0);
 //    bool res = false;
-    bool recalc = persistentNumberEdit(pa, 5, itNum, consume);
+    bool recalc = persistentNumberEdit(pa, 5, itNum);
     gridNextRow();
     recalc |= guiCheckBox(pa, &drawJumps);
 
 
     gridNextColumn();
-    if(resourseToolButton(pa, "minus.png", consume)) {
+    if(resourseToolButton(pa, "minus.png")) {
         itNum--;
         SAVE_INT(itNum);
         recalc = /*res = */true;
         guiRedraw();
     }
     gridNextColumn();
-    if(resourseToolButton(pa, "plus.png", consume)) {
+    if(resourseToolButton(pa, "plus.png")) {
         itNum++;
         SAVE_INT(itNum);
         recalc = /*res = */true;
         guiRedraw();
     }
 //    gridNextColumn();
-//    resourseModeToolButton(pa, "select.png", consume);
+//    resourseModeToolButton(pa, "select.png");
 //        mode = selectMode;
 //        res = true;
 //    }
     gridNextColumn();
-//    if(resourseToolButton(pa, "iters.png", consume)) {
+//    if(resourseToolButton(pa, "iters.png")) {
 //        recalc = true;
 //        mode = itersMode;
 ////        res = true;
 //    }
     gridNextColumn();
-    if(resourseToolButton(pa, "100percent.png", consume)) {
+    if(resourseToolButton(pa, "100percent.png")) {
         c = 1;
         xm = 0;
         ym = 0;
         recalc/* = res */= true;
     }
     gridNextColumn();
-    if(resourseToolButton(pa, "zoomin.png", consume)) {
+    if(resourseToolButton(pa, "zoomin.png")) {
         zoomin();
     }
     gridNextColumn();
-    if(resourseToolButton(pa, "zoomout.png", consume)) {
+    if(resourseToolButton(pa, "zoomout.png")) {
         zoomout();
     }
 
@@ -1078,9 +1079,9 @@ void loop(Painter* pa, bool* consume) {
     for(int exponent = 5; exponent > 0; exponent--) {
         char label[30];
         int len = snprintf(label, 30, "ω%s+", sups[exponent]);
-        recalc |= persistentNumberEdit_(pa, 2, iters+exponent, label, consume);
+        recalc |= persistentNumberEdit_(pa, 2, iters+exponent, label);
         gridNextRow();
-        if(resourseToolButton(pa, "plus.png", consume)) {
+        if(resourseToolButton(pa, "plus.png")) {
             iters[exponent]++; recalc = true; guiRedraw();
             for(int i = exponent-1; i >= 0; i--) {
                 iters[i] = 0;
@@ -1089,19 +1090,19 @@ void loop(Painter* pa, bool* consume) {
         gridNextColumn();
         guiLabelWithBackground(pa, label, len, true);
         gridNextRow();
-        if(resourseToolButton(pa, "minus.png", consume)) {
+        if(resourseToolButton(pa, "minus.png")) {
             iters[exponent]--; recalc = true; guiRedraw();
         }
         gridNextColumn();
     }
-    recalc |= persistentNumberEdit(pa, 2, iters, consume);
+    recalc |= persistentNumberEdit(pa, 2, iters);
     gridNextRow();
-    if(resourseToolButton(pa, "plus.png", consume)) {
+    if(resourseToolButton(pa, "plus.png")) {
         iters[0]++; recalc = true; guiRedraw();
     }
     gridNextColumn();
     gridNextRow();
-    if(resourseToolButton(pa, "minus.png", consume)) {
+    if(resourseToolButton(pa, "minus.png")) {
         iters[0]--; recalc = true; guiRedraw();
     }
 
