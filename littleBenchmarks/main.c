@@ -16,6 +16,26 @@ inline int mod4(int f, int num) {
 inline int mod5(int f, int num) {
     return f==num?0:f==-1?num-1:f;
 }
+
+
+int compar(int* a, int* b) {
+    return *a < *b;
+}
+int solution(int A[], int N) {
+    // write your code in C99 (gcc 6.2.0)
+    qsort(a, N, sizeof(*A), compar);
+    int smallest = 1;
+    for(int i = 0; i < N; i++) {
+        if(A[i] == smallest) {
+            smallest++;
+        } else if(A[i] > smallest) {
+            break;
+        }
+    }
+    return smallest;
+}
+
+
 int main()
 {
     clock_t start, end;

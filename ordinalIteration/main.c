@@ -1062,8 +1062,8 @@ void loop(Painter* pa) {
         function = functions[functionNumber];
         recalc = true;
     }
-    Size size; size.width = getGridWidth(&nextprevgrid);
-               size.height = getGridHeight(&nextprevgrid);
+    Size size; size.w = getGridWidth(&nextprevgrid);
+               size.h = getGridHeight(&nextprevgrid);
 
     popGrid();
     feedbackSize(size);
