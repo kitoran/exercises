@@ -4,4 +4,7 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += \
-        main.c
+    main.cpp
+
+CONFIG += c++20
+QMAKE_CXXFLAGS += -std=gnu++20

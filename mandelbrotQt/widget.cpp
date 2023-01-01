@@ -20,7 +20,7 @@ float le = -2, ri = 2,
 class Fixed {
 public:
     int a;
-    Fixed operator+(Fixed b) {
+    Fixed operator+(Fixed b) { 
         Fixed res;
         res.a = a+b.a;
         return res;

@@ -7,4 +7,4 @@ SOURCES += \
         main.c
 
 
-LIBS += -lSDL2
+LIBS += -lSDL2 -lX11
