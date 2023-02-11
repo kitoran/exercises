@@ -22,82 +22,25 @@
 // cl /nologo /O2 /Z7 /Zo /DUNICODE main.cpp /link /DEBUG /OPT:REF /PDBALTPATH:%_PDB% /DLL /OUT:reaper_barebone.dll
 
 #define REAPERAPI_IMPLEMENT
-//#define __cplusplus // wtf why was this not defined in the first place/
-#include  <thread>
-#include  <condition_variable>
-#include "gui.h"
-#include "melody.h"
-#include "actions.h"
-#include "stb_ds.h"
-//#include "stb_ds.h"
-#include "playback.h"
-#include "actionsReaper.h"
-#include "editorinstance.h"
-
-#include <cstdio>
-#include <SDL.h>
-//#include <WinUser.h>
-#include "reaper_plugin_functions.h"
-//#ifdef __cplusplus
-// #define UINT void
-//#endif
-
-#include "midiprot.h"
-#include <processthreadsapi.h>
-extern "C" {
-    int pianorollgui(void);
-    extern _Atomic bool running;
-}
-//extern double __declspec(selectany) itemStart;
-
-UINT command;
-// TODO: not thread safe access to variables
-static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
-{
-    char* copy = strdup(line);
-    char* saveptr = NULL;
-    char* token = SDL_strtokr(copy, " \n", &saveptr);
-    if(strcmp(token, "<CONTINUOUSMIDIEDITOR")) {
-        return false;
-    }
-    token = SDL_strtokr(NULL, " \n", &saveptr); ASSERT(token == NULL, "fail to read lconfig");
-    free(copy);
-    saveptr = NULL;
+#include <thread>
+#include <Fileapi.h>
+#include <synchapi.h>
+#include <winbase.h>
+void (*pluginEntryPoint)();
+static void watchFile() {
+    HANDLE hdl = FindFirstChangeNotificationA("\src\reaper_midieditor.dll",
+                                 FALSE,
+                                 FILE_NOTIFY_CHANGE_LAST_WRITE);
     while(true) {
-        char oneline[4096];
-        char guid[/*38*/64];
-
-        ctx->GetLine(oneline, sizeof(oneline));
-        token = SDL_strtokr(oneline, " \n", &saveptr);
-        if(!strcmp(token, ">")) {
-            break;
-        }
-
-        ASSERT(!strcmp(token, "<ITEM"), "fail to read lconfig");
-        token = SDL_strtokr(NULL, " \n", &saveptr); ASSERT(token == NULL, "fail to read lconfig");
-        CONTINUOUSMIDIEDITOR_Config cnfg;
-        ctx->GetLine(oneline, sizeof(oneline));
-        int res = sscanf(oneline, " GUID %38s", guid); ASSERT(res == 1,  "fail to read lconfig");
-        stringToGuid(guid, &cnfg.key);
-        ctx->GetLine(oneline, sizeof(oneline));
-        res = sscanf(oneline, " WNDRECT " RECT_FORMAT, RECT_ARGS(&cnfg.value.windowGeometry)); ASSERT(res == 4, "fail to read lconfig");
-        ctx->GetLine(oneline, sizeof(oneline));
-        res = sscanf(oneline, " INNERRECT %lf %lf %lf %lf ", &cnfg.value.horizontalScroll,
-                     &cnfg.value.verticalScroll,
-                     &cnfg.value.horizontalFrac,
-                     &cnfg.value.verticalFrac
-                     ); ASSERT(res == 4, "fail to read lconfig");
-        hmputs(config, cnfg);
-        ctx->GetLine(oneline, sizeof(oneline));
-        token = oneline; while((*token != 0) && isspace(*token)) token++;
-        int end = 0; while((*token != 0) && (!isspace(token[end]))) end++;
-        token[end] = 0;
-        if(strcmp(token, ">")) {
-            ABORT("failed to read config");
-        }
+        DWORD dw = WaitForSingleObject(hdl, INFINITE);
+        assert(dw = WAIT_OBJECT_0);
+        pluginEntryPoint();
+        FreeLibrary
+        "\src\reaper_midieditor.dll\reaper_midieditor.dll"
     }
-    return true;
+
 }
+
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg) {
     if(hmlen(config) == 0) {
         return;
@@ -356,29 +299,17 @@ bool hookCommandProc(int iCmd, int flag)
                            .length = pos-channelNoteStarts[channel] }, false);
             }
         }
-        // GetProjectTimeSignature2 actually returns beats, not quarters, per minute.
-        // It also doesn't return the denominator of the time signature, so it's not very useful
-//        GetProjectTimeSignature2(NULL, &qpm, &bpiOut);
-        // TimeMap_GetTimeSigAtTime's docs say that it returns something called "tempo" in the third argument,
-        // experiments show it actually returns quarters per minute
-        TimeMap_GetTimeSigAtTime(NULL, 0, &projectSignature.num,
-                                 &projectSignature.denom, &projectSignature.qpm);
+        double bpiOut;
+//                double* bpmOut, double* bpiOut
+        GetProjectTimeSignature2(NULL, &bpm, &bpiOut);
         arrsetlen(tempoMarkers, 0);
-
-        // Okay, hot take: time signature denominators are CRINGE. They may add some interpretive context
-        // to musicians but it's actually not needed; in midi editors we don't specify when a certain note is D#
-        // or Eb, and noone misses that, and the function of the note is clear from context and you can't
-        // fully specify it with these alteration marks anyway. In the same way the denominator of the time signature
-        // doesn't add enough rhytmical information to justify its usage.
-
         int numberOfTempoMarkers = CountTempoTimeSigMarkers(NULL);
         for(int i = 0; i < numberOfTempoMarkers; i ++) {
             double timepos, beatpos, mbpm;
             int measurepos, timesig_num, timesig_denom;
             bool linearTempo;
             GetTempoTimeSigMarker(NULL, i, &timepos, &measurepos, &beatpos, &mbpm, &timesig_num, &timesig_denom, &linearTempo);
-            arrpush(tempoMarkers, (TempoMarker{ .when = timepos-itemStart, .qpm = mbpm,
-                                                .num = timesig_num, .denom = timesig_denom}));
+            arrpush(tempoMarkers, (TempoMarker{timepos-itemStart, mbpm}));
         }
 //        data_ready = true;
         //TODO: free arrays on unloading?..

@@ -79,7 +79,16 @@ QPointF MainWindow::mapLinear(QPointF a)
 
 void MainWindow::drawFactorialLogarithmic(QPainter* p) {
     for(int i = 0; i < virtualWidth; i++) {
-        p->drawEllipse(mapLogarithmic({i, fact(i)}), 2, 2);
+        p->drawEllipse(
+                    mapLogarithmic(
+                        {
+                            qreal(i),
+                            qreal(fact(
+                                i
+                            ))
+                        }),
+                    2,
+                    2);
     }
 }
 
@@ -88,7 +97,7 @@ void MainWindow::drawInverse(QPainter* p) {
         fuck r = inverse(i);
         p->setPen(r.coprime? Qt::black : Qt::gray);
 
-        p->drawLine(mapLinear({i, 0}), mapLinear({i, r.res}));
+        p->drawLine(mapLinear({qreal(i), 0}), mapLinear({qreal(i), qreal(r.res)}));
     }
 }
 
