@@ -119,9 +119,10 @@ void Widget::doPic() {
         QElapsedTimer t; t.start();
 
 //        for(float angle = 0; angle < tau*2; angle += tau/(5*25)) {
-        for(float angle = tau/4-0.1; angle < tau/4+0.01; angle += tau/30) {
+//        for(float angle = tau/4-0.1; angle < tau/4+0.01; angle += tau/30) {
     //    for(int branch = 0; branch < (1<<6); branch++) {
-    //    float angle = 0;
+        static float angle = 0;
+        angle += tau/(5*25);
             std::complex<float> roo = std::polar<float>(1, angle);
             std::complex<float> ere = std::log(roo);
             roo = std::conj(roo);
@@ -188,7 +189,7 @@ void Widget::doPic() {
                     fprintf(stderr, "xp = %d, elapxsed %d ms\n", xp, t.elapsed());
 
             }
-        }
+//        }
 
     //        QPainter pa2(&i);
     //        pa2.setPen(QColor(255,255,255,127));
@@ -214,7 +215,7 @@ void Widget::doPic() {
 
     //        pa2.drawLine(QPointF(xc,yc),QPointF(xe,ye));
 
-            saveFrame(false);
+//            saveFrame(false);
     //    }
 
         fprintf(stderr, "%d\n", t.elapsed());
@@ -225,7 +226,7 @@ void Widget::paintEvent(QPaintEvent *)
 {
     QPainter pa(this);
     pa.drawPixmap(0,0,QPixmap::fromImage(i));
-    pa.drawPixmap(0,0,QPixmap::fromImage(trajectory));
+//    pa.drawPixmap(0,0,QPixmap::fromImage(trajectory));
     if(rect) {
         pa.drawRect(QRect(start, curm));
     }

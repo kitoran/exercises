@@ -4,10 +4,28 @@
 #
 #-------------------------------------------------
 
-CONFIG += X
+CONFIG += SDL
 QT       -= core
 QMAKE_CXXFLAGS += -std=gnu++2a
-QMAKE_CFLAGS += -std=gnu11  -Wstrict-overflow=5 -Wno-comment
+unix {
+    QMAKE_CFLAGS += -std=gnu11  -Wstrict-overflow=5 -Wno-comment
+    QMAKE_CFLAGS += -Werror=implicit-function-declaration -Wno-unused-variable -Wno-parentheses \
+        -Wno-discarded-qualifiers
+}
+windows {
+    DEFINES += _CRT_SECURE_NO_WARNINGS
+    INCLUDEPATH += C:\src\SDL2-devel-2.26.1-VC\SDL2-2.26.1\include C:\src\SDL2-devel-2.26.1-VC\SDL2_ttf-2.20.1\include
+    CONFIG -= console
+    LIBS += /lKernel32
+    QMAKE_CXXFLAGS += /Zc:preprocessor
+#    -lSDL2main -lShell32
+    QMAKE_LFLAGS += user32.lib
+    QMAKE_CFLAGS += /std:c11
+    SDL2.dll.path = C:\src\SDL2-devel-2.26.1-VC\SDL2-2.26.1\
+        INSTALLS += SDL2.dll
+    #    QMAKE_CXXFLAGS += /D__cplusplus #wtf why was this not defined in the first place
+}
+
 #CONFIG+=c++17
 #CONFIG+=link_pkgconfig
 #PKGCONFIG += gtk+-3.0 gdk-3.0
@@ -30,14 +48,13 @@ LIBS += -lGL -lGLU -lasound
 
 #unix:!macx: PRE_TARGETDEPS += $$PWD/../../library/build-guiS-Desktop-Debug/gui/libgui.a
 
-QMAKE_CFLAGS += -Werror=implicit-function-declaration -Wno-unused-variable -Wno-parentheses \
-    -Wno-discarded-qualifiers
 INCLUDEPATH += ../sound
 include(../../library/misc/misc.pri)
 include(../../library/stb/stb_ds.pri)
-LIBS += -lsndfile -lssl -lcrypto -lexplain -lX11 -lXrender
+LIBS += -lsndfile -lssl -lcrypto -lexplain
+#-lX11 -lXrender
 SOURCES *= \
-    ../sound/audio.c \
+#    ../sound/audio.c \
     alsathread.c \
     globals.c \
     graph.c \
@@ -57,7 +74,7 @@ SOURCES *= \
 HEADERS += \
     graph.h \
     stft.h \
-    ../sound/audio.h \
+#    ../sound/audio.h \
     alsathread.h \
     synthesis.h \
     mathext.h \

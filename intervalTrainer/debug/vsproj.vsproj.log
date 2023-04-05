@@ -1,0 +1,25 @@
+﻿  pluginEntryPoint.cpp
+pluginEntryPoint.cpp(81,31): warning C4477: 'sscanf' : format string '%d' requires an argument of type 'int *', but variadic argument 1 has type 'i32'
+pluginEntryPoint.cpp(81,31): warning C4477: 'sscanf' : format string '%d' requires an argument of type 'int *', but variadic argument 2 has type 'i32'
+pluginEntryPoint.cpp(81,31): warning C4477: 'sscanf' : format string '%d' requires an argument of type 'int *', but variadic argument 3 has type 'u32'
+pluginEntryPoint.cpp(81,31): warning C4477: 'sscanf' : format string '%d' requires an argument of type 'int *', but variadic argument 4 has type 'u32'
+pluginEntryPoint.cpp(83,31): warning C4477: 'sscanf' : format string '%d' requires an argument of type 'int *', but variadic argument 1 has type 'i32'
+pluginEntryPoint.cpp(83,31): warning C4477: 'sscanf' : format string '%d' requires an argument of type 'int *', but variadic argument 2 has type 'i32'
+pluginEntryPoint.cpp(83,31): warning C4477: 'sscanf' : format string '%d' requires an argument of type 'int *', but variadic argument 3 has type 'u32'
+pluginEntryPoint.cpp(83,31): warning C4477: 'sscanf' : format string '%d' requires an argument of type 'int *', but variadic argument 4 has type 'u32'
+pluginEntryPoint.cpp(58,126): warning C4100: 'reg': unreferenced formal parameter
+pluginEntryPoint.cpp(58,83): warning C4100: 'isUndo': unreferenced formal parameter
+pluginEntryPoint.cpp(118,107): warning C4100: 'reg': unreferenced formal parameter
+pluginEntryPoint.cpp(118,64): warning C4100: 'isUndo': unreferenced formal parameter
+pluginEntryPoint.cpp(119,10): warning C4101: 'configstring': unreferenced local variable
+pluginEntryPoint.cpp(180,62): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+pluginEntryPoint.cpp(184,36): warning C4838: conversion from 'int' to 'Uint32' requires a narrowing conversion
+pluginEntryPoint.cpp(268,36): warning C4100: 'flag': unreferenced formal parameter
+pluginEntryPoint.cpp(376,93): warning C4100: 'hwnd': unreferenced formal parameter
+pluginEntryPoint.cpp(376,79): warning C4100: 'relmode': unreferenced formal parameter
+pluginEntryPoint.cpp(376,68): warning C4100: 'valhw': unreferenced formal parameter
+pluginEntryPoint.cpp(376,59): warning C4100: 'val': unreferenced formal parameter
+pluginEntryPoint.cpp(376,39): warning C4100: 'sec': unreferenced formal parameter
+pluginEntryPoint.cpp(387,27): warning C4100: 'instance': unreferenced formal parameter
+C:\src\exercises\midieditor\pluginEntryPoint.cpp(337): warning C4700: uninitialized local variable 'vel' used
+  vsproj.vsproj.vcxproj -> C:\Users\my\AppData\Roaming\REAPER\UserPlugins\reaper_midieditor.dll
