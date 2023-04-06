@@ -21,7 +21,7 @@ SOURCES += \
 #        ../additive/fftrec.c \
 #        ../additive/stft.c \
 QMAKE_CFLAGS += /we4013 /we4024 /we4020 /we4047 /we4133 /O3 /fp:fast
-QMAKE_CXXFLAGS += /fp:strict /O3 /fp:fast
+QMAKE_CXXFLAGS += /O2 /fp:fast
 HEADERS += \
 #    ../additive/fft.h \
 #    ../additive/fftrec.h \

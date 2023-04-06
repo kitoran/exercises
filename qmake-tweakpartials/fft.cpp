@@ -91,15 +91,17 @@ void fft(std::span<float > data, int size, std::span<std::complex<float> >  res)
     }
 }
 static std::vector<float> windowSA;
-//
-void ifft(std::complex<float> *data, float* res)// data.size() = size/2+1, res.size() = size
+std::complex<float> cast(const myComplex& r){
+    return {r.r, r.i};
+}
+void ifft(myComplex *data, float* res)// data.size() = size/2+1, res.size() = size
 {
     std::vector<std::complex<float>>  actualRes;    actualRes.resize(WINDOW_SIZE);
     std::vector<std::complex<float>>  actualParam;  actualParam.resize(WINDOW_SIZE);
-    actualParam[0] = data[0]*windowSA[0];
+    actualParam[0] = cast(data[0])*windowSA[0];
     for(int i = 1; i < WINDOW_SIZE/2+1; i++) {
-        actualParam[WINDOW_SIZE-i] = std::conj(data[i]) * windowSA[WINDOW_SIZE-i];
-        actualParam[i] = data[i]*windowSA[i];
+        actualParam[WINDOW_SIZE-i] = std::conj(cast(data[i])) * windowSA[WINDOW_SIZE-i];
+        actualParam[i] = cast(data[i])*windowSA[i];
     }
 //    actualParam[1]=1;
     int logsize = intLog2(WINDOW_SIZE);
@@ -263,21 +265,20 @@ void alignPeaks(Peak* peaks) {
 float norm(const myComplex& r){
     return r.r*r.r + r.i*r.i;
 }
-std::complex<float> cast(const myComplex& r){
-    return {r.r, r.i};
-}
 void resynth(Peak* peaks, float* res, int phase) {
-    std::complex<float> data[WINDOW_SIZE/2+1];
+    myComplex data[WINDOW_SIZE/2+1];
     memset(data, 0, sizeof(data));
 //    data[0] = 1;
     for(int i = 0; i < WINDOW_SIZE/2; i++) {
 //        if(peaks[i].freq > 2000) break;
         int index = round(peaks[i].freq / SAMPLE_FREQ * WINDOW_SIZE);
-        if(index >= 0 && index < WINDOW_SIZE/2 + 1 && std::norm(data[index]) < norm(peaks[i].val)) {
+        if(index >= 0 && index < WINDOW_SIZE/2 + 1 && norm(data[index]) < norm(peaks[i].val)) {
 //            std::complex<float> mul = std::complex<float>(std::pow<float>(primeroot(intLog2(WINDOW_SIZE/STEP_SIZE)), index*phase));
 
-            std::complex<float> mul = ((index)*phase)%2?(1):(-1);
-            data[index] = std::abs(cast(peaks[i].val))*mul;
+            float mul = ((index)*phase)%2?(1):(-1);
+            float abs = std::abs(cast(peaks[i].val));
+            data[index] = {abs*mul, 0};
+
 //            data[index] = cast(peaks[i].val);
         }
     }
