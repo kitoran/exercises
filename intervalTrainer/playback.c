@@ -31,7 +31,9 @@ void buffer(void* userdata,
         for(int i = 0; i < samplesToFillNow; i++) {
             stream[i] = 0;
             FOR(j, 2) {
-                stream[i] += (i16)round(sin(phase[j]/4.0*tau/(SDL_MAX_UINT32/4))*1000);
+                FOR(t, 5) {
+                    stream[i] += (i16)round(sin(phase[j]*(t+1)/4.0*tau/(SDL_MAX_UINT32/4))*1000/(t+1)/(t+1));
+                }
 //                if(state.framesLeftLastFreq[j] == 0) {
                 phase[j] += (u32)round(SDL_MAX_UINT32/((double)have.freq)*(freqs[j]));
 //                } else {

@@ -7,7 +7,7 @@
 #include <QElapsedTimer>
 #include <complex>
 
-#define IterATIONnUMBER 400
+#define IterATIONnUMBER 100
 using namespace std::complex_literals;
 const int w = 700, h = 700;
 //const float le = -1.75-0.02, ri = -1.75+0.02,
@@ -97,13 +97,54 @@ std::complex<float> toNumber(QPointF end) {
     return std::complex<float>(xe, ye);
 }
 
-inline std::complex<float> func(std::complex<float> p, std::complex<float> c) {
+inline std::complex<float> func(std::complex<float> p, std::complex<float> c, float bc) {
+    return std::exp((std::log(p*std::polar<float>(1, bc))-std::complex<float>(0,bc))*(2.5f)) + c;
 //    return std::conj(std::exp((std::log(p/**roo*/)/*+ere*/)*3.f
 ////                    std::complex<float>(0.f,  1)
 //                    )) + c;
 //    return c*p*(1.f-p);
+
 //    return std::conj(std::exp((std::log(p))*(-2.f))) + c;
-    return std::conj(std::exp((std::log(p))*(-2.f))) + c;
+//    return std::conj(std::exp((std::log(p))*(-2.f))) + c;
+}
+
+void Widget::body(QElapsedTimer t, float angles[])
+{
+    for(int xp = 0; xp < w; xp++) {
+        for(int yp = 0; yp < w; yp++) {
+            float x = xp*(ri-le)/w+le;
+            float y = (h-1-(float(yp)+0.1))*(up-dow)/h+dow;
+
+            std::complex<float> c(x, y);
+            std::complex<float> p = c;//0.5f;///3.f;
+            int iter = 0;
+
+                for(; iter < IterATIONnUMBER; iter++) {
+                    if( std::norm(p) > 8 ) {
+                        i.setPixelColor(xp, yp, QColor::fromHsv(float(iter )/IterATIONnUMBER *360, 255, 127));
+                        break;
+                    }
+                    float angle = iter > 4? angles[4] : angles[iter];
+                    std::complex<float> adjusted  = p*std::polar<float>(1, angle);
+                    if( std::abs(adjusted.imag()) < 0.01 && adjusted.real()<0 && iter < 5) {
+
+                        //                                i.setPixelColor(xp, yp, QColor::fromHsv((std::arg(p)+tau/2)/tau*360, 255, sqrt(sqrt(float(iter)/200))*255));
+                        i.setPixelColor(xp, yp, QColor::fromHsvF(0, 0, 1-iter/5.0));
+                        break;
+                    }
+                    p = func(p, c, angle);
+                }
+                if(iter == IterATIONnUMBER) {
+                    i.setPixelColor(xp, yp, Qt::black);
+                }
+
+            }
+        if(xp%64==0)
+            fprintf(stderr, "xp = %d, elapxsed %d ms\n", xp, t.elapsed());
+
+    }
+    static int frameNumber = 0;
+    i.save(QString("frame%0.png").arg(frameNumber++));
 }
 
 void Widget::doPic() {
@@ -117,78 +158,34 @@ void Widget::doPic() {
 
         };
         QElapsedTimer t; t.start();
+#define steps 100
+        float angles[5] = {0};
+//        int summand = 0;
+        for( int i  = 0; i < steps; i++, angles[4] += tau/steps) {
+            body(t, angles);
+        }
+        for(int i  = 0; i < steps; i++, angles[3] += tau/(steps), angles[4] += tau/(steps)) {
+            body(t, angles);
+        }
+        for(int i  = 0; i < steps; i++, angles[2] += tau/(steps), angles[3] += tau/(steps), angles[4] += tau/(steps)) {
+            body(t, angles);
+        }
+        for(int i  = 0; i < steps; i++, angles[3] += tau/(steps), angles[4] += tau/(steps)) {
+            body(t, angles);
+        }
+        for(int i  = 0; i < steps; i++, angles[1] += tau/(steps), angles[2] += tau/(steps), angles[3] += tau/(steps), angles[4] += tau/(steps)) {
+            body(t, angles);
+        }
+        for(int i  = 0; i < steps; i++, angles[0] += tau/(steps)) {
+            body(t, angles);
+        }
 
-//        for(float angle = 0; angle < tau*2; angle += tau/(5*25)) {
+//        for(float angle = 0; angle < tau*2; angle += tau/(25*25)) {
 //        for(float angle = tau/4-0.1; angle < tau/4+0.01; angle += tau/30) {
     //    for(int branch = 0; branch < (1<<6); branch++) {
-        static float angle = 0;
-        angle += tau/(5*25);
-            std::complex<float> roo = std::polar<float>(1, angle);
-            std::complex<float> ere = std::log(roo);
-            roo = std::conj(roo);
-            if(angle >= tau/2) ere += std::complex<float>(0, tau);
-            if(angle > 3*tau/2) ere += std::complex<float>(0, tau);
-            for(int xp = 0; xp < w; xp++) {
-                for(int yp = 0; yp < w; yp++) {
-                    std::complex<float> oneOfPrevs;
-                    float x = xp*(ri-le)/w+le;
-                    float y = (h-1-(float(yp)+0.1))*(up-dow)/h+dow;
+//        static float angle = 0;
+//        angle += tau/(5*25);
 
-                    std::complex<float> c(x, y);
-                    std::complex<float> p = c;//0.5f;///3.f;
-                    int iter = 0;
-
-    //                bool cut = false;
-    //                if(p.real() >= 0 && fabs(p.imag()) < 1.0/100) {
-    //                    i.setPixelColor(xp, yp, Qt::gray);
-    //                } else {
-                        for(; iter < IterATIONnUMBER; iter++) {
-            //                if(p.real().outside2by2() || p.imag().outside2by2()) {
-//                            std::complex<float> rere = p*p*p - c*p/**p*/;
-                            //                            if( rere.real()>=0.95 &&rere.real()<=1.05&&
-                            //                                rere.imag()>=-0.05&&rere.imag()<=0.05) {
-                            //                            if( p.real()>=2 || p.real()<=-2 ||
-                            //                                p.imag()>2 || p.imag()<=-2 ) {
-                            //                            if( std::norm(p) >= 8 ) {
-
-                            //                                //                                i.setPixelColor(xp, yp, QColor::fromHsv((std::arg(p)+tau/2)/tau*360, 255, sqrt(sqrt(float(iter)/200))*255));
-                            //                                i.setPixelColor(xp, yp, QColor::fromHsv(float(iter)/200*360, 255, 127));
-                            //                                break;
-                            //                            }
-//                            std::complex<float> rrr = p;
-#define gerger 16
-                            if(iter%gerger == 0) {
-                                oneOfPrevs = p;
-                            }
-                            p = func(p, c);
-                            if( std::norm(p-oneOfPrevs) < 0.000001 ) {
-
-                                //                                i.setPixelColor(xp, yp, QColor::fromHsv((std::arg(p)+tau/2)/tau*360, 255, sqrt(sqrt(float(iter)/200))*255));
-                                i.setPixelColor(xp, yp, QColor::fromHsv(float(iter%gerger )/gerger *360, 255, 127));
-                                break;
-                            }
-//                            float
-//                            p = p - (rere-std::complex<float>(1,0))/(std::complex<float>(3,0)*p*p - c/**std::complex<float>(2,0)*p*/);
-    // z -> (z - e)(z - e2)(z - 1) = z3 - 1
-    // ' -> 3z2
-                        }
-//                        for
-                        if(iter == IterATIONnUMBER) {
-                            i.setPixelColor(xp, yp, Qt::black);
-                        }
-//                        int index = IterATIONnUMBER%16;
-//                        for(int ii = 1; ii <= 8; ii++) {
-//                            bool notCylle = false;
-//                            for(int j = 1; j <= ii; j++) {
-
-//                            }
-//                        }
-
-                    }
-                if(xp%64==0)
-                    fprintf(stderr, "xp = %d, elapxsed %d ms\n", xp, t.elapsed());
-
-            }
 //        }
 
     //        QPainter pa2(&i);
@@ -290,7 +287,7 @@ void Widget::drawTrajectory(int x, int y)
     QPointF prev = toPoint(fff);//(x, y);
     p.setPen(Qt::white);
     for(int i = 0; i < IterATIONnUMBER; i++) {
-        fff = func(fff, c);
+        fff = func(fff, c, 0);
         QPointF cur = toPoint(fff);
         p.drawLine(prev, cur);
         prev = cur;

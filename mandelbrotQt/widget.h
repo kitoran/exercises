@@ -6,7 +6,9 @@
 #include "shittyintrospection.h"
 
 #include <QComboBox>
+//#include <QElsapsed>
 #include <QSettings>
+class QElapsedTimer;
 INTROSPECT_ENUM_VISIBLE_NAMES_PERSISTENT_COMBOBOX_ENUMNAME(Mode,
         modeEnlarge, enlarge,
         modeIterations, showiterations)
@@ -34,6 +36,8 @@ public:
     void mouseReleaseEvent(QMouseEvent *event);
     void drawTrajectory(int x, int y);
     void doPic();
+    void body(QElapsedTimer t, float angles[]);
+    
 private:
     Ui::Widget *ui;
 };
