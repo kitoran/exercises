@@ -97,8 +97,10 @@ std::complex<float> toNumber(QPointF end) {
     return std::complex<float>(xe, ye);
 }
 
-inline std::complex<float> func(std::complex<float> p, std::complex<float> c, float bc) {
-    return std::exp((std::log(p*std::polar<float>(1, bc))-std::complex<float>(0,bc))*(2.5f)) + c;
+float branchCutArg;
+std::complex<float> branchCut;
+inline std::complex<float> func(std::complex<float> adjusted, std::complex<float> c) {
+    return std::exp((std::log(adjusted)-branchCutArg)*(2.5f)) + c;
 //    return std::conj(std::exp((std::log(p/**roo*/)/*+ere*/)*3.f
 ////                    std::complex<float>(0.f,  1)
 //                    )) + c;
@@ -107,7 +109,7 @@ inline std::complex<float> func(std::complex<float> p, std::complex<float> c, fl
 //    return std::conj(std::exp((std::log(p))*(-2.f))) + c;
 //    return std::conj(std::exp((std::log(p))*(-2.f))) + c;
 }
-
+#define NUM_TAMP_ITERS 3
 void Widget::body(QElapsedTimer t, float angles[])
 {
     for(int xp = 0; xp < w; xp++) {
@@ -119,21 +121,38 @@ void Widget::body(QElapsedTimer t, float angles[])
             std::complex<float> p = c;//0.5f;///3.f;
             int iter = 0;
 
-                for(; iter < IterATIONnUMBER; iter++) {
-                    if( std::norm(p) > 8 ) {
+                for(; iter < 5; iter++) {
+                    if( std::norm(p) > 4 ) {
                         i.setPixelColor(xp, yp, QColor::fromHsv(float(iter )/IterATIONnUMBER *360, 255, 127));
                         break;
                     }
-                    float angle = iter > 4? angles[4] : angles[iter];
-                    std::complex<float> adjusted  = p*std::polar<float>(1, angle);
+                    branchCutArg = iter > NUM_TAMP_ITERS-1? angles[NUM_TAMP_ITERS-1] : angles[iter];
+                    branchCut = std::polar<float>(1, branchCutArg);
+                    std::complex<float> adjusted  = p*branchCut;
                     if( std::abs(adjusted.imag()) < 0.01 && adjusted.real()<0 && iter < 5) {
 
                         //                                i.setPixelColor(xp, yp, QColor::fromHsv((std::arg(p)+tau/2)/tau*360, 255, sqrt(sqrt(float(iter)/200))*255));
                         i.setPixelColor(xp, yp, QColor::fromHsvF(0, 0, 1-iter/5.0));
                         break;
                     }
-                    p = func(p, c, angle);
+
+                    p = func(adjusted, c);
                 }
+                branchCutArg = angles[NUM_TAMP_ITERS-1];
+                branchCut = std::polar<float>(1, branchCutArg);
+                for(; iter < IterATIONnUMBER; iter++) {
+                    if( std::norm(p) > 4 ) {
+                        i.setPixelColor(xp, yp, QColor::fromHsv(float(iter )/IterATIONnUMBER *360, 255, 127));
+                        break;
+                    }
+                    std::complex<float> adjusted  = p*branchCut;
+                    if( std::abs(adjusted.imag()) < 0.01 && adjusted.real()<0 && iter < 5) {
+                        i.setPixelColor(xp, yp, QColor::fromHsvF(0, 0, 1-iter/5.0));
+                        break;
+                    }
+                    p = func(p, c);
+                }
+
                 if(iter == IterATIONnUMBER) {
                     i.setPixelColor(xp, yp, Qt::black);
                 }
@@ -145,6 +164,8 @@ void Widget::body(QElapsedTimer t, float angles[])
     }
     static int frameNumber = 0;
     i.save(QString("frame%0.png").arg(frameNumber++));
+    if(frameNumber % 20 == 0)
+        fprintf(stderr, "made %d frames, elapxsed %d ms\n", frameNumber, t.elapsed());
 }
 
 void Widget::doPic() {
@@ -159,24 +180,31 @@ void Widget::doPic() {
         };
         QElapsedTimer t; t.start();
 #define steps 100
-        float angles[5] = {0};
+        float angles[NUM_TAMP_ITERS] = {0};
 //        int summand = 0;
-        for( int i  = 0; i < steps; i++, angles[4] += tau/steps) {
-            body(t, angles);
+
+        for(int i  = 0; i < steps; i++, angles[2] += tau/(steps)) {
+            body(t, angles, 0);
         }
-        for(int i  = 0; i < steps; i++, angles[3] += tau/(steps), angles[4] += tau/(steps)) {
-            body(t, angles);
+        for(int i  = 0; i < steps; i++, angles[1] += tau/(steps)) {
+            body(t, angles, steps);
         }
-        for(int i  = 0; i < steps; i++, angles[2] += tau/(steps), angles[3] += tau/(steps), angles[4] += tau/(steps)) {
-            body(t, angles);
-        }
-        for(int i  = 0; i < steps; i++, angles[3] += tau/(steps), angles[4] += tau/(steps)) {
-            body(t, angles);
-        }
-        for(int i  = 0; i < steps; i++, angles[1] += tau/(steps), angles[2] += tau/(steps), angles[3] += tau/(steps), angles[4] += tau/(steps)) {
-            body(t, angles);
+        for(int i  = 0; i < steps; i++, angles[2] += tau/(steps)) {
+            body(t, angles, steps*2);
         }
         for(int i  = 0; i < steps; i++, angles[0] += tau/(steps)) {
+            body(t, angles, steps*3);
+        }
+        for(int i  = 0; i < steps; i++, angles[2] += tau/(steps)) {
+            body(t, angles, steps*4);
+        }
+        for(int i  = 0; i < steps; i++, angles[1] += tau/(steps)) {
+            body(t, angles, steps*5);
+        }
+        for(int i  = 0; i < steps; i++, angles[2] += tau/(steps)) {
+            body(t, angles);
+        }
+        for(int i  = 0; i <= steps; i++, angles[0] += tau/(steps)) {
             body(t, angles);
         }
 
@@ -287,7 +315,7 @@ void Widget::drawTrajectory(int x, int y)
     QPointF prev = toPoint(fff);//(x, y);
     p.setPen(Qt::white);
     for(int i = 0; i < IterATIONnUMBER; i++) {
-        fff = func(fff, c, 0);
+        fff = func(fff, c);
         QPointF cur = toPoint(fff);
         p.drawLine(prev, cur);
         prev = cur;
