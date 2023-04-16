@@ -12,6 +12,7 @@
 
 #include <time.h>
 
+
 //extern "C" {
 static char const* feature [] = {CLAP_PLUGIN_FEATURE_NOTE_EFFECT, NULL};
 static const clap_plugin_descriptor_t s_retune_plug_desc = {
@@ -36,6 +37,13 @@ typedef struct {
     const clap_host_state_t        *host_state;
 
     uint32_t latency;
+
+
+
+    //Param
+    double center, edo, pitchRange;
+
+    u8 channelKeys[16];
 } retune_plug_t;
 
 ////////////////////////////
@@ -56,7 +64,7 @@ static bool retune_plug_note_ports_get(const clap_plugin_t   *plugin,
     info->id = 0;
     snprintf(info->name, sizeof(info->name), "%s", "My Port Name");
     info->supported_dialects =
-            CLAP_NOTE_DIALECT_CLAP | CLAP_NOTE_DIALECT_MIDI | CLAP_NOTE_DIALECT_MIDI_MPE | CLAP_NOTE_DIALECT_MIDI2;
+            CLAP_NOTE_DIALECT_MIDI;
     info->preferred_dialect = CLAP_NOTE_DIALECT_MIDI;
     return true;
 }
@@ -138,54 +146,108 @@ static void retune_plug_stop_processing(const struct clap_plugin *plugin) {}
 
 static void retune_plug_reset(const struct clap_plugin *plugin) {}
 
-static void retune_plug_process_event(retune_plug_t *plug, const clap_event_header_t *hdr) {
+static int findChannelOfKey(u8 key, retune_plug_t *plug) {
+    FOR(i, 16) {
+        if(plug->channelKeys[i] == key) {
+            return i;
+        }
+    }
+    return -1;
+}
+static int findFreeChannel(retune_plug_t *plug) {
+    return findChannelOfKey(0, plug);
+}
+enum MidiEventType {
+    note_off = 0b1000 << 4,
+    note_on = 0b1001 << 4,
+    pitch_wheel = 0b1110 << 4,
+};
+typedef struct MidiPitch {
+    int key;
+    int wheel;
+} MidiPitch;
+//TODO: simplify math
+#define LOG_SEMITONE 0.05776226504//log(2)/12;
+#define BIAS 36.3763165623 //log(440)/logSemitone-69;
+static MidiPitch getMidiPitchLog(double logFreq, double pitchRange) {
+    int key = (int)round(logFreq/LOG_SEMITONE-BIAS);
+    CLAMP(key, 0, 127);
+    double freqOfTheKey = (440.0 / 32) * pow(2, ((key - 9) / 12.0));
+    double logdifference = logFreq - log(freqOfTheKey);
+
+    double differenceInSemitones = 12*logdifference/log(2);
+    double differenceInPitchRamgeIntervals = differenceInSemitones/pitchRange;
+    int pitchWheel = (int)round(differenceInPitchRamgeIntervals*0x2000)+0x2000;
+    ASSERT(pitchWheel < 0x4000 && pitchWheel >= 0 , "pitch out of range: pitchwheel %d, key %d, freq %lf, pitchrange %lf\n", pitchWheel,
+           key, exp(logFreq), pitchRange);
+    return (MidiPitch){key, pitchWheel};
+}
+static MidiPitch calculateMidiPitch(int key, retune_plug_t* plug) {
+//                double center = (440.0 / 32) * pow(2, ((key - 9) / 12.0));
+    double freqOfKey = (440.0 / 32) * pow(2, ((key - 9) / 12.0));
+    double distance = log(freqOfKey)-log(plug->center);
+
+//                double correctStep = pow(2, 1/edo);
+    double multiplier = 12/plug->edo;//log(2)/edo/(log(2)/12);
+
+    double correctDistance = distance*multiplier;
+    double correctLogFreq = log(plug->center)+correctDistance;
+    fprintf(stderr, "key %d, freqOfKey %lf, dist %lf, mult %lf, cordist %lf, corlogfreq %lf\n",
+                    key,     freqOfKey, distance, multiplier, correctDistance, correctLogFreq);
+    return getMidiPitchLog(correctLogFreq, plug->pitchRange);
+}
+static void retune_plug_process_event(retune_plug_t *plug, const clap_event_header_t *hdr,
+                                      const clap_process_t     *process) {
     if (hdr->space_id == CLAP_CORE_EVENT_SPACE_ID) {
         switch (hdr->type) {
         case CLAP_EVENT_MIDI: {
             fprintf(stderr, "CLAP_EVENT_MIDI\n");
             const clap_event_midi_t *ev = (const clap_event_midi_t *)hdr;
-            int channel = msg[0] & MIDI_CHANNEL_MASK;
-            if((msg[0] & MIDI_COMMAND_MASK) == pitchWheelEvent) {
-               i16 pitchWheel =
-                       (msg[2] << 7) |
-                       (msg[1]&MIDI_7HB_MASK);
-               double differenceInTones =
-                       double(pitchWheel-0x2000)/0x2000 * currentItemConfig->value.pitchRange / 2.0;
-               double ratio = pow(2, differenceInTones/6);
-               channelPitches[channel] = ratio;
-            }
-            //TODO: delete selected notes on "delete"
-            //TODO: store velocity value too
-//          res = MIDI_GetNote(take, i++, 0, 0, , &endppqpos, 0, &pitch, &vel);
+            u8* msg = ev->data;
 
-            // TODO: indicate when we changed the take
-    // we think that all the simultaneous notes are on different channels
-    // so to get note's key we only need to read it from onteOff event
-            double pos = MIDI_GetProjTimeFromPPQPos(take, ppqpos);
             if((msg[0] & MIDI_COMMAND_MASK) == noteOn) {
-                channelNoteStarts[channel] = pos;
-            }
-            if((msg[0] & MIDI_COMMAND_MASK) == noteOff) {
-                int key = msg[1];
-                int vel = msg[2];
-                double freq = (440.0 / 32) * pow(2, ((key - 9) / 12.0));
-                freq *= channelPitches[channel];
-                message("st %lf end %lf pitch %d vel %d\n"
-                        "start %lf  freq %lf", pos, channelNoteStarts[channel] , key, vel
-                        , start, freq);
-                appendRealNote({.note = {.freq = freq,
-                                         .start = channelNoteStarts[channel]  - itemStart,
-                                         .length = pos-channelNoteStarts[channel]},
-                                .midiChannel = channel});
+                int channel= findFreeChannel(plug);
+                if(channel < 0) {
+                    return;
+                }
+
+                MidiPitch mp = calculateMidiPitch(msg[1], plug);
+                plug->channelKeys[channel] = mp.key;
+                char pitchEventData[] = {pitch_wheel | channel, mp.wheel&0b1111111, mp.wheel>>7};
+                clap_event_midi_t pitchEvent = {.header = ev->header,
+                                               .port_index = ev->port_index};
+                memcpy(pitchEvent.data, pitchEventData, 3);
+                process->out_events->try_push(process->out_events, &pitchEvent.header);
+
+                char noteOnData[] = {note_on | channel, mp.key, msg[2]};
+                clap_event_midi_t noteOnEvent = {.header = ev->header,
+                                                 .port_index = ev->port_index};
+                memcpy(noteOnEvent.data, noteOnData, 3);
+
+                process->out_events->try_push(process->out_events, &noteOnEvent.header);
+            } else if((msg[0] & MIDI_COMMAND_MASK) == noteOff) {
+                MidiPitch mp = calculateMidiPitch(msg[1], plug);
+                int channel = findChannelOfKey(mp.key, plug);
+                if(channel < 0) {
+                    return;
+                }
+                plug->channelKeys[channel] = 0;
+                char noteOffData[] = {note_off | channel, mp.key, msg[2]};
+                clap_event_midi_t noteOffEvent = {.header = ev->header,
+                                                 .port_index = ev->port_index};
+                memcpy(noteOffEvent.data, noteOffData, 3);
+
+                process->out_events->try_push(process->out_events, &noteOffEvent.header);
+            } else {
+                process->out_events->try_push(process->out_events, &ev->header);
             }
 
-            volatile int rer = 42;
             break;
         }
 
         case CLAP_EVENT_MIDI_SYSEX: {
             const clap_event_midi_sysex_t *ev = (const clap_event_midi_sysex_t *)hdr;
-            // TODO: handle MIDI Sysex event
+            process->out_events->try_push(process->out_events, &ev->header);
             break;
         }
         }
@@ -214,7 +276,7 @@ static clap_process_status retune_plug_process(const struct clap_plugin *plugin,
              volatile uint16_t sid = hdr->space_id;
              volatile uint16_t type = hdr->type;
 
-             retune_plug_process_event(plug, hdr);
+             retune_plug_process_event(plug, hdr, process);
              ++ev_index;
 
              if (ev_index == nev) {
@@ -258,6 +320,13 @@ static clap_plugin_t *retune_plug_create(const clap_host_t *host) {
     p->plugin.get_extension = retune_plug_get_extension;
     p->plugin.on_main_thread = retune_plug_on_main_thread;
 
+
+    p->center = 261.6256;
+    p->edo = 16;
+    p->pitchRange = 2;
+    FOR(i, 16) {
+        p->channelKeys[i] = 0;
+    }
     // Don't call into the host here
 
     return &p->plugin;
