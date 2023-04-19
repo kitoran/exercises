@@ -110,7 +110,7 @@ inline std::complex<float> func(std::complex<float> adjusted, std::complex<float
 //    return std::conj(std::exp((std::log(p))*(-2.f))) + c;
 }
 #define NUM_TAMP_ITERS 3
-void Widget::body(QElapsedTimer t, float angles[])
+void Widget::body(QElapsedTimer t, float angles[], int st = 0)
 {
     for(int xp = 0; xp < w; xp++) {
         for(int yp = 0; yp < w; yp++) {

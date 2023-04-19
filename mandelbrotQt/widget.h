@@ -36,7 +36,7 @@ public:
     void mouseReleaseEvent(QMouseEvent *event);
     void drawTrajectory(int x, int y);
     void doPic();
-    void body(QElapsedTimer t, float angles[]);
+    void body(QElapsedTimer t, float angles[], int st);
     
 private:
     Ui::Widget *ui;

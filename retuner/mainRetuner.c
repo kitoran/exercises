@@ -5,12 +5,20 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include "midiprot.h"
 
 #include <clap/clap.h>
 
 
 #include <time.h>
+
+
+
+
+#include <SDL.h>
+
+
 
 
 //extern "C" {
@@ -42,7 +50,7 @@ typedef struct {
 
     //Param
     double center, edo, pitchRange;
-
+    bool usezerothchannel;
     u8 channelKeys[16];
 } retune_plug_t;
 
@@ -74,6 +82,151 @@ static const clap_plugin_note_ports_t s_retune_plug_note_ports = {
     .get = retune_plug_note_ports_get,
 };
 
+
+/////////// clap_params
+static uint32_t retune_plug_params_count(const clap_plugin_t *plugin) {
+    return 3;
+}
+
+// Copies the parameter's info to param_info. Returns true on success.
+// [main-thread]
+static bool retune_plug_params_get_info(const clap_plugin_t *plugin,
+                         uint32_t             param_index,
+                         clap_param_info_t   *param_info) {
+    clap_param_info_t center = {
+        .id = 1,
+        .flags = 0/*CLAP_PARAM_REQUIRES_PROCESS?*/,
+        .cookie = 0,
+        .name = "retuning center",
+        .module = "",
+        .min_value = 26,
+        .max_value = 8000,
+        .default_value = 261.6256
+    };
+    clap_param_info_t edo = {
+        .id = 2,
+        .flags = 0/*CLAP_PARAM_REQUIRES_PROCESS?*/,
+        .cookie = 0,
+        .name = "number of equal divisions of octave",
+        .module = "",
+        .min_value = 0.5,
+        .max_value = 8000,
+        .default_value = 16
+    };//todo: add a param for using 0th channel or not
+    clap_param_info_t range = {
+        .id = 3,
+        .flags = 0/*CLAP_PARAM_REQUIRES_PROCESS?*/,
+        .cookie = 0,
+        .name = "pitch wheel range",
+        .module = "",
+        .min_value = 0.01,
+        .max_value = 48,
+        .default_value = 2
+    };
+    if(param_index == 0) {
+        *param_info = center;
+        return true;
+    }
+    if(param_index == 1) {
+        *param_info = edo;
+        return true;
+    }
+    if(param_index == 2) {
+        *param_info = range;
+        return true;
+    }
+    return false;
+}
+
+// Writes the parameter's current value to out_value. Returns true on success.
+// [main-thread]
+static bool retune_plug_params_get_value(const clap_plugin_t *plugin, clap_id param_id, double *out_value) {
+    retune_plug_t *plug = ((retune_plug_t *)plugin->plugin_data);
+    if(param_id == 1) {
+        *out_value = plug->center;
+        return true;
+    }
+    if(param_id == 2) {
+        *out_value = plug->edo;
+        return true;
+    }
+    if(param_id == 3) {
+        *out_value = plug->pitchRange;
+        return true;
+    }
+    return false;
+}
+
+// Fills out_buffer with a null-terminated UTF-8 string that represents the parameter at the
+// given 'value' argument. eg: "2.3 kHz". Returns true on success. The host should always use
+// this to format parameter values before displaying it to the user. [main-thread]
+static bool retune_plug_params_value_to_text(const clap_plugin_t *plugin,
+                              clap_id              param_id,
+                              double               value,
+                              char                *out_buffer,
+                              uint32_t             out_buffer_capacity) {
+    snprintf(out_buffer, out_buffer_capacity, "%lf", value);
+}
+
+// Converts the null-terminated UTF-8 param_value_text into a double and writes it to out_value.
+// Returns true on success. The host can use this to convert user input into a parameter value.
+// [main-thread]
+static bool retune_plug_params_text_to_value(const clap_plugin_t *plugin,
+                              clap_id              param_id,
+                              const char          *param_value_text,
+                              double              *out_value) {
+    sscanf(param_value_text, "%lf", out_value);
+}
+
+
+
+static void retune_plug_process_param(retune_plug_t *plug,
+                                      const clap_event_header_t *hdr) {
+    ASSERT(hdr->type == CLAP_EVENT_PARAM_VALUE, "");
+    const clap_event_param_value_t *ev = (const clap_event_param_value_t *)hdr;
+    if(ev->param_id == 1) {
+        plug->center=ev->value;
+    }
+    if(ev->param_id == 2) {
+        plug->edo = ev->value;
+    }
+    if(ev->param_id == 3) {
+        plug->pitchRange = ev->value;
+    }
+}
+// Flushes a set of parameter changes.
+// This method must not be called concurrently to clap_plugin->process().
+//
+// Note: if the plugin is processing, then the process() call will already achieve the
+// parameter update (bi-directional), so a call to flush isn't required, also be aware
+// that the plugin may use the sample offset in process(), while this information would be
+// lost within flush().
+//
+// [active ? audio-thread : main-thread]
+static void retune_plug_params_flush(const clap_plugin_t *plugin,
+                      const clap_input_events_t  *in,
+                      const clap_output_events_t *out) {
+    const uint32_t nev = in->size(in);
+    retune_plug_t *plug = (retune_plug_t *)plugin->plugin_data;
+
+    FOR(i, nev) {
+        const clap_event_header_t *hdr = in->get(in, i);
+        retune_plug_process_param(plug, hdr);
+    }
+
+}
+
+
+static const clap_plugin_params_t s_retune_plug_params = {
+    .count = retune_plug_params_count,
+    .get_info = retune_plug_params_get_info,
+    .get_value = retune_plug_params_get_value,
+    .value_to_text = retune_plug_params_value_to_text,
+    .text_to_value = retune_plug_params_text_to_value,
+    .flush = retune_plug_params_flush
+};
+
+
 //////////////////
 // clap_latency //
 //////////////////
@@ -86,6 +239,19 @@ static uint32_t retune_plug_latency_get(const clap_plugin_t *plugin) {
 static const clap_plugin_latency_t s_retune_plug_latency = {
     .get = retune_plug_latency_get,
 };
+
+//////////////////
+// clap_gui //
+//////////////////
+
+//static uint32_t retune_plug_latency_get(const clap_plugin_t *plugin) {
+//    const retune_plug_t *plug = (const retune_plug_t *)plugin->plugin_data;
+//    return plug->latency;
+//}
+
+//static const clap_plugin_gui_t s_retune_plug_latency = {
+//    .get = retune_plug_latency_get,
+//};
 
 ////////////////
 // clap_state //
@@ -157,11 +323,6 @@ static int findChannelOfKey(u8 key, retune_plug_t *plug) {
 static int findFreeChannel(retune_plug_t *plug) {
     return findChannelOfKey(0, plug);
 }
-enum MidiEventType {
-    note_off = 0b1000 << 4,
-    note_on = 0b1001 << 4,
-    pitch_wheel = 0b1110 << 4,
-};
 typedef struct MidiPitch {
     int key;
     int wheel;
@@ -196,16 +357,17 @@ static MidiPitch calculateMidiPitch(int key, retune_plug_t* plug) {
                     key,     freqOfKey, distance, multiplier, correctDistance, correctLogFreq);
     return getMidiPitchLog(correctLogFreq, plug->pitchRange);
 }
+const char* appName = "Another Name";
 static void retune_plug_process_event(retune_plug_t *plug, const clap_event_header_t *hdr,
-                                      const clap_process_t     *process) {
+                                        const clap_process_t     *process) {
     if (hdr->space_id == CLAP_CORE_EVENT_SPACE_ID) {
         switch (hdr->type) {
         case CLAP_EVENT_MIDI: {
-            fprintf(stderr, "CLAP_EVENT_MIDI\n");
+            fprintf(stderr, "CLAP_EVENT_MIDI %s %d\n", appName, SDL_WasInit(SDL_INIT_VIDEO));
             const clap_event_midi_t *ev = (const clap_event_midi_t *)hdr;
             u8* msg = ev->data;
 
-            if((msg[0] & MIDI_COMMAND_MASK) == noteOn) {
+            if((msg[0] & MIDI_COMMAND_MASK) == note_on) {
                 int channel= findFreeChannel(plug);
                 if(channel < 0) {
                     return;
@@ -213,7 +375,7 @@ static void retune_plug_process_event(retune_plug_t *plug, const clap_event_head
 
                 MidiPitch mp = calculateMidiPitch(msg[1], plug);
                 plug->channelKeys[channel] = mp.key;
-                char pitchEventData[] = {pitch_wheel | channel, mp.wheel&0b1111111, mp.wheel>>7};
+                char pitchEventData[] = {pitch_wheel_event | channel, mp.wheel&0b1111111, mp.wheel>>7};
                 clap_event_midi_t pitchEvent = {.header = ev->header,
                                                .port_index = ev->port_index};
                 memcpy(pitchEvent.data, pitchEventData, 3);
@@ -225,7 +387,7 @@ static void retune_plug_process_event(retune_plug_t *plug, const clap_event_head
                 memcpy(noteOnEvent.data, noteOnData, 3);
 
                 process->out_events->try_push(process->out_events, &noteOnEvent.header);
-            } else if((msg[0] & MIDI_COMMAND_MASK) == noteOff) {
+            } else if((msg[0] & MIDI_COMMAND_MASK) == note_off) {
                 MidiPitch mp = calculateMidiPitch(msg[1], plug);
                 int channel = findChannelOfKey(mp.key, plug);
                 if(channel < 0) {
@@ -248,6 +410,10 @@ static void retune_plug_process_event(retune_plug_t *plug, const clap_event_head
         case CLAP_EVENT_MIDI_SYSEX: {
             const clap_event_midi_sysex_t *ev = (const clap_event_midi_sysex_t *)hdr;
             process->out_events->try_push(process->out_events, &ev->header);
+            break;
+        }
+        case CLAP_EVENT_PARAM_VALUE: {
+            retune_plug_process_param(plug, hdr);
             break;
         }
         }
@@ -296,9 +462,12 @@ static const void *retune_plug_get_extension(const struct clap_plugin *plugin, c
         return NULL;
     if (!strcmp(id, CLAP_EXT_NOTE_PORTS))
         return &s_retune_plug_note_ports;
+    if (!strcmp(id, CLAP_EXT_PARAMS))
+        return &s_retune_plug_params;
     if (!strcmp(id, CLAP_EXT_STATE))
         return &s_retune_plug_state;
-    // TODO: add support to CLAP_EXT_PARAMS
+//    if (!strcmp(id, CLAP_EXT_GUI))
+//        return &s_retune_plug_gui;
     return NULL;
 }
 
