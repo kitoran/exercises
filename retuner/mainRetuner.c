@@ -313,7 +313,7 @@ static void retune_plug_stop_processing(const struct clap_plugin *plugin) {}
 static void retune_plug_reset(const struct clap_plugin *plugin) {}
 
 static int findChannelOfKey(u8 key, retune_plug_t *plug) {
-    FOR(i, 16) {
+    for(int i = 1; i < 16; i++) {
         if(plug->channelKeys[i] == key) {
             return i;
         }
@@ -332,6 +332,7 @@ typedef struct MidiPitch {
 #define BIAS 36.3763165623 //log(440)/logSemitone-69;
 static MidiPitch getMidiPitchLog(double logFreq, double pitchRange) {
     int key = (int)round(logFreq/LOG_SEMITONE-BIAS);
+//    fprintf(stderr, "key is
     CLAMP(key, 0, 127);
     double freqOfTheKey = (440.0 / 32) * pow(2, ((key - 9) / 12.0));
     double logdifference = logFreq - log(freqOfTheKey);
@@ -372,7 +373,10 @@ static void retune_plug_process_event(retune_plug_t *plug, const clap_event_head
                 if(channel < 0) {
                     return;
                 }
-
+                fprintf(stderr, "channel %d ", channel);
+                FOR_STATIC_ARRAY(u8*, i, plug->channelKeys) {
+                    fprintf(stderr, " %d ", *i);
+                }
                 MidiPitch mp = calculateMidiPitch(msg[1], plug);
                 plug->channelKeys[channel] = mp.key;
                 char pitchEventData[] = {pitch_wheel_event | channel, mp.wheel&0b1111111, mp.wheel>>7};
