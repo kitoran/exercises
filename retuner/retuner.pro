@@ -19,7 +19,7 @@ include(../../library/misc/misc.pri)
 include(../../library/stb/stb_ds.pri)
 
 CONFIG += SDL
-INCLUDEPATH += C:\src\SDL2-devel-2.26.1-VC\SDL2-2.26.1\include C:\src\SDL2-devel-2.26.1-VC\SDL2_ttf-2.20.1\include
+INCLUDEPATH += C:\src\SDL2-devel-2.26.5-VC\SDL2-2.26.5\include C:\src\SDL2-devel-2.26.5-VC\SDL2_ttf-2.20.1\include
 DEFINES += MY_PATH=\\\"$$PWD\\\" GUI_NO_PERSISTENT_WIDGETS
 include(../../library/gui/gui.pri)
 SOURCES += \
@@ -38,7 +38,7 @@ HEADERS += \
 # LIBS += -lSDL2 -lSDL2_ttf
 # LIBS += -lSDL2 -lSDL2_ttf
 windows {
-QMAKE_LIBDIR += C:\src\SDL2-devel-2.26.1-VC\SDL2-2.26.1\lib\x64 C:\src\SDL2-devel-2.26.1-VC\SDL2_ttf-2.20.1\lib\x64
+QMAKE_LIBDIR += C:\src\SDL2-devel-2.26.5-VC\SDL2-2.26.5\lib\x64 C:\src\SDL2-devel-2.26.5-VC\SDL2_ttf-2.20.1\lib\x64
 #LIBS += /lKernel32
 QMAKE_LFLAGS += user32.lib SDL2.lib SDL2_ttf.lib
 DEFINES += _CRT_SECURE_NO_WARNINGS

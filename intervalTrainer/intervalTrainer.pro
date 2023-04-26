@@ -12,10 +12,10 @@ linux {
 }
 windows {
     DEFINES += _CRT_SECURE_NO_WARNINGS
-    INCLUDEPATH += C:\src\SDL2-devel-2.26.1-VC\SDL2-2.26.1\include C:\src\SDL2-devel-2.26.1-VC\SDL2_ttf-2.20.1\include
+    INCLUDEPATH += C:\src\SDL2-devel-2.26.5-VC\SDL2-2.26.5\include C:\src\SDL2-devel-2.26.5-VC\SDL2_ttf-2.20.1\include
     CONFIG -= console
     LIBS += -lSDL2main -lShell32
-    SDL2.dll.path = C:\src\SDL2-devel-2.26.1-VC\SDL2-2.26.1\
+    SDL2.dll.path = C:\src\SDL2-devel-2.26.5-VC\SDL2-2.26.5\
     INSTALLS += SDL2.dll
 }
 include(../../library/stb/stb_ds.pri)
@@ -35,18 +35,18 @@ linux {
 }
 windows {
     DEFINES += _CRT_SECURE_NO_WARNINGS
-    INCLUDEPATH += C:\src\SDL2-devel-2.26.1-VC\SDL2-2.26.1\include C:\src\SDL2-devel-2.26.1-VC\SDL2_ttf-2.20.1\include
+    INCLUDEPATH += C:\src\SDL2-devel-2.26.5-VC\SDL2-2.26.5\include C:\src\SDL2-devel-2.26.5-VC\SDL2_ttf-2.20.1\include
     CONFIG -= console
     LIBS += /lKernel32
     QMAKE_CXXFLAGS += /Zc:preprocessor /wd4838
 #    -lSDL2main -lShell32
     QMAKE_LFLAGS += user32.lib
     QMAKE_CFLAGS += /std:c11 /we4013 /wd4838
-    SDL2.dll.path = C:\src\SDL2-devel-2.26.1-VC\SDL2-2.26.1\
+    SDL2.dll.path = C:\src\SDL2-devel-2.26.5-VC\SDL2-2.26.5\
         INSTALLS += SDL2.dll
     #    QMAKE_CXXFLAGS += /D__cplusplus #wtf why was this not defined in the first place
 }
-QMAKE_LIBDIR += C:\src\SDL2-devel-2.26.1-VC\SDL2-2.26.1\lib\x64 C:\src\SDL2-devel-2.26.1-VC\SDL2_ttf-2.20.1\lib\x64
+QMAKE_LIBDIR += C:\src\SDL2-devel-2.26.5-VC\SDL2-2.26.5\lib\x64 C:\src\SDL2-devel-2.26.5-VC\SDL2_ttf-2.20.1\lib\x64
 HEADERS += \
     actions.h \
     config.h \
