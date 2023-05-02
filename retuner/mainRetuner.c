@@ -105,17 +105,17 @@ static bool retune_plug_params_get_info(const clap_plugin_t *plugin,
     };
     clap_param_info_t edo = {
         .id = 2,
-        .flags = 0/*CLAP_PARAM_REQUIRES_PROCESS?*/,
+        .flags = CLAP_PARAM_IS_STEPPED/*CLAP_PARAM_REQUIRES_PROCESS?*/,
         .cookie = 0,
         .name = "number of equal divisions of octave",
         .module = "",
         .min_value = 0.5,
-        .max_value = 8000,
+        .max_value = 53,
         .default_value = 16
     };//todo: add a param for using 0th channel or not
     clap_param_info_t range = {
         .id = 3,
-        .flags = 0/*CLAP_PARAM_REQUIRES_PROCESS?*/,
+        .flags = CLAP_PARAM_IS_STEPPED/*CLAP_PARAM_REQUIRES_PROCESS?*/,
         .cookie = 0,
         .name = "pitch wheel range",
         .module = "",

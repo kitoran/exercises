@@ -34,16 +34,7 @@ void buffer(void* userdata,
                 FOR(t, 5) {
                     stream[i] += (i16)round(sin(phase[j]*(t+1)/4.0*tau/(SDL_MAX_UINT32/4))*1000/(t+1)/(t+1));
                 }
-//                if(state.framesLeftLastFreq[j] == 0) {
                 phase[j] += (u32)round(SDL_MAX_UINT32/((double)have.freq)*(freqs[j]));
-//                } else {
-//                    phase[j] +=
-//                             ((SDL_MAX_UINT32/((double)have.freq)*(state.lastFreq[j])))*
-//                                    (state.framesLeftLastFreq[j]/(double)EASE_FRAMES)
-//                            + (SDL_MAX_UINT32/((double)have.freq)*(state.freq[j]))*
-//                                    (1-state.framesLeftLastFreq[j]/(double)EASE_FRAMES);
-//                    state.framesLeftLastFreq[j]--;
-//                }
             }
         }
         stream += samplesToFillNow;
@@ -53,7 +44,41 @@ void buffer(void* userdata,
     SDL_Event event; event.user = userevent;
     SDL_PushEvent(&event);
 }
+//#define PHI 1.618033988749
+//void buffer(void* userdata,
+//            Uint8* stream8,
+//            int wrongLen)
+//{
+//    int trueLen = wrongLen/2;
 
+//    i16* stream = (i16*)stream8;
+//    int j = 0;
+//    freqs[j] = 416.1;
+//    while(trueLen > 0) {
+//        int samplesToFillNow = trueLen;
+
+//        static u32 phase[2] = {0};
+
+//        for(int i = 0; i < samplesToFillNow; i++) {
+//            stream[i] = 0;
+//            FOR(t, 16) {
+//                //                stream[i] += (i16)round(sin(phase[j]*(t+1)/4.0*tau/(SDL_MAX_UINT32/4))*1000/(t+1));
+//                //                                stream[i] += (i16)round(sin(phase[j]*(t*3+1)/4.0*tau/(SDL_MAX_UINT32/4))*1000/(t+1));
+////                stream[i] += (i16)round(sin(phase[j]*(t*3+1)/4.0*tau/(SDL_MAX_UINT32/4))*1000/(t+1))+(i16)round(sin(phase[j]*(t*3+2)/4.0*tau/(SDL_MAX_UINT32/4))*1000/(t+1));
+////                stream[i] += (i16)round(sin(phase[j]*(t+1)/PHI/4.0*tau/(SDL_MAX_UINT32/4))*1000/(t+1));
+////                  stream[i] += (i16)round(sin(phase[j]*(t+1)*PHI/4.0*tau/(SDL_MAX_UINT32/4))*1000/(t+1));
+////                                  stream[i] += (i16)round(sin(phase[j]*(t+1+PHI)/(1+PHI)/4.0*tau/(SDL_MAX_UINT32/4))*1000/(t+1));
+////                  stream[i] += (i16)round(sin(phase[j]*(t+2+PHI)/(PHI)/4.0*tau/(SDL_MAX_UINT32/4))*1000/(t+1));
+//            }
+//            phase[j] += (u32)round(SDL_MAX_UINT32/((double)have.freq)*(freqs[j]));
+//        }
+//        stream += samplesToFillNow;
+//        trueLen -= samplesToFillNow;
+//    }
+//    SDL_UserEvent userevent = {PlaybackEvent, SDL_GetTicks(), 0, 0, 0, 0};
+//    SDL_Event event; event.user = userevent;
+//    SDL_PushEvent(&event);
+//}
 int PlaybackEvent;
 void openAudio() {
     SDL_Init(SDL_INIT_AUDIO);
