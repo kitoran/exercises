@@ -36,8 +36,19 @@ public:
     void mouseReleaseEvent(QMouseEvent *event);
     void drawTrajectory(int x, int y);
     void doPic();
-    void body(QElapsedTimer t, float angles[], int st);
+//    void body(QElapsedTimer t, int st);
     
+private slots:
+    void on_horizontalSlider_sliderReleased();
+
+    void on_horizontalSlider_2_sliderReleased();
+
+    void on_horizontalSlider_3_sliderReleased();
+
+    void on_horizontalSlider_4_sliderReleased();
+
+    void on_horizontalSlider_5_sliderReleased();
+
 private:
     Ui::Widget *ui;
 };
